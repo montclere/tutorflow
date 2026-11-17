@@ -76,14 +76,14 @@
 .negative { color: var(--color-error); }
 .muted { color: var(--color-muted); }
 
-.kim { display: grid; grid-template-columns: repeat(auto-fill, minmax(52px, 1fr)); gap: var(--space-2); }
+.kim { display: grid; grid-template-columns: repeat(auto-fill, minmax(56px, 1fr)); gap: var(--space-2); }
 
 .kimCell {
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 2px;
-  padding: 8px 0 6px;
+  padding: 10px 0 8px;
   border: 1px solid var(--cab-line);
   border-radius: var(--radius-input);
   background: var(--color-paper);
@@ -94,7 +94,8 @@
   transition: border-color 0.15s, transform 0.15s;
 }
 
-.kimCell:hover { border-color: var(--color-blue); }
+.kimCell:hover { border-color: var(--color-blue); box-shadow: var(--shadow-message); }
+.kimCell:focus-visible { outline: 3px solid var(--color-blue); outline-offset: 2px; }
 .kimCell:active { transform: translateY(1px); }
 .kimCell small { color: var(--color-muted); font-family: var(--font-body); font-weight: 700; font-size: var(--fs-2xs); }
 .kimCell[aria-pressed="true"] { border-color: var(--color-blue); background: var(--color-blue); color: var(--color-paper); }
@@ -108,35 +109,6 @@
 .kimCell[aria-pressed="true"].level-2,
 .kimCell[aria-pressed="true"].level-3 { background: var(--color-blue); }
 
-.task {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  padding: var(--space-3) var(--space-4);
-  border: 1px solid var(--cab-line);
-  border-radius: var(--radius-md);
-  background: var(--color-paper);
-}
-
-.taskMeta { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--space-2); }
-.taskQuestion { font-weight: 700; font-size: var(--fs-md); }
-.taskAnswer { color: var(--color-muted); font-weight: 700; font-size: var(--fs-xs); }
-.taskSource { color: var(--color-muted); font-weight: 700; font-size: var(--fs-2xs); }
-.tools { display: flex; gap: var(--space-1); }
-
-.tools button {
-  display: inline-flex;
-  align-items: center;
-  padding: 4px 8px;
-  border: 1px solid var(--cab-line);
-  border-radius: var(--radius-xs);
-  background: var(--color-paper);
-  font-weight: 800;
-  font-size: var(--fs-2xs);
-  transition: border-color 0.15s, color 0.15s;
-}
-
-.tools button:hover { border-color: var(--color-blue); color: var(--color-blue); }
 .empty { color: var(--color-muted); font-weight: 600; font-size: var(--fs-xs); }
 
 @media (max-width: 1180px) {

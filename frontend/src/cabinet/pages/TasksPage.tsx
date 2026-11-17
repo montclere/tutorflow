@@ -34,7 +34,9 @@ export function TasksPage({ tab }: { tab: TasksTab }) {
           </>
         }
       />
-      <Tabs label={text.tabsLabel} items={tabItems} selectedId={tab} />
+      <div className="mb-4">
+        <Tabs label={text.tabsLabel} items={tabItems} selectedId={tab} />
+      </div>
       {tab === "create" && <TasksCreate />}
       {tab === "bank" && <TasksBank />}
       {tab === "mine" && <TasksMine />}
