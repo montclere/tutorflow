@@ -16,9 +16,9 @@
 .progressCell { min-width: 130px; }
 .progressNote { color: var(--color-muted); font-weight: 700; font-size: var(--fs-2xs); }
 
-.gen { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.15fr); gap: 14px; align-items: start; }
-.chat { display: flex; flex-direction: column; gap: 12px; }
-.params { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.gen { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.15fr); gap: var(--space-4); align-items: start; }
+.chat { display: flex; flex-direction: column; gap: var(--space-3); }
+.params { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-2); }
 .param { padding: 8px 10px; border-radius: 11px; background: var(--color-mist); }
 
 .param label {
@@ -33,14 +33,14 @@
 .param select { width: 100%; padding: 2px 0; border: 0; outline: 0; background: transparent; font-weight: 800; }
 .param:focus-within { outline: 3px solid var(--focus-ring); outline-offset: 2px; }
 
-.msgs { display: flex; flex-direction: column; gap: 8px; max-height: 320px; padding: 2px; overflow: auto; }
+.msgs { display: flex; flex-direction: column; gap: var(--space-2); max-height: 320px; padding: 2px; overflow: auto; }
 .msg { max-width: 88%; padding: 10px 12px; border-radius: var(--radius-card-sm); font-weight: 600; font-size: var(--fs-sm); }
 .msgMe { align-self: flex-end; border-bottom-right-radius: 4px; background: var(--color-blue); color: var(--color-paper); }
 .msgAi { border-bottom-left-radius: 4px; background: var(--color-mist); }
 
 .composer {
   display: flex;
-  gap: 8px;
+  gap: var(--space-2);
   padding: 6px;
   border: 1px solid var(--cab-line);
   border-radius: var(--radius-card-sm);
@@ -50,7 +50,7 @@
 .composer input { flex: 1; padding: 8px 10px; border: 0; outline: 0; background: transparent; }
 .composer:focus-within { outline: 3px solid var(--focus-ring); outline-offset: 2px; }
 
-.actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 14px; }
+.actions { display: flex; flex-wrap: wrap; gap: var(--space-2); margin-top: 14px; }
 .note { margin: 12px 0 0; color: var(--color-muted); font-weight: 700; font-size: var(--fs-2xs); }
 
 .examSelect {
@@ -62,12 +62,12 @@
   font-size: var(--fs-2xs);
 }
 
-.review { display: grid; grid-template-columns: 280px minmax(0, 1fr); gap: 14px; align-items: start; }
+.review { display: grid; grid-template-columns: 280px minmax(0, 1fr); gap: var(--space-4); align-items: start; }
 
 .qitem {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: var(--space-3);
   width: 100%;
   padding: 10px;
   border: 1px solid transparent;
@@ -105,22 +105,22 @@
 .aibox b { font-size: var(--fs-sm); }
 .aibox p { margin: 2px 0 0; color: var(--color-muted); font-weight: 600; font-size: var(--fs-sm); }
 
-.trainer { display: grid; grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr); gap: 14px; align-items: start; }
-.exam { display: grid; grid-template-columns: minmax(0, 1fr) 250px; gap: 14px; align-items: start; }
+.trainer { display: grid; grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr); gap: var(--space-4); align-items: start; }
+.exam { display: grid; grid-template-columns: minmax(0, 1fr) 250px; gap: var(--space-4); align-items: start; }
 
 .qcard {
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: var(--space-4);
   padding: 22px;
   border: 1px solid var(--cab-line);
   border-radius: var(--radius-lg);
   background: var(--color-paper);
 }
 
-.qmeta { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px; }
+.qmeta { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--space-2); }
 .qtext { font-weight: 700; font-size: var(--fs-lg); }
-.answer { display: flex; gap: 8px; }
+.answer { display: flex; gap: var(--space-2); }
 
 .answer input {
   flex: 1;
@@ -142,7 +142,7 @@
 .streak {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: var(--space-3);
   padding: 14px;
   border-radius: var(--radius-md);
   background: var(--color-ink);

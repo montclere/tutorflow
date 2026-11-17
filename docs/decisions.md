@@ -21,6 +21,16 @@
 - Шрифты Google Fonts подключаются через `preload` без блокировки отрисовки: с блокирующей таблицей Lighthouse (мобильный) давал производительность 80.
 - Проверки: `frontend/scripts/check.sh` (npm ci, lint, типы, тесты, сборка), подключён к `./scripts/dev.sh check` и CI.
 
+## UI-1 — shadcn/ui, Tailwind и lucide-react в кабинете
+
+- Дата: 2026-11-17. Статус: принято вместе с новым «Обзором» репетитора.
+- Кабинет собран на компонентах shadcn/ui (`frontend/src/shared/ui/kit`): Card, Button, Badge, Tabs, Avatar, Progress, Tooltip, Separator, Sonner. Иконки — `lucide-react`, эмодзи в интерфейсе нет.
+- shadcn требует Tailwind v4. Подключены только слои `theme` и `utilities` (`frontend/src/styles/tailwind.css`), без сброса стилей (preflight): лендинг на CSS Modules не меняется. Тема shadcn — алиасы на токены из `tokens.css`, второй палитры нет. Остальной код по-прежнему на CSS Modules.
+- Альтернативы: писать компоненты вручную на Radix (больше кода без выгоды) и полный Tailwind с preflight (ломает стили лендинга).
+- Зависимости (версии зафиксированы): `lucide-react`, `radix-ui`, `sonner`, `class-variance-authority`, `clsx`, `tailwind-merge`; dev: `tailwindcss`, `@tailwindcss/vite`, `tw-animate-css`.
+- Маршрутизация — минимальный роутер на History API (`frontend/src/app/router.ts`), библиотека маршрутов не нужна.
+- Вместо `DropdownMenu` из списка shadcn подходящего места в «Обзоре» нет, компонент не подключён.
+
 ## SIGNUP — страница регистрации
 
 - Дата: 2026-11-17. Статус: интерфейс готов, серверной части нет.

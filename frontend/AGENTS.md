@@ -3,6 +3,7 @@
 Правила интерфейса; действуют также [общие правила](../AGENTS.md).
 
 - Стек — [INF-2](../docs/decisions.md); новые зависимости — по скиллу `add-dependency`.
+- Кабинет строй из компонентов `src/shared/ui/kit` (shadcn/ui, [UI-1](../docs/decisions.md)) и иконок `lucide-react`; эмодзи не используй.
 - Цвета, шрифты, кегли и радиусы бери только из `src/styles/tokens.css`; тексты — из `src/content/landing.ru.ts`, название и цены — из `src/config/site.ts`.
 - Логику держи в `model`-модулях с тестами, разметку — в компонентах.
 - Бери поведение из [behavior](../docs/behavior.md), API — из [контракта](../docs/frontend-api.md).

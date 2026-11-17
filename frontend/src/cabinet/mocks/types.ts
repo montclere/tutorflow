@@ -18,19 +18,41 @@ export type Person = { name: string; initials: string; tone: AvatarTone; roleLab
 
 export type StatData = { label: string; value: string; note: string; highlight?: boolean };
 
-export type TodayLesson = { time: string; studentId: string; subject: string; tone: Tone; status: string };
-export type Alert = { icon: string; title: string; note: string };
-export type StudentActivity = { studentId: string; solved: number; note: string };
 export type TaskStatus = { title: string; note: string; tone: Tone; status: string };
 
+export type LessonRow = {
+  time: string;
+  studentId: string;
+  subject: string;
+  statusLabel: string;
+  statusTone: Tone;
+  past: boolean;
+};
+
+export type AttentionKind = "lesson" | "review" | "debt" | "package" | "inactive";
+export type AttentionItem = { kind: AttentionKind; title: string; note: string };
+
+export type WeekDay = { label: string; lessons: number; today?: boolean };
+export type WeekPlan = { days: WeekDay[]; capacity: number; freeWindows: string[] };
+
+export type ExamPrep = {
+  studentId: string;
+  exam: string;
+  daysLeft: number;
+  weakNumber?: number;
+  inactiveDays?: number;
+  readiness: number;
+  delta: number;
+};
+
 export type TeacherOverview = {
-  greeting: string;
+  teacherName: string;
   date: string;
-  stats: StatData[];
-  lessons: TodayLesson[];
-  alerts: Alert[];
-  trainerWeek: StudentActivity[];
-  tasksWeek: TaskStatus[];
+  today: LessonRow[];
+  tomorrow: LessonRow[];
+  attention: AttentionItem[];
+  week: WeekPlan;
+  exams: ExamPrep[];
 };
 
 export type ScheduleEvent = { day: number; hour: number; studentId: string; tone: "blue" | "ok" | "bad" };

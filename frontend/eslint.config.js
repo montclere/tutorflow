@@ -11,6 +11,10 @@ export default tseslint.config(
   reactHooks.configs.flat.recommended,
   jsxA11y.flatConfigs.recommended,
   {
+    files: ["src/shared/ui/kit/**"],
+    rules: { "jsx-a11y/heading-has-content": "off" },
+  },
+  {
     languageOptions: { globals: globals.browser },
     rules: {
       "no-console": "error",

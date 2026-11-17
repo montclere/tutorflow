@@ -1,3 +1,4 @@
+import { Plus } from "lucide-react";
 import { cabinet } from "../content/cabinet.ru";
 import { getFinance, getStudent } from "../data";
 import { formatSigned } from "../model/format";
@@ -23,7 +24,7 @@ export function FinancePage() {
         actions={
           <>
             <Button onClick={() => notifySoon(text.export)}>{text.export}</Button>
-            <Button variant="primary" onClick={() => notifySoon(text.addPayment)}>
+            <Button variant="primary" icon={Plus} onClick={() => notifySoon(text.addPayment)}>
               {text.addPayment}
             </Button>
           </>

@@ -39,10 +39,12 @@ a {
   color: inherit;
 }
 
-button,
-input {
-  font: inherit;
-  color: inherit;
+@layer base {
+  button,
+  input {
+    font: inherit;
+    color: inherit;
+  }
 }
 
 button {

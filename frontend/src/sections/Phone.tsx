@@ -1,7 +1,15 @@
+import { Bell, BookOpen, CircleCheck, CreditCard, type LucideIcon } from "lucide-react";
 import { landing } from "../content/landing.ru";
 import styles from "./Telegram.module.css";
 
 const { phoneLabel, bot, messages } = landing.telegram;
+
+const icons: Record<(typeof messages)[number]["icon"], LucideIcon> = {
+  bell: Bell,
+  book: BookOpen,
+  done: CircleCheck,
+  card: CreditCard,
+};
 
 export function Phone() {
   return (
@@ -15,9 +23,14 @@ export function Phone() {
           </span>
         </div>
         <div className={styles.chat}>
-          {messages.map((message) => (
+          {messages.map((message) => {
+            const Icon = icons[message.icon];
+            return (
             <div key={message.title} className={styles.message}>
-              <b>{message.title}</b>
+              <b>
+                <Icon className={styles.messageIcon} size={16} aria-hidden="true" />
+                {message.title}
+              </b>
               {message.meta && <small>{message.meta}</small>}
               {message.buttons.length > 0 && (
                 <div className={styles.keyboard}>
@@ -29,7 +42,8 @@ export function Phone() {
                 </div>
               )}
             </div>
-          ))}
+            );
+          })}
         </div>
       </div>
     </div>

@@ -1,3 +1,4 @@
+import { X } from "lucide-react";
 import { useEffect, useRef, type FormEvent } from "react";
 import { cabinet } from "../content/cabinet.ru";
 import { getTaskLab } from "../data";
@@ -82,7 +83,7 @@ export function TasksCreate() {
                   <ToolButton onClick={() => notifySoon(text.draft.harder)}>{text.draft.harder}</ToolButton>
                   <ToolButton onClick={() => notifySoon(text.draft.edit)}>{text.draft.edit}</ToolButton>
                   <ToolButton label={text.draft.remove} onClick={() => notifySoon(text.draft.remove)}>
-                    ✕
+                    <X size={14} aria-hidden="true" />
                   </ToolButton>
                 </>
               }

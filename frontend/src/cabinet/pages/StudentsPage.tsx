@@ -1,3 +1,4 @@
+import { Plus } from "lucide-react";
 import { cabinet } from "../content/cabinet.ru";
 import { getStudents } from "../data";
 import { formatSigned } from "../model/format";
@@ -30,7 +31,7 @@ export function StudentsPage() {
         actions={
           <>
             <Button onClick={() => notifySoon(text.import)}>{text.import}</Button>
-            <Button variant="primary" onClick={() => notifySoon(text.invite)}>
+            <Button variant="primary" icon={Plus} onClick={() => notifySoon(text.invite)}>
               {text.invite}
             </Button>
           </>

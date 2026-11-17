@@ -1,3 +1,4 @@
+import { Check, X } from "lucide-react";
 import { useState } from "react";
 import { navigate } from "../../app/router";
 import { studentRoutes } from "../../config/routes";
@@ -5,10 +6,12 @@ import { cabinet } from "../content/cabinet.ru";
 import { getHomework } from "../data";
 import { Button } from "../ui/Button";
 import { Card } from "../ui/Card";
+import { ICON_SIZE } from "../ui/Icon";
 import { ListRow } from "../ui/ListRow";
 import { useNotifier } from "../ui/Notifications";
 import { PageHead } from "../ui/PageHead";
 import { Pill } from "../ui/Pill";
+import { RowList } from "../ui/RowList";
 import { Tabs } from "../ui/Tabs";
 import ui from "../ui/ui.module.css";
 
@@ -56,9 +59,16 @@ export function HomeworkPage() {
       {tab === "done" && (
         <div className={`${ui.grid} ${ui.g2}`}>
           <Card title={data.done.title} subtitle={data.done.checkedOn} action={<Pill tone="ok">{data.done.score}</Pill>}>
-            {data.done.results.map((result) => (
-              <ListRow key={result.title} lead={<Pill tone={result.ok ? "ok" : "bad"}>{result.ok ? "✓" : "✕"}</Pill>} title={result.title} note={result.note} />
-            ))}
+            <RowList>
+              {data.done.results.map((result) => (
+                <ListRow
+                  key={result.title}
+                  lead={<Pill tone={result.ok ? "ok" : "bad"}>{result.ok ? <Check size={ICON_SIZE - 6} aria-label="Верно" /> : <X size={ICON_SIZE - 6} aria-label="Неверно" />}</Pill>}
+                  title={result.title}
+                  note={result.note}
+                />
+              ))}
+            </RowList>
             <div className={ui.headActions}>
               <Button variant="lime" onClick={() => notifySoon(text.mistakes)}>
                 {text.mistakes}

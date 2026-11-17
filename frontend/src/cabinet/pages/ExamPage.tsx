@@ -8,6 +8,7 @@ import { ListRow } from "../ui/ListRow";
 import { useNotifier } from "../ui/Notifications";
 import { PageHead } from "../ui/PageHead";
 import { Pill } from "../ui/Pill";
+import { RowList } from "../ui/RowList";
 import { RichText } from "../ui/RichText";
 import ui from "../ui/ui.module.css";
 import { useCountdown } from "./useCountdown";
@@ -33,9 +34,11 @@ export function ExamPage() {
         <PageHead title={text.title} subtitle={text.subtitle} />
         <div className={`${ui.grid} ${ui.g2}`}>
           <Card title={data.title} subtitle={data.subtitle} action={<Pill tone="lime">{text.badge}</Pill>}>
-            {data.parts.map((part) => (
-              <ListRow key={part.title} title={part.title} note={part.note} />
-            ))}
+            <RowList>
+              {data.parts.map((part) => (
+                <ListRow key={part.title} title={part.title} note={part.note} />
+              ))}
+            </RowList>
             <div className={styles.actions}>
               <Button variant="primary" onClick={() => setStarted(true)}>
                 {text.start}
@@ -44,11 +47,13 @@ export function ExamPage() {
             </div>
           </Card>
           <Card title={text.historyTitle}>
-            {data.history.map((item) => (
-              <ListRow key={item.title} title={item.title} note={item.date}>
-                <Pill tone={item.tone}>{item.score}</Pill>
-              </ListRow>
-            ))}
+            <RowList>
+              {data.history.map((item) => (
+                <ListRow key={item.title} title={item.title} note={item.date}>
+                  <Pill tone={item.tone}>{item.score}</Pill>
+                </ListRow>
+              ))}
+            </RowList>
           </Card>
         </div>
       </>

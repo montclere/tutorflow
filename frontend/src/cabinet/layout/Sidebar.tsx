@@ -2,7 +2,7 @@ import { siteConfig } from "../../config/site";
 import { cabinet, type Role } from "../content/cabinet.ru";
 import { CabinetLink } from "../ui/CabinetLink";
 import { cx } from "../ui/cx";
-import { Icon } from "../ui/Icon";
+import { NavIcon } from "../ui/Icon";
 import { navigate } from "../../app/router";
 import { routes } from "../../config/routes";
 import styles from "./layout.module.css";
@@ -39,7 +39,7 @@ export function Sidebar({ role, pathname, open, onClose }: Props) {
             aria-current={isActive(pathname, item.path, item.matchPrefix) ? "page" : undefined}
             onClick={onClose}
           >
-            <Icon name={item.icon} />
+            <NavIcon name={item.icon} />
             {item.label}
             {item.badge && <span className={styles.count}>{item.badge}</span>}
           </CabinetLink>

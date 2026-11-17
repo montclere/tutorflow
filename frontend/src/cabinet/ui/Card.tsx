@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
+import { Card as KitCard, CardAction, CardContent, CardDescription, CardHeader, CardTitle } from "@/shared/ui/kit/card";
 import { cx } from "./cx";
-import styles from "./ui.module.css";
 
 type Props = {
   title?: string;
@@ -14,17 +14,15 @@ type Props = {
 
 export function Card({ title, subtitle, action, children, className, compact, scroll }: Props) {
   return (
-    <section className={cx(styles.card, compact && styles.cardCompact, scroll && styles.tableWrap, className)}>
+    <KitCard className={cx(compact && "py-2", scroll && "overflow-x-auto", className)}>
       {(title || action) && (
-        <div className={styles.cardHead}>
-          <div>
-            {title && <h2 className={styles.cardTitle}>{title}</h2>}
-            {subtitle && <p className={styles.cardSub}>{subtitle}</p>}
-          </div>
-          {action}
-        </div>
+        <CardHeader>
+          {title && <CardTitle>{title}</CardTitle>}
+          {subtitle && <CardDescription>{subtitle}</CardDescription>}
+          {action && <CardAction>{action}</CardAction>}
+        </CardHeader>
       )}
-      {children}
-    </section>
+      {children && <CardContent className={compact ? "px-2" : undefined}>{children}</CardContent>}
+    </KitCard>
   );
 }

@@ -1,6 +1,7 @@
+import { ChevronLeft, ChevronRight, Plus } from "lucide-react";
 import { cabinet } from "../content/cabinet.ru";
 import { getSchedule, getStudent } from "../data";
-import { Button } from "../ui/Button";
+import { Button, IconButton } from "../ui/Button";
 import { Card } from "../ui/Card";
 import { DataTable } from "../ui/DataTable";
 import { useNotifier } from "../ui/Notifications";
@@ -21,13 +22,9 @@ export function SchedulePage() {
         subtitle={data.range}
         actions={
           <>
-            <Button aria-label={text.prevLabel} onClick={() => notifySoon(text.prevLabel)}>
-              {text.prev}
-            </Button>
-            <Button aria-label={text.nextLabel} onClick={() => notifySoon(text.nextLabel)}>
-              {text.next}
-            </Button>
-            <Button variant="primary" onClick={() => notifySoon(text.addLesson)}>
+            <IconButton icon={ChevronLeft} label={text.prevLabel} onClick={() => notifySoon(text.prevLabel)} />
+            <IconButton icon={ChevronRight} label={text.nextLabel} onClick={() => notifySoon(text.nextLabel)} />
+            <Button variant="primary" icon={Plus} onClick={() => notifySoon(text.addLesson)}>
               {text.addLesson}
             </Button>
           </>

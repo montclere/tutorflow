@@ -4,6 +4,7 @@ import { App } from "./app/App";
 import { usePathname } from "./app/router";
 import { CabinetApp, isCabinetPath } from "./cabinet/CabinetApp";
 import "./styles/global.css";
+import "./styles/tailwind.css";
 
 function Root() {
   const pathname = usePathname().replace(/(.)\/$/, "$1");

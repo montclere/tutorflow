@@ -1,3 +1,4 @@
+import { Plus } from "lucide-react";
 import { navigate } from "../../app/router";
 import { teacherRoutes } from "../../config/routes";
 import { cabinet } from "../content/cabinet.ru";
@@ -27,7 +28,7 @@ export function TasksPage({ tab }: { tab: TasksTab }) {
         actions={
           <>
             <Button onClick={() => notifySoon(text.manual)}>{text.manual}</Button>
-            <Button variant="primary" onClick={() => navigate(teacherRoutes.tasksCreate)}>
+            <Button variant="primary" icon={Plus} onClick={() => navigate(teacherRoutes.tasksCreate)}>
               {text.withAi}
             </Button>
           </>

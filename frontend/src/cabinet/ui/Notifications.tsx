@@ -1,36 +1,29 @@
-import { createContext, useCallback, useContext, useEffect, useRef, useState, type ReactNode } from "react";
+import type { ReactNode } from "react";
+import { toast } from "sonner";
+import { Toaster } from "@/shared/ui/kit/sonner";
+import { TooltipProvider } from "@/shared/ui/kit/tooltip";
 import { cabinet } from "../content/cabinet.ru";
-import styles from "./ui.module.css";
 
-const TOAST_MS = 2600;
 type Notifier = { notify: (text: string) => void; notifySoon: (label: string) => void };
 
-const NotifyContext = createContext<Notifier>({ notify: () => undefined, notifySoon: () => undefined });
+const notifier: Notifier = {
+  notify: (text) => {
+    toast(text);
+  },
+  notifySoon: (label) => {
+    toast(cabinet.notify.soon(label));
+  },
+};
 
-export function useNotifier() {
-  return useContext(NotifyContext);
+export function useNotifier(): Notifier {
+  return notifier;
 }
 
 export function NotificationsProvider({ children }: { children: ReactNode }) {
-  const [message, setMessage] = useState<string | null>(null);
-  const timer = useRef<number | undefined>(undefined);
-
-  const notify = useCallback((text: string) => {
-    window.clearTimeout(timer.current);
-    setMessage(text);
-    timer.current = window.setTimeout(() => setMessage(null), TOAST_MS);
-  }, []);
-
-  const notifySoon = useCallback((label: string) => notify(cabinet.notify.soon(label)), [notify]);
-
-  useEffect(() => () => window.clearTimeout(timer.current), []);
-
   return (
-    <NotifyContext.Provider value={{ notify, notifySoon }}>
+    <TooltipProvider delayDuration={300}>
       {children}
-      <div className={styles.toastRegion} role="status" aria-live="polite">
-        {message && <div className={styles.toast}>{message}</div>}
-      </div>
-    </NotifyContext.Provider>
+      <Toaster position="bottom-right" />
+    </TooltipProvider>
   );
 }

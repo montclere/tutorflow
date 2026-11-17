@@ -1,34 +1,44 @@
 import type { Finance, Review, Schedule, TeacherOverview } from "./types";
 
 export const teacherOverview: TeacherOverview = {
-  greeting: "Добрый день, Анна",
-  date: "Вторник, 17 ноября · 5 уроков, 4 работы на проверку",
-  stats: [
-    { label: "Получено за ноябрь", value: "82 400 ₽", note: "+12% к октябрю", highlight: true },
-    { label: "Заработано уроками", value: "76 000 ₽", note: "42 урока" },
-    { label: "Должны", value: "1 200 ₽", note: "1 ученик" },
-    { label: "На проверке", value: "4", note: "2 с подсказкой ИИ" },
+  teacherName: "Анна",
+  date: "Вторник, 17 ноября",
+  today: [
+    { time: "11:00", studentId: "orlova", subject: "Математика · ОГЭ", statusLabel: "Проведён", statusTone: "ok", past: true },
+    { time: "15:00", studentId: "ivanov", subject: "Математика · ЕГЭ", statusLabel: "через 25 мин", statusTone: "blue", past: false },
+    { time: "16:30", studentId: "smirnova", subject: "Английский · B1", statusLabel: "Оплачено", statusTone: "ok", past: false },
+    { time: "18:00", studentId: "petrov", subject: "Физика · 10 класс", statusLabel: "Долг", statusTone: "bad", past: false },
+    { time: "19:30", studentId: "volkova", subject: "Русский язык · ОГЭ", statusLabel: "Оплачено", statusTone: "ok", past: false },
   ],
-  lessons: [
-    { time: "15:00", studentId: "ivanov", subject: "Математика · ЕГЭ", tone: "blue", status: "Скоро" },
-    { time: "16:30", studentId: "smirnova", subject: "Английский · B1", tone: "ok", status: "Оплачено" },
-    { time: "18:00", studentId: "petrov", subject: "Физика · 10 класс", tone: "bad", status: "Долг" },
+  tomorrow: [
+    { time: "14:00", studentId: "smirnova", subject: "Английский · B1", statusLabel: "Оплачено", statusTone: "ok", past: false },
+    { time: "16:00", studentId: "ivanov", subject: "Математика · ЕГЭ", statusLabel: "Оплачено", statusTone: "ok", past: false },
+    { time: "18:30", studentId: "petrov", subject: "Физика · 10 класс", statusLabel: "Долг", statusTone: "bad", past: false },
   ],
-  alerts: [
-    { icon: "⏱", title: "Отметьте вчерашний урок", note: "Екатерина Орлова · 18:00" },
-    { icon: "💳", title: "Долг 1 200 ₽", note: "Дмитрий Петров · напомнить в Telegram" },
-    { icon: "📝", title: "4 работы на проверку", note: "ИИ уже предложил оценки" },
-    { icon: "📦", title: "Пакет заканчивается", note: "Мария Смирнова · остался 1 урок" },
+  attention: [
+    { kind: "lesson", title: "Отметьте вчерашний урок", note: "Екатерина Орлова · 18:00" },
+    { kind: "review", title: "4 работы на проверку", note: "ИИ уже предложил оценки" },
+    { kind: "debt", title: "Долг 1 200 ₽", note: "Дмитрий Петров" },
+    { kind: "package", title: "Пакет заканчивается", note: "Мария Смирнова · остался 1 урок" },
+    { kind: "inactive", title: "Не занимается 6 дней", note: "Полина Волкова" },
   ],
-  trainerWeek: [
-    { studentId: "ivanov", solved: 34, note: "слабое место: №13 · 40%" },
-    { studentId: "orlova", solved: 21, note: "слабое место: №15 · 52%" },
-    { studentId: "volkova", solved: 9, note: "реже обычного" },
-  ],
-  tasksWeek: [
-    { title: "Квадратные уравнения", note: "Александр · до пт", tone: "warn", status: "Не сдано" },
-    { title: "Past Perfect", note: "Мария · сдано", tone: "blue", status: "Проверить" },
-    { title: "Вариант ОГЭ №3", note: "Екатерина · 21/31", tone: "ok", status: "Проверено" },
+  week: {
+    days: [
+      { label: "Пн", lessons: 3 },
+      { label: "Вт", lessons: 5, today: true },
+      { label: "Ср", lessons: 2 },
+      { label: "Чт", lessons: 3 },
+      { label: "Пт", lessons: 4 },
+      { label: "Сб", lessons: 1 },
+      { label: "Вс", lessons: 0 },
+    ],
+    capacity: 24,
+    freeWindows: ["Ср 14:00–17:00", "Чт 17:00–19:00", "Сб 12:00–15:00"],
+  },
+  exams: [
+    { studentId: "ivanov", exam: "ЕГЭ профиль", daysLeft: 191, weakNumber: 13, readiness: 61, delta: 4 },
+    { studentId: "orlova", exam: "ОГЭ математика", daysLeft: 197, weakNumber: 21, readiness: 71, delta: 2 },
+    { studentId: "volkova", exam: "ОГЭ русский язык", daysLeft: 197, inactiveDays: 6, readiness: 84, delta: -3 },
   ],
 };
 

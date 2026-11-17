@@ -1,8 +1,10 @@
+import { Bell, Menu, Search } from "lucide-react";
 import { type FormEvent } from "react";
 import { studentPerson, teacherPerson } from "../mocks/people";
 import { cabinet, type Role } from "../content/cabinet.ru";
 import { Avatar } from "../ui/Avatar";
-import { cx } from "../ui/cx";
+import { IconButton } from "../ui/Button";
+import { ICON_SIZE } from "../ui/Icon";
 import { useNotifier } from "../ui/Notifications";
 import styles from "./layout.module.css";
 
@@ -20,25 +22,24 @@ export function Topbar({ role, menuOpen, onToggleMenu }: Props) {
   return (
     <header className={styles.top}>
       <div className={styles.topLeft}>
-        <button
-          type="button"
-          className={cx(styles.iconBtn, styles.burger)}
-          aria-label={menuOpen ? cabinet.shell.closeMenu : cabinet.shell.openMenu}
+        <IconButton
+          icon={Menu}
+          label={menuOpen ? cabinet.shell.closeMenu : cabinet.shell.openMenu}
+          className={styles.burger}
           aria-expanded={menuOpen}
           aria-controls="cabinet-menu"
           onClick={onToggleMenu}
-        >
-          ☰
-        </button>
+        />
         <form className={styles.search} role="search" onSubmit={search}>
-          <span aria-hidden="true">⌕</span>
+          <Search size={ICON_SIZE} aria-hidden="true" />
           <input placeholder={cabinet.shell.searchPlaceholder} aria-label={cabinet.shell.searchLabel} />
         </form>
       </div>
       <div className={styles.me}>
-        <button type="button" className={styles.iconBtn} aria-label={cabinet.shell.notificationsLabel} onClick={() => notifySoon(cabinet.shell.notificationsLabel)}>
-          🔔<i className={styles.dot} />
-        </button>
+        <span className={styles.bell}>
+          <IconButton icon={Bell} label={cabinet.shell.notificationsLabel} onClick={() => notifySoon(cabinet.shell.notificationsLabel)} />
+          <i className={styles.dot} aria-hidden="true" />
+        </span>
         <Avatar initials={person.initials} tone={person.tone} />
         <div className={styles.who}>
           <b>{person.name}</b>

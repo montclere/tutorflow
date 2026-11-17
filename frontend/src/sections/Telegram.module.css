@@ -157,3 +157,8 @@
     display: none;
   }
 }
+
+.messageIcon {
+  margin-right: 6px;
+  vertical-align: -3px;
+}

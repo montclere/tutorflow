@@ -1,13 +1,16 @@
+import { Star, Zap } from "lucide-react";
 import { navigate } from "../../app/router";
 import { studentRoutes } from "../../config/routes";
 import { cabinet } from "../content/cabinet.ru";
 import { getStudentHome } from "../data";
 import { Button, LinkButton } from "../ui/Button";
 import { Card } from "../ui/Card";
+import { ICON_SIZE } from "../ui/Icon";
 import { ListRow } from "../ui/ListRow";
 import { PageHead } from "../ui/PageHead";
 import { Pill } from "../ui/Pill";
 import { ProgressBar } from "../ui/ProgressBar";
+import { RowList } from "../ui/RowList";
 import { StatGrid } from "../ui/Stat";
 import ui from "../ui/ui.module.css";
 
@@ -22,7 +25,7 @@ export function StudentHomePage() {
         title={data.greeting}
         subtitle={data.subtitle}
         actions={
-          <Button variant="lime" onClick={() => navigate(studentRoutes.trainer)}>
+          <Button variant="lime" icon={Zap} onClick={() => navigate(studentRoutes.trainer)}>
             {text.trainer}
           </Button>
         }
@@ -35,26 +38,30 @@ export function StudentHomePage() {
           subtitle={text.homeworkSub}
           action={<LinkButton onClick={() => navigate(studentRoutes.tasks)}>{cabinet.common.all}</LinkButton>}
         >
-          {data.homework.map((task) => (
-            <ListRow key={task.title} title={task.title} note={task.note}>
-              <Pill tone={task.tone}>{task.status}</Pill>
-            </ListRow>
-          ))}
+          <RowList>
+            {data.homework.map((task) => (
+              <ListRow key={task.title} title={task.title} note={task.note}>
+                <Pill tone={task.tone}>{task.status}</Pill>
+              </ListRow>
+            ))}
+          </RowList>
         </Card>
 
         <Card title={text.weakTitle} subtitle={text.weakSub}>
-          {data.weak.map((item) => (
+          <RowList>
+            {data.weak.map((item) => (
             <ListRow
               key={item.number}
               lead={<Pill tone="bad">{`№${item.number}`}</Pill>}
               title={item.topic}
-              note={<ProgressBar percent={item.percent} danger />}
+              note={<ProgressBar percent={item.percent} tone="danger" />}
             >
               <Button size="sm" onClick={() => navigate(studentRoutes.trainer)}>
                 {cabinet.common.solve}
               </Button>
             </ListRow>
-          ))}
+            ))}
+          </RowList>
         </Card>
       </div>
 
@@ -62,7 +69,7 @@ export function StudentHomePage() {
         <Card title={text.feedbackTitle}>
           <div className={`${ui.alert} ${ui.alertLime}`}>
             <div className={ui.alertIcon} aria-hidden="true">
-              ⭐
+              <Star size={ICON_SIZE} aria-hidden="true" />
             </div>
             <div>
               <b>{data.feedback.title}</b>

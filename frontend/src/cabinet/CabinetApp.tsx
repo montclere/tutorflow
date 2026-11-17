@@ -4,7 +4,7 @@ import { CabinetShell } from "./layout/CabinetShell";
 import { ExamPage } from "./pages/ExamPage";
 import { FinancePage } from "./pages/FinancePage";
 import { HomeworkPage } from "./pages/HomeworkPage";
-import { OverviewPage } from "./pages/OverviewPage";
+import { OverviewPage } from "./pages/overview/OverviewPage";
 import { ProgressPage } from "./pages/ProgressPage";
 import { ReviewPage } from "./pages/ReviewPage";
 import { SchedulePage } from "./pages/SchedulePage";

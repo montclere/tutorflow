@@ -1,12 +1,7 @@
-import { cx } from "./cx";
-import styles from "./ui.module.css";
+import { Progress } from "@/shared/ui/kit/progress";
 
-type Props = { percent: number; danger?: boolean };
+type Props = { percent: number; tone?: "default" | "success" | "danger" | "warning"; label?: string };
 
-export function ProgressBar({ percent, danger }: Props) {
-  return (
-    <div className={styles.bar} role="presentation">
-      <span className={cx(danger && styles.barDanger)} style={{ width: `${percent}%` }} />
-    </div>
-  );
+export function ProgressBar({ percent, tone, label }: Props) {
+  return <Progress value={percent} tone={tone} aria-label={label} aria-hidden={label ? undefined : true} />;
 }

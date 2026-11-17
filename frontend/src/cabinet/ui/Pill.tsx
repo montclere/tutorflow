@@ -1,8 +1,16 @@
 import type { ReactNode } from "react";
+import { Badge } from "@/shared/ui/kit/badge";
 import type { Tone } from "../mocks/types";
-import { cx } from "./cx";
-import styles from "./ui.module.css";
+
+const variants = {
+  blue: "default",
+  lime: "highlight",
+  ok: "success",
+  bad: "danger",
+  warn: "warning",
+  grey: "muted",
+} as const;
 
 export function Pill({ tone, children }: { tone: Tone; children: ReactNode }) {
-  return <span className={cx(styles.pill, styles[`pill-${tone}`])}>{children}</span>;
+  return <Badge variant={variants[tone]}>{children}</Badge>;
 }

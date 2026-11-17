@@ -254,7 +254,8 @@ export const landing = {
     bot: { avatar: "tf", name: brand, status: "бот" },
     messages: [
       {
-        title: "🔔 Урок сегодня в 16:00",
+        icon: "bell" as const,
+        title: "Урок сегодня в 16:00",
         meta: "Математика · Анна К.",
         buttons: [
           { label: "Войти", accent: false },
@@ -262,17 +263,20 @@ export const landing = {
         ],
       },
       {
-        title: "📚 Новое ДЗ",
+        icon: "book" as const,
+        title: "Новое ДЗ",
         meta: "Квадратные уравнения · до пятницы",
         buttons: [{ label: "Открыть", accent: false }],
       },
       {
-        title: "✅ ДЗ проверено",
+        icon: "done" as const,
+        title: "ДЗ проверено",
         meta: "9 из 10 · «Отлично, обрати внимание на знаки»",
         buttons: [],
       },
       {
-        title: "💳 В пакете остался 1 урок",
+        icon: "card" as const,
+        title: "В пакете остался 1 урок",
         meta: null,
         buttons: [{ label: "Продлить", accent: true }],
       },

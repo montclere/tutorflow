@@ -1,4 +1,6 @@
 import { routes, studentRoutes, teacherRoutes } from "../../config/routes.ts";
+import { plural } from "../model/plural.ts";
+import type { AttentionKind } from "../mocks/types.ts";
 
 export type IconName =
   | "home"
@@ -10,6 +12,9 @@ export type IconName =
   | "bolt"
   | "flag"
   | "chart";
+
+const lessonForms: [string, string, string] = ["урок", "урока", "уроков"];
+const dayForms: [string, string, string] = ["день", "дня", "дней"];
 
 export type Role = "teacher" | "student";
 
@@ -66,33 +71,66 @@ export const cabinet = {
   },
   teacher: {
     overview: {
-      addTask: "＋ Задание",
-      addLesson: "＋ Урок",
-      todayTitle: "Сегодня",
-      todaySub: "Ближайшие уроки",
-      join: "Войти",
-      alertsTitle: "Требует внимания",
-      alertsSub: "Не упустите",
-      trainerTitle: "Тренажёр за неделю",
-      trainerSub: "Сколько ученики решали сами",
-      tasksTitle: "Задания",
-      tasksSub: "Выданы на этой неделе",
-      solved: (count: number) => `${count} задач`,
+      greeting: (name: string) => `Добрый день, ${name}`,
+      addTask: "Задание",
+      addLesson: "Урок",
+      today: {
+        title: "Сегодня",
+        tabsLabel: "День",
+        days: [
+          { id: "today", label: "Сегодня" },
+          { id: "tomorrow", label: "Завтра" },
+        ] as const,
+        tabLabel: (label: string, count: number) => `${label} · ${count}`,
+        join: "Войти",
+        empty: "Уроков нет",
+      },
+      attention: {
+        title: "Требует внимания",
+        empty: "Всё в порядке",
+        maxItems: 5,
+        actions: {
+          lesson: "Проведён",
+          review: "Проверить",
+          debt: "Напомнить",
+          package: "Продлить",
+          inactive: "Написать",
+        } as Record<AttentionKind, string>,
+        lessonDone: "Урок отмечен проведённым",
+      },
+      week: {
+        title: "Неделя",
+        summary: (lessons: number, load: number) => `${lessons} ${plural(lessons, lessonForms)} · загрузка ${load}%`,
+        chartLabel: "Уроков по дням недели",
+        barLabel: (day: string, count: number) => `${day}: ${count} ${plural(count, lessonForms)}`,
+        freeWindows: (windows: string[]) => (windows.length ? `Свободно: ${windows.join(" · ")}` : "Свободных окон нет"),
+        share: "Поделиться",
+        shareIntro: "Свободные окна на неделе:",
+        copied: "Окна скопированы",
+        copyFailed: "Не удалось скопировать",
+      },
+      exams: {
+        title: "Подготовка к экзаменам",
+        name: (student: string, exam: string) => `${student} · ${exam}`,
+        progress: (days: number, weak: number) => `${days} ${plural(days, dayForms)} · слабое место №${weak}`,
+        inactive: (days: number) => `не занимается ${days} ${plural(days, dayForms)}`,
+        readinessLabel: (name: string) => `Готовность: ${name}`,
+        trendUp: "Рост",
+        trendDown: "Падение",
+      },
     },
     schedule: {
       title: "Расписание",
-      prev: "←",
-      next: "→",
       prevLabel: "Предыдущая неделя",
       nextLabel: "Следующая неделя",
-      addLesson: "＋ Урок",
+      addLesson: "Урок",
       tableLabel: "Расписание на неделю",
     },
     students: {
       title: "Ученики",
       subtitle: "5 активных",
       import: "Импорт",
-      invite: "＋ Пригласить",
+      invite: "Пригласить",
       columns: ["Ученик", "Предмет", "Уроков", "Баланс", "Прогресс", ""],
       progress: (percent: number) => `${percent}% тем освоено`,
     },
@@ -100,7 +138,7 @@ export const cabinet = {
       title: "Задания",
       subtitle: "Создавайте с ИИ, берите из банка, храните своё",
       manual: "Вручную",
-      withAi: "＋ С ИИ",
+      withAi: "С ИИ",
       tabsLabel: "Раздел заданий",
       tabs: [
         { label: "Создать с ИИ", path: teacherRoutes.tasksCreate },
@@ -156,14 +194,14 @@ export const cabinet = {
     finance: {
       title: "Финансы",
       export: "Экспорт",
-      addPayment: "＋ Оплата",
+      addPayment: "Оплата",
       operations: "Операции",
       columns: ["Дата", "Ученик", "Операция", "Сумма"],
     },
   },
   student: {
     home: {
-      trainer: "⚡ Тренажёр",
+      trainer: "Тренажёр",
       homeworkTitle: "Мои задания",
       homeworkSub: "От преподавателя",
       weakTitle: "Подтянуть",
