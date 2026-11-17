@@ -5,8 +5,8 @@ import { formatLongDay } from "../../model/dates";
 import { groupByDate, isPast } from "../../model/lessons";
 import { Avatar } from "../../ui/Avatar";
 import { cx } from "../../ui/cx";
-import { lessonTime, PaymentBadge, RecurringIcon } from "./LessonMeta";
-import { lessonColorStyle, type ColorMode } from "./scheduleStyle";
+import { lessonTime, PaymentBadge } from "./LessonMeta";
+import { lessonColorStyle } from "./scheduleStyle";
 import styles from "./schedule.module.css";
 
 const text = cabinet.teacher.schedule;
@@ -15,11 +15,10 @@ type Props = {
   data: ScheduleData;
   lessons: ScheduleLesson[];
   filtered: boolean;
-  colorMode: ColorMode;
   onOpen: (lesson: ScheduleLesson) => void;
 };
 
-export function ListView({ data, lessons, filtered, colorMode, onOpen }: Props) {
+export function ListView({ data, lessons, filtered, onOpen }: Props) {
   const groups = groupByDate(lessons);
 
   if (groups.length === 0) {
@@ -40,7 +39,7 @@ export function ListView({ data, lessons, filtered, colorMode, onOpen }: Props) 
                   key={lesson.id}
                   type="button"
                   className={cx(styles.lessonRow, past && styles.lessonRowPast)}
-                  style={lessonColorStyle(student, colorMode)}
+                  style={lessonColorStyle(student)}
                   onClick={() => onOpen(lesson)}
                 >
                   <span className={styles.rowTime}>{lessonTime(lesson)}</span>
@@ -51,8 +50,7 @@ export function ListView({ data, lessons, filtered, colorMode, onOpen }: Props) 
                     <b>{student.name}</b>
                     <span>{student.subject}</span>
                   </span>
-                  {lesson.recurring && <RecurringIcon />}
-                  <PaymentBadge payment={student.payment} />
+                  {student.payment !== "paid" && <PaymentBadge payment={student.payment} />}
                 </button>
               );
             })}

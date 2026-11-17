@@ -10,8 +10,8 @@ import { Card } from "../../ui/Card";
 import { cx } from "../../ui/cx";
 import { useNotifier } from "../../ui/Notifications";
 import { Tabs } from "../../ui/Tabs";
-import { lessonTime, PaymentBadge, RecurringIcon } from "./LessonMeta";
-import { lessonColorStyle, type ColorMode } from "./scheduleStyle";
+import { lessonTime, PaymentBadge } from "./LessonMeta";
+import { lessonColorStyle } from "./scheduleStyle";
 import styles from "./schedule.module.css";
 
 const text = cabinet.teacher.schedule;
@@ -20,7 +20,6 @@ type Props = {
   data: ScheduleData;
   lessons: ScheduleLesson[];
   date: string;
-  colorMode: ColorMode;
   onDate: (date: string) => void;
   onOpen: (lesson: ScheduleLesson) => void;
 };
@@ -34,7 +33,7 @@ function Fact({ label, value }: { label: string; value: string }) {
   );
 }
 
-export function DayView({ data, lessons, date, colorMode, onDate, onOpen }: Props) {
+export function DayView({ data, lessons, date, onDate, onOpen }: Props) {
   const { notifySoon } = useNotifier();
   const { today, now } = data;
   const dayLessons = lessonsOn(lessons, date);
@@ -64,7 +63,7 @@ export function DayView({ data, lessons, date, colorMode, onDate, onOpen }: Prop
                 key={lesson.id}
                 type="button"
                 className={cx(styles.lessonRow, past && styles.lessonRowPast)}
-                style={lessonColorStyle(student, colorMode)}
+                style={lessonColorStyle(student)}
                 onClick={() => onOpen(lesson)}
               >
                 <span className={styles.rowTime}>{lessonTime(lesson)}</span>
@@ -75,8 +74,7 @@ export function DayView({ data, lessons, date, colorMode, onDate, onOpen }: Prop
                   <b>{student.name}</b>
                   <span>{student.subject}</span>
                 </span>
-                {lesson.recurring && <RecurringIcon />}
-                <PaymentBadge payment={student.payment} />
+                {student.payment !== "paid" && <PaymentBadge payment={student.payment} />}
               </button>
             );
           })}

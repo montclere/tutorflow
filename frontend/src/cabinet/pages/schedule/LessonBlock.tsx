@@ -1,21 +1,20 @@
 import { getStudent } from "../../data";
 import type { ScheduleLesson } from "../../mocks/types";
+import { cabinet } from "../../content/cabinet.ru";
 import { cx } from "../../ui/cx";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/shared/ui/kit/tooltip";
-import { lessonSummary, lessonTime, PaymentBadge, RecurringIcon } from "./LessonMeta";
-import type { ColorMode } from "./scheduleStyle";
+import { lessonSummary, lessonTime } from "./LessonMeta";
 import { lessonColorStyle } from "./scheduleStyle";
 import styles from "./schedule.module.css";
 
 type Props = {
   lesson: ScheduleLesson;
   past: boolean;
-  colorMode: ColorMode;
   position: { top: string; height: string; left: string; width: string };
   onOpen: (lesson: ScheduleLesson) => void;
 };
 
-export function LessonBlock({ lesson, past, colorMode, position, onOpen }: Props) {
+export function LessonBlock({ lesson, past, position, onOpen }: Props) {
   const student = getStudent(lesson.studentId);
 
   return (
@@ -24,16 +23,13 @@ export function LessonBlock({ lesson, past, colorMode, position, onOpen }: Props
         <button
           type="button"
           className={cx(styles.block, past && styles.past)}
-          style={{ ...lessonColorStyle(student, colorMode), ...position }}
+          style={{ ...lessonColorStyle(student), ...position }}
           onClick={() => onOpen(lesson)}
           aria-label={lessonSummary(lesson, student)}
         >
-          <span className={styles.blockName}>{student.name}</span>
+          <span className={styles.blockName}>{student.name.split(" ")[0]}</span>
           <span className={styles.blockTime}>{lessonTime(lesson)}</span>
-          <span className={styles.blockMeta}>
-            <PaymentBadge payment={student.payment} />
-            {lesson.recurring && <RecurringIcon />}
-          </span>
+          {student.payment === "debt" && <span className={styles.blockDebt}>{cabinet.teacher.schedule.pay.debt}</span>}
         </button>
       </TooltipTrigger>
       <TooltipContent>{lessonSummary(lesson, student)}</TooltipContent>

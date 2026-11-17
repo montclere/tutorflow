@@ -12,7 +12,6 @@ import { ListView } from "./ListView";
 import { MonthView } from "./MonthView";
 import { ScheduleFilters } from "./ScheduleFilters";
 import { ScheduleHeader } from "./ScheduleHeader";
-import type { ColorMode } from "./scheduleStyle";
 import { useScheduleUrl } from "./useScheduleUrl";
 import { WeekView } from "./WeekView";
 
@@ -31,35 +30,28 @@ export function SchedulePage() {
   const subjects = getTeacherSubjects();
   const { view, date, go } = useScheduleUrl(data.today);
   const [filters, setFilters] = useState<LessonFilters>(noFilters);
-  const [colorMode, setColorMode] = useState<ColorMode>("student");
-  const [withWeekend, setWithWeekend] = useState(false);
   const [selected, setSelected] = useState<ScheduleLesson | null>(null);
 
   const lessons = useMemo(() => filterLessons(data.lessons, filters, students), [data.lessons, filters, students]);
-  const range = viewRange(view, date, withWeekend);
+  const range = viewRange(view, date);
   const lessonCount = lessonsBetween(lessons, range.from, range.to).length;
   const windowCount = upcomingFreeWindows(data.lessons, eachDate(range.from, range.to), data.work, data.today, data.now).length;
   const isFiltered = filters.studentId !== null || filters.type !== null || filters.subject !== null;
 
   return (
     <>
-      <ScheduleHeader view={view} date={date} today={data.today} withWeekend={withWeekend} onChange={go} />
+      <ScheduleHeader view={view} date={date} today={data.today} onChange={go} />
       <ScheduleFilters
         students={students}
         subjects={subjects}
         filters={filters}
-        colorMode={colorMode}
-        view={view}
-        withWeekend={withWeekend}
         summary={text.summary(lessonCount, windowCount)}
         onFilters={setFilters}
-        onColorMode={setColorMode}
-        onWeekend={setWithWeekend}
       />
-      {view === "week" && <WeekView data={data} lessons={lessons} date={date} withWeekend={withWeekend} colorMode={colorMode} onOpen={setSelected} />}
-      {view === "day" && <DayView data={data} lessons={lessons} date={date} colorMode={colorMode} onDate={(next) => go({ date: next })} onOpen={setSelected} />}
-      {view === "month" && <MonthView lessons={lessons} date={date} today={data.today} colorMode={colorMode} onPick={(next) => go({ view: "day", date: next })} />}
-      {view === "list" && <ListView data={data} lessons={lessonsBetween(lessons, range.from, range.to)} filtered={isFiltered} colorMode={colorMode} onOpen={setSelected} />}
+      {view === "week" && <WeekView data={data} lessons={lessons} date={date} onOpen={setSelected} />}
+      {view === "day" && <DayView data={data} lessons={lessons} date={date} onDate={(next) => go({ date: next })} onOpen={setSelected} />}
+      {view === "month" && <MonthView lessons={lessons} date={date} today={data.today} onPick={(next) => go({ view: "day", date: next })} />}
+      {view === "list" && <ListView data={data} lessons={lessonsBetween(lessons, range.from, range.to)} filtered={isFiltered} onOpen={setSelected} />}
       <LessonSheet lesson={selected} onClose={() => setSelected(null)} />
     </>
   );

@@ -29,9 +29,9 @@ export function startOfWeek(iso: string): string {
   return addDays(iso, -weekdayIndex(iso));
 }
 
-export function weekDates(anchor: string, withWeekend: boolean): string[] {
+export function weekDates(anchor: string): string[] {
   const start = startOfWeek(anchor);
-  return Array.from({ length: withWeekend ? 7 : 5 }, (_, index) => addDays(start, index));
+  return Array.from({ length: 7 }, (_, index) => addDays(start, index));
 }
 
 export function monthGrid(anchor: string): string[][] {

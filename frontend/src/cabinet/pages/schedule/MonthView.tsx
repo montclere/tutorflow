@@ -4,7 +4,7 @@ import type { ScheduleLesson } from "../../mocks/types";
 import { isSameMonth, monthGrid, parseDate } from "../../model/dates";
 import { lessonsOn } from "../../model/lessons";
 import { cx } from "../../ui/cx";
-import { lessonColorStyle, type ColorMode } from "./scheduleStyle";
+import { lessonColorStyle } from "./scheduleStyle";
 import styles from "./schedule.module.css";
 
 const text = cabinet.teacher.schedule;
@@ -14,11 +14,10 @@ type Props = {
   lessons: ScheduleLesson[];
   date: string;
   today: string;
-  colorMode: ColorMode;
   onPick: (date: string) => void;
 };
 
-export function MonthView({ lessons, date, today, colorMode, onPick }: Props) {
+export function MonthView({ lessons, date, today, onPick }: Props) {
   const weeks = monthGrid(date);
 
   return (
@@ -44,7 +43,7 @@ export function MonthView({ lessons, date, today, colorMode, onPick }: Props) {
               <span className={styles.monthNumber}>{parseDate(day).getDate()}</span>
               <span className={styles.dots} aria-hidden="true">
                 {dayLessons.slice(0, MAX_DOTS).map((lesson) => (
-                  <i key={lesson.id} className={styles.dot} style={lessonColorStyle(getStudent(lesson.studentId), colorMode)} />
+                  <i key={lesson.id} className={styles.dot} style={lessonColorStyle(getStudent(lesson.studentId))} />
                 ))}
               </span>
               {dayLessons.length > 0 && <span className={styles.monthCount}>{text.monthDay(dayLessons.length)}</span>}

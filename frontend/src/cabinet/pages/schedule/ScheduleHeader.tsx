@@ -16,11 +16,10 @@ type Props = {
   view: ScheduleView;
   date: string;
   today: string;
-  withWeekend: boolean;
   onChange: (next: { view?: ScheduleView; date?: string }) => void;
 };
 
-export function ScheduleHeader({ view, date, today, withWeekend, onChange }: Props) {
+export function ScheduleHeader({ view, date, today, onChange }: Props) {
   const { notifySoon } = useNotifier();
   const [pickerOpen, setPickerOpen] = useState(false);
 
@@ -33,9 +32,9 @@ export function ScheduleHeader({ view, date, today, withWeekend, onChange }: Pro
               <button
                 type="button"
                 className="-ml-2 inline-flex min-h-9 items-center gap-2 rounded-lg border border-transparent bg-transparent px-2 text-left font-[inherit] text-[length:inherit] leading-[inherit] font-black tracking-[inherit] transition-colors duration-150 hover:bg-secondary focus-visible:ring-[3px] focus-visible:ring-ring/40 motion-reduce:transition-none"
-                aria-label={`${text.pickDate}: ${periodTitle(view, date, withWeekend)}`}
+                aria-label={`${text.pickDate}: ${periodTitle(view, date)}`}
               >
-                {periodTitle(view, date, withWeekend)}
+                {periodTitle(view, date)}
                 <CalendarDays size={18} className="text-muted-foreground" aria-hidden="true" />
               </button>
             </PopoverTrigger>

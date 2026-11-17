@@ -3,20 +3,19 @@ import { parseDateParam, parseView, periodTitle, stepDate, viewRange } from "./s
 
 describe("viewRange", () => {
   it("день — одна дата", () => {
-    expect(viewRange("day", "2026-11-17", false)).toEqual({ from: "2026-11-17", to: "2026-11-17" });
+    expect(viewRange("day", "2026-11-17")).toEqual({ from: "2026-11-17", to: "2026-11-17" });
   });
 
-  it("неделя без выходных заканчивается пятницей", () => {
-    expect(viewRange("week", "2026-11-18", false)).toEqual({ from: "2026-11-16", to: "2026-11-20" });
-    expect(viewRange("week", "2026-11-18", true).to).toBe("2026-11-22");
+  it("неделя идёт с понедельника по воскресенье", () => {
+    expect(viewRange("week", "2026-11-18")).toEqual({ from: "2026-11-16", to: "2026-11-22" });
   });
 
   it("месяц охватывает все дни месяца", () => {
-    expect(viewRange("month", "2026-11-17", false)).toEqual({ from: "2026-11-01", to: "2026-11-30" });
+    expect(viewRange("month", "2026-11-17")).toEqual({ from: "2026-11-01", to: "2026-11-30" });
   });
 
   it("список — две недели вперёд", () => {
-    expect(viewRange("list", "2026-11-17", false)).toEqual({ from: "2026-11-17", to: "2026-11-30" });
+    expect(viewRange("list", "2026-11-17")).toEqual({ from: "2026-11-17", to: "2026-11-30" });
   });
 });
 
@@ -31,9 +30,9 @@ describe("stepDate", () => {
 
 describe("periodTitle", () => {
   it("даёт заголовок для каждого вида", () => {
-    expect(periodTitle("day", "2026-11-17", false)).toBe("Вторник, 17 ноября");
-    expect(periodTitle("week", "2026-11-17", false)).toBe("16 — 20 ноября");
-    expect(periodTitle("month", "2026-11-17", false)).toBe("Ноябрь 2026");
+    expect(periodTitle("day", "2026-11-17")).toBe("Вторник, 17 ноября");
+    expect(periodTitle("week", "2026-11-17")).toBe("16 — 22 ноября");
+    expect(periodTitle("month", "2026-11-17")).toBe("Ноябрь 2026");
   });
 });
 

@@ -21,9 +21,11 @@ describe("dates", () => {
     expect(daysBetween("2026-11-16", "2026-11-22")).toBe(6);
   });
 
-  it("строит неделю без выходных и с ними", () => {
-    expect(weekDates("2026-11-18", false)).toEqual(["2026-11-16", "2026-11-17", "2026-11-18", "2026-11-19", "2026-11-20"]);
-    expect(weekDates("2026-11-18", true)).toHaveLength(7);
+  it("строит неделю с понедельника по воскресенье", () => {
+    const days = weekDates("2026-11-18");
+    expect(days).toHaveLength(7);
+    expect(days[0]).toBe("2026-11-16");
+    expect(days[6]).toBe("2026-11-22");
   });
 
   it("строит сетку месяца с неполными неделями по краям", () => {

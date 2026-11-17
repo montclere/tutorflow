@@ -157,14 +157,8 @@ export const cabinet = {
         allTypes: "Все типы",
         subject: "Предмет",
         allSubjects: "Все предметы",
-        colorBy: "Цвет",
-        weekend: "Выходные",
       },
       types: { individual: "Индивидуальный", group: "Групповой", trial: "Пробный" },
-      colorModes: [
-        { id: "student", label: "По ученикам" },
-        { id: "payment", label: "По оплате" },
-      ] as const,
       summary: (lessons: number, windows: number) =>
         `${lessons} ${plural(lessons, lessonForms)} · ${windows} ${plural(windows, windowForms)}`,
       pay: { paid: "оплачено", debt: "долг", low: "пакет" },

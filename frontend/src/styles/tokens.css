@@ -148,8 +148,8 @@
 }
 
 :root {
-  --schedule-hour-height: 64px;
-  --schedule-time-width: 56px;
-  --schedule-day-min-width: 148px;
+  --schedule-hour-height: 76px;
+  --schedule-time-width: 60px;
+  --schedule-day-min-width: 128px;
   --schedule-today-bg: rgb(35 70 230 / 0.05);
 }

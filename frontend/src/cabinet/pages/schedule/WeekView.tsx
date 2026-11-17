@@ -8,7 +8,6 @@ import { assignColumns, blockPosition, gridHours, nowOffsetHours } from "../../m
 import { cx } from "../../ui/cx";
 import { FreeSlot } from "./FreeSlot";
 import { LessonBlock } from "./LessonBlock";
-import type { ColorMode } from "./scheduleStyle";
 import styles from "./schedule.module.css";
 
 const text = cabinet.teacher.schedule;
@@ -17,14 +16,12 @@ type Props = {
   data: ScheduleData;
   lessons: ScheduleLesson[];
   date: string;
-  withWeekend: boolean;
-  colorMode: ColorMode;
   onOpen: (lesson: ScheduleLesson) => void;
 };
 
-export function WeekView({ data, lessons, date, withWeekend, colorMode, onOpen }: Props) {
+export function WeekView({ data, lessons, date, onOpen }: Props) {
   const { today, now, work } = data;
-  const dates = weekDates(date, withWeekend);
+  const dates = weekDates(date);
   const hours = gridHours(work);
   const nowOffset = nowOffsetHours(now, work);
   const freeByDate = upcomingFreeWindows(data.lessons, dates, work, today, now);
@@ -72,7 +69,6 @@ export function WeekView({ data, lessons, date, withWeekend, colorMode, onOpen }
                   key={lesson.id}
                   lesson={lesson}
                   past={isPast(lesson, today, now)}
-                  colorMode={colorMode}
                   onOpen={onOpen}
                   position={{
                     top: `calc(var(--schedule-hour-height) * ${position.topHours} + 1px)`,

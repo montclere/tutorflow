@@ -5,12 +5,12 @@ export type DateRange = { from: string; to: string };
 
 export const LIST_DAYS = 14;
 
-export function viewRange(view: ScheduleView, date: string, withWeekend: boolean): DateRange {
+export function viewRange(view: ScheduleView, date: string): DateRange {
   switch (view) {
     case "day":
       return { from: date, to: date };
     case "week": {
-      const days = weekDates(date, withWeekend);
+      const days = weekDates(date);
       return { from: days[0] ?? date, to: days.at(-1) ?? date };
     }
     case "month": {
@@ -35,8 +35,8 @@ export function stepDate(view: ScheduleView, date: string, direction: 1 | -1): s
   }
 }
 
-export function periodTitle(view: ScheduleView, date: string, withWeekend: boolean): string {
-  const range = viewRange(view, date, withWeekend);
+export function periodTitle(view: ScheduleView, date: string): string {
+  const range = viewRange(view, date);
   if (view === "day") return formatLongDay(date);
   if (view === "month") return formatMonthTitle(date);
   return formatRange(range.from, range.to);

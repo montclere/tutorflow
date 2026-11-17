@@ -54,7 +54,7 @@ export function getStudent(id: string): Student {
 export function getTeacherOverview(): TeacherOverview {
   const { today, now, work, lessons } = schedule;
   const rowsOn = (date: string) => lessonsOn(lessons, date).map((lesson) => toLessonRow(lesson, getStudent(lesson.studentId), today, now));
-  const windows = upcomingFreeWindows(lessons, weekDates(today, true), work, today, now);
+  const windows = upcomingFreeWindows(lessons, weekDates(today), work, today, now);
 
   return {
     teacherName: overviewBase.teacherName,
