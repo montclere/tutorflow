@@ -87,5 +87,8 @@ export const students: StudentRecord[] = [
   },
 ];
 
+/** Предметы из профиля репетитора. Сейчас один — поле «Предмет» нигде не показывается. */
+export const teacherSubjects: string[] = ["Математика"];
+
 export const teacherPerson: Person = { name: "Анна Кузнецова", initials: "АК", color: "sky", roleLabel: "Репетитор · Про" };
 export const studentPerson: Person = { name: "Александр Иванов", initials: "АИ", color: "peach", roleLabel: "Ученик · ЕГЭ профиль" };

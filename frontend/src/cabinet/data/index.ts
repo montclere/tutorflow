@@ -3,7 +3,8 @@ import { addDays, formatLongDay, weekDates, weekdayIndex } from "../model/dates"
 import { upcomingFreeWindows } from "../model/freeSlots";
 import { expandTemplates, lessonsOn } from "../model/lessons";
 import { toLessonRow, weekDays } from "../model/overview";
-import { students } from "../mocks/people";
+import { withSubjectParam } from "../model/taskParams";
+import { students, teacherSubjects } from "../mocks/people";
 import { studentDetails } from "../mocks/studentDetails";
 import { expectedIncome, growthPercent, lessonsAhead, monthKeyOf, shiftMonth } from "../model/finance";
 import { deriveSchedule, LOW_PACKAGE_LEFT, nextLessonOf } from "../model/students";
@@ -100,7 +101,7 @@ export function getTeacherOverview(): TeacherOverview {
 }
 
 export function getTaskLab(): TaskLab {
-  return taskLab;
+  return { ...taskLab, params: withSubjectParam(taskLab.params, teacherSubjects, cabinet.teacher.tasks.subjectLabel) };
 }
 
 export function getReview(): Review {

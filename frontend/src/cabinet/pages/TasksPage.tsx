@@ -24,7 +24,6 @@ export function TasksPage({ tab }: { tab: TasksTab }) {
     <>
       <PageHead
         title={text.title}
-        subtitle={text.subtitle}
         actions={
           <>
             <Button onClick={() => notifySoon(text.manual)}>{text.manual}</Button>
