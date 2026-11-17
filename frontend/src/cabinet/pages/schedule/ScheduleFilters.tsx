@@ -9,13 +9,12 @@ const ALL = "all";
 
 type Props = {
   students: Student[];
-  subjects: string[];
   filters: LessonFilters;
   summary: string;
   onFilters: (filters: LessonFilters) => void;
 };
 
-export function ScheduleFilters({ students, subjects, filters, summary, onFilters }: Props) {
+export function ScheduleFilters({ students, filters, summary, onFilters }: Props) {
   return (
     <div className="mb-4 flex flex-wrap items-center gap-2">
       <StudentCombobox students={students} value={filters.studentId} onChange={(studentId) => onFilters({ ...filters, studentId })} />
@@ -33,22 +32,6 @@ export function ScheduleFilters({ students, subjects, filters, summary, onFilter
           ))}
         </SelectContent>
       </Select>
-
-      {subjects.length >= 2 && (
-        <Select value={filters.subject ?? ALL} onValueChange={(value) => onFilters({ ...filters, subject: value === ALL ? null : value })}>
-          <SelectTrigger aria-label={text.filters.subject} className="w-44 max-[520px]:min-w-0 max-[520px]:flex-1">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value={ALL}>{text.filters.allSubjects}</SelectItem>
-            {subjects.map((subject) => (
-              <SelectItem key={subject} value={subject}>
-                {subject}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      )}
 
       <p className="m-0 ml-auto text-sm font-bold text-muted-foreground tabular-nums max-[820px]:ml-0 max-[820px]:w-full">{summary}</p>
     </div>

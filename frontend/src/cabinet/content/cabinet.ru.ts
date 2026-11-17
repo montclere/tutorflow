@@ -14,7 +14,6 @@ export type IconName =
   | "chart";
 
 const lessonForms: [string, string, string] = ["урок", "урока", "уроков"];
-const activeForms: [string, string, string] = ["активный", "активных", "активных"];
 const dayForms: [string, string, string] = ["день", "дня", "дней"];
 const windowForms: [string, string, string] = ["свободное окно", "свободных окна", "свободных окон"];
 
@@ -155,8 +154,6 @@ export const cabinet = {
         noStudents: "Ученик не найден",
         type: "Тип урока",
         allTypes: "Все типы",
-        subject: "Предмет",
-        allSubjects: "Все предметы",
       },
       types: { individual: "Индивидуальный", group: "Групповой", trial: "Пробный" },
       summary: (lessons: number, windows: number) =>
@@ -175,6 +172,8 @@ export const cabinet = {
       emptyFiltered: "По выбранным фильтрам уроков нет",
       next: {
         title: "Следующий урок",
+        goal: "Цель",
+        none: "—",
         topic: "Прошлая тема",
         homework: "Домашнее задание",
         balance: "Баланс",
@@ -211,11 +210,92 @@ export const cabinet = {
     },
     students: {
       title: "Ученики",
-      subtitle: (count: number) => `${count} ${plural(count, activeForms)}`,
       import: "Импорт",
       invite: "Пригласить",
-      columns: ["Ученик", "Предмет", "Уроков", "Баланс", "Прогресс", ""],
-      progress: (percent: number) => `${percent}% тем освоено`,
+      mixedTime: "в разное время",
+      tabsLabel: "Статус учеников",
+      statusTabs: [
+        { id: "active", label: "Активные" },
+        { id: "pause", label: "Пауза" },
+        { id: "archive", label: "Архив" },
+      ] as const,
+      tabLabel: (label: string, count: number) => `${label} · ${count}`,
+      searchLabel: "Поиск по имени",
+      searchPlaceholder: "Найти ученика",
+      debtors: "Должники",
+      columns: ["Ученик", "Занятия", "Оплата", "Баланс", "Следующий урок"],
+      listLabel: "Список учеников",
+      openCard: (name: string) => `Открыть карточку: ${name}`,
+      noSchedule: "Не задано",
+      noNextLesson: "—",
+      nextLesson: { today: "Сегодня", tomorrow: "Завтра" },
+      payment: {
+        perLesson: "Поурочно",
+        package: "Абонемент",
+        pricePerLesson: (price: string) => `${price} за урок`,
+      },
+      empty: {
+        first: { title: "Пригласите первого ученика", text: "Отправьте ссылку или импортируйте список из Excel", action: "Пригласить" },
+        pause: "На паузе никого нет",
+        archive: "Архив пуст",
+        search: "Никого не нашли",
+        debtors: "Должников нет",
+      },
+      sheet: {
+        close: "Закрыть",
+        since: (goal: string, date: string) => `${goal} · с ${date}`,
+        actions: { lesson: "Урок", payment: "Оплата", task: "Задание", more: "Ещё" },
+        moreItems: { pause: "Поставить на паузу", archive: "В архив", remove: "Удалить" },
+        tiles: { balance: "Баланс", next: "Следующий урок", tariff: "Тариф", done: "Уроков проведено" },
+        tariff: {
+          package: (left: number, total: number) => `осталось ${left} из ${total}`,
+        },
+        tabsLabel: "Разделы карточки",
+        tabs: [
+          { id: "overview", label: "Обзор" },
+          { id: "lessons", label: "Уроки" },
+          { id: "payments", label: "Оплаты" },
+          { id: "tasks", label: "Задания" },
+          { id: "notes", label: "Заметки" },
+        ] as const,
+        overview: {
+          schedule: "Расписание",
+          scheduleLine: (times: string, days: string, time: string, duration: number) =>
+            [times, [days, time].filter(Boolean).join(" · "), `${duration} мин`].filter(Boolean).join(" · "),
+          exam: "Подготовка к экзамену",
+          examDays: (days: number) => `${days} ${plural(days, dayForms)} до экзамена`,
+          readiness: "Готовность",
+          weak: (numbers: number[]) => (numbers.length ? `Подтянуть: ${numbers.map((number) => `№${number}`).join(", ")}` : "Слабых мест нет"),
+          recent: "Последние уроки",
+          noLessons: "Уроков пока не было",
+          homeworkDone: (done: number, total: number) => `ДЗ ${done}/${total}`,
+          homeworkMissing: "ДЗ не сдано",
+          contacts: "Контакты",
+          telegram: "Telegram",
+          connected: "подключён",
+          notConnected: "не подключён · отправить ссылку",
+          parent: "Родитель",
+          source: "Откуда пришёл",
+          note: "Заметка",
+          noNote: "Заметок нет",
+        },
+        lessons: {
+          empty: "Уроков пока не было",
+          status: { done: "Проведён", cancelled: "Отменён", moved: "Перенесён" },
+        },
+        payments: { empty: "Движений по счёту нет" },
+        tasks: {
+          assigned: "Выданные задания",
+          empty: "Заданий нет",
+          status: { todo: "К выполнению", wait: "На проверке", done: "Выполнено" },
+          trainer: "Тренажёр",
+          noTrainer: "Ученик ещё не пользовался тренажёром",
+          solved: (count: number) => `${count} задач за неделю`,
+          accuracy: (percent: number) => `Точность ${percent}%`,
+          weak: (topic: string) => `Слабое место: ${topic}`,
+        },
+        notes: { empty: "Заметок нет" },
+      },
     },
     tasks: {
       title: "Задания",

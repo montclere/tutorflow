@@ -1,8 +1,8 @@
-import type { LessonTemplate, ScheduleLesson, Student } from "../mocks/types";
+import type { LessonTemplate, ScheduleLesson } from "../mocks/types";
 import { addDays, daysBetween, weekdayIndex } from "./dates";
 import { addMinutes, toMinutes } from "./time";
 
-export type LessonFilters = { studentId: string | null; type: ScheduleLesson["type"] | null; subject: string | null };
+export type LessonFilters = { studentId: string | null; type: ScheduleLesson["type"] | null };
 
 export function expandTemplates(templates: LessonTemplate[], from: string, to: string): ScheduleLesson[] {
   const lessons: ScheduleLesson[] = [];
@@ -37,14 +37,10 @@ export function lessonsBetween(lessons: ScheduleLesson[], from: string, to: stri
   return lessons.filter((lesson) => lesson.date >= from && lesson.date <= to).sort(compareLessons);
 }
 
-export function filterLessons(lessons: ScheduleLesson[], filters: LessonFilters, students: Student[]): ScheduleLesson[] {
+export function filterLessons(lessons: ScheduleLesson[], filters: LessonFilters): ScheduleLesson[] {
   return lessons.filter((lesson) => {
     if (filters.studentId && lesson.studentId !== filters.studentId) return false;
     if (filters.type && lesson.type !== filters.type) return false;
-    if (filters.subject) {
-      const subject = students.find((student) => student.id === lesson.studentId)?.subject.split(" · ")[0];
-      if (subject !== filters.subject) return false;
-    }
     return true;
   });
 }

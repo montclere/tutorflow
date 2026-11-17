@@ -16,5 +16,5 @@ export function PaymentBadge({ payment, full }: { payment: PaymentStatus; full?:
 }
 
 export function lessonSummary(lesson: ScheduleLesson, student: Student): string {
-  return `${student.name} · ${lessonTime(lesson)} · ${student.subject}`;
+  return `${student.name} · ${lessonTime(lesson)} · ${student.goal}`;
 }

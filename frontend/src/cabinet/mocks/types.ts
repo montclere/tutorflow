@@ -4,20 +4,55 @@ export type StudentColor = "peach" | "mint" | "rose" | "sky" | "lilac" | "teal";
 export type RichPart = string | { sup: string } | { sub: string };
 export type Rich = RichPart[];
 
+export type StudentStatus = "active" | "pause" | "archive";
+export type StudentSource = "Знакомые" | "Авито" | "Профи.ру" | "Сайт" | "Другое";
+export type PaymentModel = "per_lesson" | "package";
+
+export type NextLesson = { date: string; start: string };
+
+export type RecentLesson = {
+  date: string;
+  topic: string;
+  status: "done" | "cancelled" | "moved";
+  homework: { title: string; done: number | null; total: number } | null;
+};
+
 export type Student = {
   id: string;
   name: string;
   initials: string;
   color: StudentColor;
-  subject: string;
-  status: "active" | "trial";
-  payment: PaymentStatus;
-  lastTopic: string;
-  homework: string;
+  goal: string;
+  status: StudentStatus;
+  schedule: { timesPerWeek: number; days: string[]; time: string; durationMin: number };
+  payment: {
+    model: PaymentModel;
+    pricePerLesson: number;
+    package?: { lessons: number; price: number; left: number };
+  };
+  balance: number;
+  nextLesson: NextLesson | null;
+  lessonsCount: number;
+  startedAt: string;
+  telegramConnected: boolean;
+  parent?: { name: string; relation: string; phone: string };
+  source: StudentSource;
+  exam?: { daysLeft: number; readiness: number; weak: number[] };
+  recentLessons: RecentLesson[];
   note: string;
-  balanceKopecks: number;
-  lessons: number;
-  progress: number;
+};
+
+export type StudentRecord = Omit<Student, "schedule" | "nextLesson">;
+
+export type PaymentMove = { date: string; title: string; amount: number };
+export type AssignedTask = { title: string; status: "todo" | "wait" | "done"; result: string | null };
+export type StudentNote = { date: string; text: string };
+
+export type StudentDetails = {
+  payments: PaymentMove[];
+  tasks: AssignedTask[];
+  trainer: { solvedWeek: number; accuracy: number; weak: string } | null;
+  notes: StudentNote[];
 };
 
 export type Person = { name: string; initials: string; color: StudentColor; roleLabel: string };
@@ -32,7 +67,7 @@ export type LessonRow = {
   id: string;
   time: string;
   studentId: string;
-  subject: string;
+  goal: string;
   status: LessonStatus;
   minutes: number;
   past: boolean;
@@ -44,11 +79,13 @@ export type AttentionItem = { kind: AttentionKind; title: string; note: string }
 export type WeekDay = { label: string; lessons: number; today?: boolean };
 export type WeekPlan = { days: WeekDay[]; capacity: number; freeWindows: string[] };
 
+export type ExamTrend = { studentId: string; delta: number; inactiveDays?: number };
+
 export type OverviewBase = {
   teacherName: string;
   attention: AttentionItem[];
   weekCapacity: number;
-  exams: ExamPrep[];
+  examTrends: ExamTrend[];
 };
 
 export type ExamPrep = {

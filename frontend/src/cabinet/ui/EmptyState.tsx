@@ -1,0 +1,13 @@
+import type { ReactNode } from "react";
+
+type Props = { title: string; text?: string; action?: ReactNode };
+
+export function EmptyState({ title, text, action }: Props) {
+  return (
+    <div className="flex flex-col items-center gap-2 rounded-xl border border-dashed bg-card px-6 py-12 text-center">
+      <p className="m-0 font-[family-name:var(--font-display)] text-base font-extrabold">{title}</p>
+      {text && <p className="m-0 max-w-sm text-sm font-semibold text-muted-foreground">{text}</p>}
+      {action && <div className="mt-2">{action}</div>}
+    </div>
+  );
+}

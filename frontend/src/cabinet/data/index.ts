@@ -3,7 +3,9 @@ import { addDays, formatLongDay, weekDates, weekdayIndex } from "../model/dates"
 import { upcomingFreeWindows } from "../model/freeSlots";
 import { expandTemplates, lessonsOn } from "../model/lessons";
 import { toLessonRow, weekDays } from "../model/overview";
-import { students, teacherSubjects } from "../mocks/people";
+import { students } from "../mocks/people";
+import { studentDetails } from "../mocks/studentDetails";
+import { deriveSchedule, nextLessonOf } from "../model/students";
 import { lessonTemplates, scheduleNow, scheduleRange, scheduleToday, singleLessons, workHours } from "../mocks/schedule";
 import { exam, homework, progress, studentHome, trainer } from "../mocks/student";
 import { taskLab } from "../mocks/tasks";
@@ -15,7 +17,9 @@ import type {
   Progress,
   Review,
   ScheduleData,
+  ExamPrep,
   Student,
+  StudentDetails,
   StudentHome,
   TaskLab,
   TeacherOverview,
@@ -33,22 +37,44 @@ export function getSchedule(): ScheduleData {
   return schedule;
 }
 
+const allStudents: Student[] = students.map((record) => ({
+  ...record,
+  schedule: deriveSchedule(record.id, lessonTemplates, cabinet.weekdays, cabinet.teacher.students.mixedTime),
+  nextLesson: nextLessonOf(record.id, schedule.lessons, schedule.today, schedule.now),
+}));
+
 export function getStudents(): Student[] {
-  return students.filter((student) => student.status === "active");
+  return allStudents;
 }
 
-export function getTeacherSubjects(): string[] {
-  return teacherSubjects;
-}
+const emptyDetails: StudentDetails = { payments: [], tasks: [], trainer: null, notes: [] };
 
-export function getAllStudents(): Student[] {
-  return students;
+export function getStudentDetails(id: string): StudentDetails {
+  return studentDetails[id] ?? emptyDetails;
 }
 
 export function getStudent(id: string): Student {
-  const student = students.find((item) => item.id === id);
+  const student = allStudents.find((item) => item.id === id);
   if (!student) throw new Error(`Нет ученика ${id}`);
   return student;
+}
+
+function examPreps(): ExamPrep[] {
+  return allStudents.flatMap((student) => {
+    if (student.status !== "active" || !student.exam) return [];
+    const trend = overviewBase.examTrends.find((item) => item.studentId === student.id);
+    return [
+      {
+        studentId: student.id,
+        exam: student.goal.split(" · ")[0] ?? student.goal,
+        daysLeft: student.exam.daysLeft,
+        weakNumber: student.exam.weak[0],
+        inactiveDays: trend?.inactiveDays,
+        readiness: student.exam.readiness,
+        delta: trend?.delta ?? 0,
+      },
+    ];
+  });
 }
 
 export function getTeacherOverview(): TeacherOverview {
@@ -67,7 +93,7 @@ export function getTeacherOverview(): TeacherOverview {
       capacity: overviewBase.weekCapacity,
       freeWindows: windows.map(({ date, window }) => `${cabinet.weekdays[weekdayIndex(date)]} ${window.start}–${window.end}`),
     },
-    exams: overviewBase.exams,
+    exams: examPreps(),
   };
 }
 

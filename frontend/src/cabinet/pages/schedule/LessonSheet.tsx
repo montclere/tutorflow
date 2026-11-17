@@ -4,6 +4,7 @@ import { getStudent } from "../../data";
 import type { ScheduleLesson } from "../../mocks/types";
 import { formatLongDay } from "../../model/dates";
 import { formatRubles, formatSigned } from "../../model/format";
+import { paymentStatus } from "../../model/students";
 import { Avatar } from "../../ui/Avatar";
 import { Button } from "../../ui/Button";
 import { useNotifier } from "../../ui/Notifications";
@@ -51,7 +52,7 @@ export function LessonSheet({ lesson, onClose }: Props) {
               </div>
               <div className="flex flex-wrap gap-1.5">
                 <Pill tone="blue">{lesson.groupTitle ?? text.types[lesson.type]}</Pill>
-                <PaymentBadge payment={student.payment} full />
+                <PaymentBadge payment={paymentStatus(student)} full />
                 {lesson.recurring && (
                   <Pill tone="grey">
                     <Repeat size={12} aria-hidden="true" />
@@ -62,10 +63,10 @@ export function LessonSheet({ lesson, onClose }: Props) {
             </SheetHeader>
             <Separator />
             <dl className="m-0 grid gap-4 p-4">
-              <Field label={cabinet.teacher.schedule.lesson.title} value={`${student.subject} · ${text.lesson.duration(lesson.durationMin)}`} />
-              <Field label={text.next.topic} value={student.lastTopic} />
-              <Field label={text.next.homework} value={student.homework} />
-              <Field label={text.next.balance} value={student.balanceKopecks === 0 ? formatRubles(0) : formatSigned(student.balanceKopecks)} />
+              <Field label={text.next.goal} value={`${student.goal} · ${text.lesson.duration(lesson.durationMin)}`} />
+              <Field label={text.next.topic} value={student.recentLessons[0]?.topic ?? text.next.none} />
+              <Field label={text.next.homework} value={student.recentLessons[0]?.homework?.title ?? text.next.none} />
+              <Field label={text.next.balance} value={student.balance === 0 ? formatRubles(0) : formatSigned(student.balance)} />
               <Field label={text.next.note} value={student.note} />
             </dl>
             <SheetFooter className="grid grid-cols-2 gap-2">

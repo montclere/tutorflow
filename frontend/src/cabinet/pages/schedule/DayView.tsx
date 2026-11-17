@@ -3,6 +3,7 @@ import { getStudent } from "../../data";
 import type { ScheduleData, ScheduleLesson } from "../../mocks/types";
 import { addDays } from "../../model/dates";
 import { formatSigned } from "../../model/format";
+import { paymentStatus } from "../../model/students";
 import { isPast, lessonsOn, nextLesson } from "../../model/lessons";
 import { Avatar } from "../../ui/Avatar";
 import { Button } from "../../ui/Button";
@@ -72,9 +73,9 @@ export function DayView({ data, lessons, date, onDate, onOpen }: Props) {
                 </span>
                 <span className={styles.rowText}>
                   <b>{student.name}</b>
-                  <span>{student.subject}</span>
+                  <span>{student.goal}</span>
                 </span>
-                {student.payment !== "paid" && <PaymentBadge payment={student.payment} />}
+                {paymentStatus(student) !== "paid" && <PaymentBadge payment={paymentStatus(student)} />}
               </button>
             );
           })}
@@ -88,14 +89,14 @@ export function DayView({ data, lessons, date, onDate, onOpen }: Props) {
                 <div className="min-w-0">
                   <b className="block truncate text-sm">{focusStudent.name}</b>
                   <span className="text-xs font-semibold text-muted-foreground tabular-nums">
-                    {lessonTime(focus)} · {focusStudent.subject}
+                    {lessonTime(focus)} · {focusStudent.goal}
                   </span>
                 </div>
               </div>
               <dl className="m-0 grid gap-3">
-                <Fact label={text.next.topic} value={focusStudent.lastTopic} />
-                <Fact label={text.next.homework} value={focusStudent.homework} />
-                <Fact label={text.next.balance} value={formatSigned(focusStudent.balanceKopecks)} />
+                <Fact label={text.next.topic} value={focusStudent.recentLessons[0]?.topic ?? text.next.none} />
+                <Fact label={text.next.homework} value={focusStudent.recentLessons[0]?.homework?.title ?? text.next.none} />
+                <Fact label={text.next.balance} value={formatSigned(focusStudent.balance)} />
                 <Fact label={text.next.note} value={focusStudent.note} />
               </dl>
               <div className="flex flex-wrap gap-2">

@@ -59,6 +59,15 @@ const dayMonth = new Intl.DateTimeFormat("ru-RU", { day: "numeric", month: "long
 const dayMonthWeekday = new Intl.DateTimeFormat("ru-RU", { weekday: "long", day: "numeric", month: "long" });
 const monthYear = new Intl.DateTimeFormat("ru-RU", { month: "long", year: "numeric" });
 
+export function formatDayMonth(iso: string): string {
+  return dayMonth.format(parseDate(iso));
+}
+
+export function formatShortDate(iso: string): string {
+  const date = parseDate(iso);
+  return `${String(date.getDate()).padStart(2, "0")}.${String(date.getMonth() + 1).padStart(2, "0")}`;
+}
+
 function capitalize(value: string): string {
   return value.charAt(0).toUpperCase() + value.slice(1);
 }

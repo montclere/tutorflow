@@ -1,5 +1,6 @@
 import { getStudent } from "../../data";
 import type { ScheduleLesson } from "../../mocks/types";
+import { paymentStatus } from "../../model/students";
 import { cabinet } from "../../content/cabinet.ru";
 import { cx } from "../../ui/cx";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/shared/ui/kit/tooltip";
@@ -29,7 +30,7 @@ export function LessonBlock({ lesson, past, position, onOpen }: Props) {
         >
           <span className={styles.blockName}>{student.name.split(" ")[0]}</span>
           <span className={styles.blockTime}>{lessonTime(lesson)}</span>
-          {student.payment === "debt" && <span className={styles.blockDebt}>{cabinet.teacher.schedule.pay.debt}</span>}
+          {paymentStatus(student) === "debt" && <span className={styles.blockDebt}>{cabinet.teacher.schedule.pay.debt}</span>}
         </button>
       </TooltipTrigger>
       <TooltipContent>{lessonSummary(lesson, student)}</TooltipContent>

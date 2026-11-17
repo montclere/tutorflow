@@ -1,7 +1,7 @@
 import { Plus } from "lucide-react";
 import { useState, type CSSProperties } from "react";
 import { cabinet } from "../../content/cabinet.ru";
-import { getAllStudents } from "../../data";
+import { getStudents } from "../../data";
 import { Button } from "../../ui/Button";
 import { useNotifier } from "../../ui/Notifications";
 import { Popover, PopoverContent, PopoverTrigger } from "@/shared/ui/kit/popover";
@@ -24,7 +24,7 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
 export function FreeSlot({ label, style }: Props) {
   const { notifySoon } = useNotifier();
   const [open, setOpen] = useState(false);
-  const students = getAllStudents();
+  const students = getStudents();
 
   const save = () => {
     notifySoon(text.quick.save);

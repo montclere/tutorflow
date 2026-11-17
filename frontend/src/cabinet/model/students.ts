@@ -1,0 +1,60 @@
+import type { LessonTemplate, NextLesson, PaymentStatus, ScheduleLesson, Student, StudentStatus } from "../mocks/types";
+import { daysBetween, weekdayIndex } from "./dates";
+import { nextLesson as nextScheduled } from "./lessons";
+
+export type StudentFilter = { status: StudentStatus; query: string; debtorsOnly: boolean };
+
+export const LOW_PACKAGE_LEFT = 1;
+
+export function paymentStatus(student: Pick<Student, "balance" | "payment">): PaymentStatus {
+  if (student.balance < 0) return "debt";
+  const left = student.payment.package?.left;
+  if (student.payment.model === "package" && left !== undefined && left <= LOW_PACKAGE_LEFT) return "low";
+  return "paid";
+}
+
+export function filterStudents(students: Student[], filter: StudentFilter): Student[] {
+  const query = filter.query.trim().toLowerCase();
+  return students.filter((student) => {
+    if (student.status !== filter.status) return false;
+    if (filter.debtorsOnly && student.balance >= 0) return false;
+    return query === "" || student.name.toLowerCase().includes(query);
+  });
+}
+
+export function countByStatus(students: Student[]): Record<StudentStatus, number> {
+  const counts: Record<StudentStatus, number> = { active: 0, pause: 0, archive: 0 };
+  for (const student of students) counts[student.status] += 1;
+  return counts;
+}
+
+export function deriveSchedule(studentId: string, templates: LessonTemplate[], weekdayLabels: string[], mixedTimeLabel: string): Student["schedule"] {
+  const own = templates.filter((template) => template.studentId === studentId).sort((a, b) => a.weekday - b.weekday);
+  if (own.length === 0) return { timesPerWeek: 0, days: [], time: "", durationMin: 0 };
+  const starts = new Set(own.map((template) => template.start));
+  return {
+    timesPerWeek: own.length,
+    days: own.map((template) => weekdayLabels[template.weekday] ?? ""),
+    time: starts.size === 1 ? (own[0]?.start ?? "") : mixedTimeLabel,
+    durationMin: own[0]?.durationMin ?? 0,
+  };
+}
+
+export function nextLessonOf(studentId: string, lessons: ScheduleLesson[], today: string, now: string): NextLesson | null {
+  const next = nextScheduled(
+    lessons.filter((lesson) => lesson.studentId === studentId),
+    today,
+    now,
+  );
+  return next ? { date: next.date, start: next.start } : null;
+}
+
+export type NextLessonLabels = { today: string; tomorrow: string; weekdays: string[] };
+
+export function formatNextLesson(next: NextLesson, today: string, labels: NextLessonLabels): string {
+  const distance = daysBetween(today, next.date);
+  if (distance === 0) return `${labels.today} ${next.start}`;
+  if (distance === 1) return `${labels.tomorrow} ${next.start}`;
+  if (distance < 7) return `${labels.weekdays[weekdayIndex(next.date)] ?? ""} ${next.start}`;
+  return `${labels.weekdays[weekdayIndex(next.date)] ?? ""} ${next.date.slice(8)}.${next.date.slice(5, 7)} ${next.start}`;
+}

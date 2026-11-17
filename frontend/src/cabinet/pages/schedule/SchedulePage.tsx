@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { cabinet } from "../../content/cabinet.ru";
-import { getAllStudents, getSchedule, getTeacherSubjects } from "../../data";
+import { getSchedule, getStudents } from "../../data";
 import type { ScheduleLesson } from "../../mocks/types";
 import { upcomingFreeWindows } from "../../model/freeSlots";
 import { filterLessons, lessonsBetween, type LessonFilters } from "../../model/lessons";
@@ -16,7 +16,7 @@ import { useScheduleUrl } from "./useScheduleUrl";
 import { WeekView } from "./WeekView";
 
 const text = cabinet.teacher.schedule;
-const noFilters: LessonFilters = { studentId: null, type: null, subject: null };
+const noFilters: LessonFilters = { studentId: null, type: null };
 
 function eachDate(from: string, to: string): string[] {
   const dates: string[] = [];
@@ -26,24 +26,22 @@ function eachDate(from: string, to: string): string[] {
 
 export function SchedulePage() {
   const data = getSchedule();
-  const students = getAllStudents();
-  const subjects = getTeacherSubjects();
+  const students = getStudents();
   const { view, date, go } = useScheduleUrl(data.today);
   const [filters, setFilters] = useState<LessonFilters>(noFilters);
   const [selected, setSelected] = useState<ScheduleLesson | null>(null);
 
-  const lessons = useMemo(() => filterLessons(data.lessons, filters, students), [data.lessons, filters, students]);
+  const lessons = useMemo(() => filterLessons(data.lessons, filters), [data.lessons, filters]);
   const range = viewRange(view, date);
   const lessonCount = lessonsBetween(lessons, range.from, range.to).length;
   const windowCount = upcomingFreeWindows(data.lessons, eachDate(range.from, range.to), data.work, data.today, data.now).length;
-  const isFiltered = filters.studentId !== null || filters.type !== null || filters.subject !== null;
+  const isFiltered = filters.studentId !== null || filters.type !== null;
 
   return (
     <>
       <ScheduleHeader view={view} date={date} today={data.today} onChange={go} />
       <ScheduleFilters
         students={students}
-        subjects={subjects}
         filters={filters}
         summary={text.summary(lessonCount, windowCount)}
         onFilters={setFilters}

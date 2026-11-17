@@ -9,7 +9,7 @@ import { ProgressPage } from "./pages/ProgressPage";
 import { ReviewPage } from "./pages/ReviewPage";
 import { SchedulePage } from "./pages/schedule/SchedulePage";
 import { StudentHomePage } from "./pages/StudentHomePage";
-import { StudentsPage } from "./pages/StudentsPage";
+import { StudentsPage } from "./pages/students/StudentsPage";
 import { TasksPage } from "./pages/TasksPage";
 import { TrainerPage } from "./pages/TrainerPage";
 

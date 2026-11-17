@@ -63,7 +63,9 @@
 }
 
 @layer base {
-  [data-slot] {
+  *,
+  ::before,
+  ::after {
     border-color: var(--border);
   }
 }

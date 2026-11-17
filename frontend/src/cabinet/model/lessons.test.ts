@@ -1,16 +1,11 @@
 import { describe, expect, it } from "vitest";
-import type { LessonTemplate, ScheduleLesson, Student } from "../mocks/types";
+import type { LessonTemplate, ScheduleLesson } from "../mocks/types";
 import { expandTemplates, filterLessons, groupByDate, isPast, lessonsOn, minutesUntil, nextLesson } from "./lessons";
 
 const templates: LessonTemplate[] = [
   { id: "t1", studentId: "a", weekday: 1, start: "15:00", durationMin: 60, type: "individual" },
   { id: "t2", studentId: "b", weekday: 5, start: "12:00", durationMin: 60, type: "group" },
 ];
-
-const students = [
-  { id: "a", subject: "Математика · ЕГЭ профиль" },
-  { id: "b", subject: "Алгебра · 10 класс" },
-] as Student[];
 
 describe("expandTemplates", () => {
   const lessons = expandTemplates(templates, "2026-11-16", "2026-11-29");
@@ -31,10 +26,10 @@ describe("lessons helpers", () => {
     expect(lessonsOn(lessons, "2026-11-17")).toHaveLength(1);
   });
 
-  it("фильтрует по ученику, типу и предмету", () => {
-    expect(filterLessons(lessons, { studentId: "a", type: null, subject: null }, students)).toHaveLength(2);
-    expect(filterLessons(lessons, { studentId: null, type: "group", subject: null }, students)).toHaveLength(2);
-    expect(filterLessons(lessons, { studentId: null, type: null, subject: "Алгебра" }, students)).toHaveLength(2);
+  it("фильтрует по ученику и типу", () => {
+    expect(filterLessons(lessons, { studentId: "a", type: null })).toHaveLength(2);
+    expect(filterLessons(lessons, { studentId: null, type: "group" })).toHaveLength(2);
+    expect(filterLessons(lessons, { studentId: "a", type: "group" })).toHaveLength(0);
   });
 
   it("определяет прошедшие уроки", () => {

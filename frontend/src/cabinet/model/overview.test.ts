@@ -2,8 +2,8 @@ import { describe, expect, it } from "vitest";
 import type { ScheduleLesson, Student } from "../mocks/types";
 import { toLessonRow, weekDays } from "./overview";
 
-const student = { id: "s", subject: "Математика · ОГЭ", payment: "paid" } as Student;
-const debtor = { ...student, payment: "debt" } as Student;
+const student = { id: "s", goal: "ОГЭ · цель 5", balance: 0, payment: { model: "per_lesson", pricePerLesson: 100000 } } as Student;
+const debtor = { ...student, balance: -100 } as Student;
 
 function lesson(date: string, start: string): ScheduleLesson {
   return { id: `${date}-${start}`, studentId: "s", date, start, durationMin: 60, type: "individual", recurring: true };

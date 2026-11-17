@@ -3,6 +3,7 @@ import { getStudent } from "../../data";
 import type { ScheduleData, ScheduleLesson } from "../../mocks/types";
 import { formatLongDay } from "../../model/dates";
 import { groupByDate, isPast } from "../../model/lessons";
+import { paymentStatus } from "../../model/students";
 import { Avatar } from "../../ui/Avatar";
 import { cx } from "../../ui/cx";
 import { lessonTime, PaymentBadge } from "./LessonMeta";
@@ -48,9 +49,9 @@ export function ListView({ data, lessons, filtered, onOpen }: Props) {
                   </span>
                   <span className={styles.rowText}>
                     <b>{student.name}</b>
-                    <span>{student.subject}</span>
+                    <span>{student.goal}</span>
                   </span>
-                  {student.payment !== "paid" && <PaymentBadge payment={student.payment} />}
+                  {paymentStatus(student) !== "paid" && <PaymentBadge payment={paymentStatus(student)} />}
                 </button>
               );
             })}

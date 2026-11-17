@@ -13,8 +13,6 @@
 .event-ok { border-color: var(--color-positive); background: var(--cab-ok-soft); }
 .event-bad { border-color: var(--color-error); background: var(--cab-bad-soft); }
 
-.progressCell { min-width: 130px; }
-.progressNote { color: var(--color-muted); font-weight: 700; font-size: var(--fs-2xs); }
 
 .gen { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.15fr); gap: var(--space-4); align-items: start; }
 .chat { display: flex; flex-direction: column; gap: var(--space-3); }

@@ -64,7 +64,7 @@ export function TodayCard({ lessons }: { lessons: Record<Day, LessonRow[]> }) {
                     </>
                   }
                   title={student.name}
-                  note={lesson.subject}
+                  note={lesson.goal}
                 >
                   <Pill tone={statusTones[lesson.status]}>{statusLabel(lesson)}</Pill>
                   <Button size="sm" variant={index === nextIndex ? "primary" : "default"} onClick={() => notifySoon(text.join)}>

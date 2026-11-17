@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { addDays, addMonths, daysBetween, formatLongDay, formatMonthTitle, formatRange, monthGrid, startOfWeek, weekDates, weekdayIndex } from "./dates";
+import { addDays, addMonths, daysBetween, formatDayMonth, formatLongDay, formatMonthTitle, formatRange, formatShortDate, monthGrid, startOfWeek, weekDates, weekdayIndex } from "./dates";
 
 describe("dates", () => {
   it("находит день недели с понедельника", () => {
@@ -48,5 +48,10 @@ describe("dates", () => {
     expect(formatRange("2026-11-30", "2026-12-04")).toBe("30 ноября — 4 декабря");
     expect(formatMonthTitle("2026-11-17")).toBe("Ноябрь 2026");
     expect(formatLongDay("2026-11-17")).toBe("Вторник, 17 ноября");
+  });
+
+  it("форматирует короткие даты", () => {
+    expect(formatDayMonth("2026-09-01")).toBe("1 сентября");
+    expect(formatShortDate("2026-11-03")).toBe("03.11");
   });
 });
