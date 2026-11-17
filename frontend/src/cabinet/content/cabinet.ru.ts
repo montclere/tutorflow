@@ -15,6 +15,9 @@ export type IconName =
 
 const lessonForms: [string, string, string] = ["урок", "урока", "уроков"];
 const dayForms: [string, string, string] = ["день", "дня", "дней"];
+const studentForms: [string, string, string] = ["ученик", "ученика", "учеников"];
+const monthsDative = ["январю", "февралю", "марту", "апрелю", "маю", "июню", "июлю", "августу", "сентябрю", "октябрю", "ноябрю", "декабрю"];
+const monthsPrepositional = ["январе", "феврале", "марте", "апреле", "мае", "июне", "июле", "августе", "сентябре", "октябре", "ноябре", "декабре"];
 const windowForms: [string, string, string] = ["свободное окно", "свободных окна", "свободных окон"];
 
 export type Role = "teacher" | "student";
@@ -355,11 +358,68 @@ export const cabinet = {
       reworked: "Отправлено на доработку",
     },
     finance: {
-      title: "Финансы",
+      monthLabel: "Месяц",
+      prev: "Предыдущий месяц",
+      next: "Следующий месяц",
       export: "Экспорт",
       addPayment: "Оплата",
-      operations: "Операции",
-      columns: ["Дата", "Ученик", "Операция", "Сумма"],
+      tiles: {
+        received: { label: "Получено", hint: "Сумма всех оплат, поступивших за выбранный месяц." },
+        expected: { label: "Ожидается до конца месяца", hint: "Цена урока каждого ученика × уроки по расписанию, которые ещё не прошли." },
+        debt: { label: "Должны сейчас", hint: "Сумма отрицательных балансов у активных учеников на сегодня." },
+        prepaid: { label: "Предоплаты", hint: "Положительные балансы активных учеников; уроки впереди считаются по цене урока." },
+        hintLabel: "Как считается",
+        growth: (percent: number, monthIndex: number) => `${percent > 0 ? "+" : percent < 0 ? "−" : ""}${Math.abs(percent)}% к ${monthsDative[monthIndex] ?? ""}`,
+        noGrowth: "нет данных за прошлый месяц",
+        expectedNote: (lessons: number) => `по расписанию, ${lessons} ${plural(lessons, lessonForms)}`,
+        debtNote: (count: number) => (count === 0 ? "долгов нет" : `${count} ${plural(count, studentForms)}`),
+        prepaidNote: (lessons: number) => `${lessons} ${plural(lessons, lessonForms)} впереди`,
+      },
+      chart: {
+        title: "Доход по месяцам",
+        label: "Доход по месяцам",
+        received: "Получено",
+        earned: "Заработано уроками",
+        months: ["Янв", "Фев", "Мар", "Апр", "Май", "Июн", "Июл", "Авг", "Сен", "Окт", "Ноя", "Дек"],
+        summary: (check: string, monthIndex: number, lessons: number, cancellations: number) =>
+          `Средний чек урока ${check} · Уроков в ${monthsPrepositional[monthIndex] ?? ""} ${lessons} · Отмен со списанием ${cancellations}`,
+        empty: "Нет данных за этот месяц",
+        openMonth: (month: string) => `Открыть месяц: ${month}`,
+      },
+      debts: {
+        title: "Долги и абонементы",
+        remindAll: "Напомнить всем",
+        sent: "Отправлено",
+        remind: "Напомнить",
+        renew: "Продлить",
+        debtors: "Должники",
+        packages: "Абонементы",
+        debtNote: (amount: string, days: number) => (days > 0 ? `долг ${amount} · ${days} ${plural(days, dayForms)}` : `долг ${amount}`),
+        packageEnding: (left: number) => `остался ${left} ${plural(left, lessonForms)}`,
+        packageOk: "в норме",
+        empty: "Долгов нет",
+      },
+      operations: {
+        title: "Операции",
+        searchLabel: "Поиск по ученику",
+        searchPlaceholder: "Найти ученика",
+        filterLabel: "Тип операции",
+        filters: [
+          { id: "all", label: "Все" },
+          { id: "payment", label: "Оплаты" },
+          { id: "lesson", label: "Уроки" },
+          { id: "correction", label: "Корректировки" },
+        ] as const,
+        columns: ["Дата", "Ученик", "Операция", "Способ", "Сумма", "Чек"],
+        methods: { sbp: "СБП", cash: "Наличные", transfer: "Перевод" },
+        noMethod: "—",
+        receipt: { sent: "отправлен", todo: "выдать" },
+        more: (count: number) => `Показать ещё ${count}`,
+        pageSize: 8,
+        emptyMonth: "В этом месяце операций нет",
+        emptySearch: "Ничего не нашли",
+        listLabel: "Операции",
+      },
     },
   },
   student: {

@@ -2,7 +2,7 @@ import { useEffect, type ReactNode } from "react";
 import { teacherRoutes, studentRoutes } from "../config/routes";
 import { CabinetShell } from "./layout/CabinetShell";
 import { ExamPage } from "./pages/ExamPage";
-import { FinancePage } from "./pages/FinancePage";
+import { FinancePage } from "./pages/finance/FinancePage";
 import { HomeworkPage } from "./pages/HomeworkPage";
 import { OverviewPage } from "./pages/overview/OverviewPage";
 import { ProgressPage } from "./pages/ProgressPage";

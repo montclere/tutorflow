@@ -1,0 +1,87 @@
+import { describe, expect, it } from "vitest";
+import type { FinanceOperation, ScheduleLesson } from "../mocks/types";
+import { averageCheck, expectedIncome, filterOperations, growthPercent, lessonsAhead, monthIndex, monthKeyOf, shiftMonth } from "./finance";
+
+describe("месяцы", () => {
+  it("берёт ключ месяца из даты", () => {
+    expect(monthKeyOf("2026-11-17")).toBe("2026-11");
+  });
+
+  it("сдвигает месяц через границу года", () => {
+    expect(shiftMonth("2026-11", 1)).toBe("2026-12");
+    expect(shiftMonth("2026-12", 1)).toBe("2027-01");
+    expect(shiftMonth("2026-01", -1)).toBe("2025-12");
+  });
+
+  it("даёт номер месяца с нуля", () => {
+    expect(monthIndex("2026-11")).toBe(10);
+  });
+});
+
+describe("growthPercent", () => {
+  it("считает рост и падение в процентах", () => {
+    expect(growthPercent(8_240_000, 7_357_000)).toBe(12);
+    expect(growthPercent(90, 100)).toBe(-10);
+  });
+
+  it("не считает без прошлого месяца", () => {
+    expect(growthPercent(100, 0)).toBeNull();
+  });
+});
+
+describe("averageCheck", () => {
+  it("делит заработок на число уроков", () => {
+    expect(averageCheck(7_614_000, 54)).toBe(141_000);
+    expect(averageCheck(100, 0)).toBe(0);
+  });
+});
+
+describe("expectedIncome", () => {
+  const lessons: ScheduleLesson[] = [
+    { id: "1", studentId: "a", date: "2026-11-17", start: "12:00", durationMin: 60, type: "individual", recurring: true },
+    { id: "2", studentId: "a", date: "2026-11-17", start: "18:00", durationMin: 60, type: "individual", recurring: true },
+    { id: "3", studentId: "b", date: "2026-11-20", start: "12:00", durationMin: 60, type: "individual", recurring: true },
+    { id: "4", studentId: "b", date: "2026-12-01", start: "12:00", durationMin: 60, type: "individual", recurring: true },
+  ];
+  const price = (id: string) => (id === "a" ? 100_000 : 150_000);
+
+  it("суммирует предстоящие уроки месяца по цене ученика", () => {
+    expect(expectedIncome(lessons, price, "2026-11", "2026-11-17", "14:35")).toEqual({ amount: 250_000, lessons: 2 });
+  });
+
+  it("не считает уроки других месяцев", () => {
+    expect(expectedIncome(lessons, price, "2026-12", "2026-11-17", "14:35")).toEqual({ amount: 150_000, lessons: 1 });
+  });
+});
+
+describe("lessonsAhead", () => {
+  it("считает целые уроки по предоплате", () => {
+    expect(lessonsAhead({ balance: 450_000, payment: { model: "package", pricePerLesson: 125_000 } })).toBe(3);
+  });
+
+  it("ноль при долге и нулевом балансе", () => {
+    expect(lessonsAhead({ balance: -100, payment: { model: "per_lesson", pricePerLesson: 100_000 } })).toBe(0);
+    expect(lessonsAhead({ balance: 0, payment: { model: "per_lesson", pricePerLesson: 100_000 } })).toBe(0);
+  });
+});
+
+describe("filterOperations", () => {
+  const operations = [
+    { id: "1", studentId: "a", kind: "payment" },
+    { id: "2", studentId: "a", kind: "lesson" },
+    { id: "3", studentId: "b", kind: "payment" },
+  ] as FinanceOperation[];
+  const nameOf = (id: string) => (id === "a" ? "Анна Мельник" : "Борис Орлов");
+
+  it("фильтрует по типу", () => {
+    expect(filterOperations(operations, "payment", "", nameOf).map((item) => item.id)).toEqual(["1", "3"]);
+  });
+
+  it("ищет по имени ученика", () => {
+    expect(filterOperations(operations, "all", " орлов", nameOf).map((item) => item.id)).toEqual(["3"]);
+  });
+
+  it("возвращает всё без фильтров", () => {
+    expect(filterOperations(operations, "all", "", nameOf)).toHaveLength(3);
+  });
+});

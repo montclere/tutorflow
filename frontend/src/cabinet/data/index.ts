@@ -5,14 +5,16 @@ import { expandTemplates, lessonsOn } from "../model/lessons";
 import { toLessonRow, weekDays } from "../model/overview";
 import { students } from "../mocks/people";
 import { studentDetails } from "../mocks/studentDetails";
-import { deriveSchedule, nextLessonOf } from "../model/students";
+import { expectedIncome, growthPercent, lessonsAhead, monthKeyOf, shiftMonth } from "../model/finance";
+import { deriveSchedule, LOW_PACKAGE_LEFT, nextLessonOf } from "../model/students";
 import { lessonTemplates, scheduleNow, scheduleRange, scheduleToday, singleLessons, workHours } from "../mocks/schedule";
 import { exam, homework, progress, studentHome, trainer } from "../mocks/student";
 import { taskLab } from "../mocks/tasks";
-import { finance, overviewBase, review } from "../mocks/teacher";
+import { finance, financeToday } from "../mocks/finance";
+import { overviewBase, review } from "../mocks/teacher";
 import type {
   ExamData,
-  Finance,
+  FinanceOverview,
   Homework,
   Progress,
   Review,
@@ -105,8 +107,41 @@ export function getReview(): Review {
   return review;
 }
 
-export function getFinance(): Finance {
-  return finance;
+export function getCurrentMonth(): string {
+  return monthKeyOf(financeToday);
+}
+
+export function getFinanceMonths(): string[] {
+  return finance.history.map((item) => item.month);
+}
+
+export function getFinanceOverview(month: string): FinanceOverview {
+  const { history, operations, debtDays } = finance;
+  const active = allStudents.filter((student) => student.status === "active");
+  const stat = history.find((item) => item.month === month) ?? null;
+  const previous = history.find((item) => item.month === shiftMonth(month, -1));
+  const debtors = active.filter((student) => student.balance < 0);
+  const prepaid = active.filter((student) => student.balance > 0);
+
+  return {
+    month,
+    months: history.map((item) => item.month),
+    history,
+    stat,
+    receivedGrowth: stat && previous ? growthPercent(stat.received, previous.received) : null,
+    expected: expectedIncome(schedule.lessons, (id) => getStudent(id).payment.pricePerLesson, month, schedule.today, schedule.now),
+    debt: { amount: debtors.reduce((sum, student) => sum - student.balance, 0), count: debtors.length },
+    prepaid: {
+      amount: prepaid.reduce((sum, student) => sum + student.balance, 0),
+      lessons: prepaid.reduce((sum, student) => sum + lessonsAhead(student), 0),
+    },
+    debtors: debtors.map((student) => ({ studentId: student.id, amount: -student.balance, days: debtDays[student.id] ?? 0 })),
+    packages: active.flatMap((student) => {
+      const pack = student.payment.package;
+      return student.payment.model === "package" && pack ? [{ studentId: student.id, left: pack.left, total: pack.lessons, ending: pack.left <= LOW_PACKAGE_LEFT }] : [];
+    }),
+    operations: operations.filter((operation) => monthKeyOf(operation.date) === month),
+  };
 }
 
 export function getStudentHome(): StudentHome {

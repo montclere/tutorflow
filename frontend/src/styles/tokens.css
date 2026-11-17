@@ -153,3 +153,7 @@
   --schedule-day-min-width: 128px;
   --schedule-today-bg: rgb(35 70 230 / 0.05);
 }
+
+:root {
+  --cab-chart-muted: #8b94b2;
+}

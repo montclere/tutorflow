@@ -108,8 +108,40 @@ export type TeacherOverview = {
   exams: ExamPrep[];
 };
 
-export type Operation = { date: string; studentId: string; title: string; amountKopecks: number };
-export type Finance = { month: string; stats: StatData[]; operations: Operation[] };
+export type OperationKind = "payment" | "lesson" | "correction";
+export type PaymentMethod = "sbp" | "cash" | "transfer";
+
+export type FinanceOperation = {
+  id: string;
+  date: string;
+  studentId: string;
+  kind: OperationKind;
+  title: string;
+  method: PaymentMethod | null;
+  amount: number;
+  receipt: "sent" | "todo" | null;
+};
+
+export type MonthStat = { month: string; received: number; earned: number; lessons: number; chargedCancellations: number };
+
+export type FinanceMock = { history: MonthStat[]; operations: FinanceOperation[]; debtDays: Record<string, number> };
+
+export type DebtorRow = { studentId: string; amount: number; days: number };
+export type PackageRow = { studentId: string; left: number; total: number; ending: boolean };
+
+export type FinanceOverview = {
+  month: string;
+  months: string[];
+  history: MonthStat[];
+  stat: MonthStat | null;
+  receivedGrowth: number | null;
+  expected: { amount: number; lessons: number };
+  debt: { amount: number; count: number };
+  prepaid: { amount: number; lessons: number };
+  debtors: DebtorRow[];
+  packages: PackageRow[];
+  operations: FinanceOperation[];
+};
 
 export type ChatMessage = { author: "me" | "ai"; text: string };
 export type ParamField = { label: string; options: string[] };

@@ -1,4 +1,4 @@
-import type { Finance, OverviewBase, Review } from "./types";
+import type { OverviewBase, Review } from "./types";
 
 export const overviewBase: OverviewBase = {
   teacherName: "Анна",
@@ -15,22 +15,6 @@ export const overviewBase: OverviewBase = {
     { studentId: "orlova", delta: 2 },
     { studentId: "smirnova", delta: 1 },
     { studentId: "volkova", delta: -3, inactiveDays: 6 },
-  ],
-};
-
-export const finance: Finance = {
-  month: "Ноябрь 2026",
-  stats: [
-    { label: "Получено", value: "82 400 ₽", note: "оплаты за месяц", highlight: true },
-    { label: "Заработано", value: "76 000 ₽", note: "проведённые уроки" },
-    { label: "Долг", value: "1 200 ₽", note: "сейчас" },
-    { label: "Предоплаты", value: "10 900 ₽", note: "сейчас" },
-  ],
-  operations: [
-    { date: "17.11", studentId: "smirnova", title: "Оплата по ссылке · чек отправлен", amountKopecks: 400000 },
-    { date: "16.11", studentId: "ivanov", title: "Урок проведён", amountKopecks: -150000 },
-    { date: "13.11", studentId: "petrov", title: "Урок проведён", amountKopecks: -120000 },
-    { date: "15.11", studentId: "orlova", title: "Пакет 8 уроков", amountKopecks: 960000 },
   ],
 };
 
