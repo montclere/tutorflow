@@ -142,6 +142,7 @@ export type PackageRow = { studentId: string; left: number; total: number; endin
 export type FinanceOverview = {
   month: string;
   months: string[];
+  history: MonthStat[];
   stat: MonthStat | null;
   receivedGrowth: number | null;
   expected: { amount: number; lessons: number };

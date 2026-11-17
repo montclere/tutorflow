@@ -1,4 +1,4 @@
-import type { FinanceOperation, OperationKind, ScheduleLesson, Student } from "../mocks/types";
+import type { FinanceOperation, MonthStat, OperationKind, ScheduleLesson, Student } from "../mocks/types";
 import { isPast } from "./lessons";
 
 export type OperationFilter = OperationKind | "all";
@@ -62,4 +62,20 @@ export function filterOperations(
     if (filter !== "all" && operation.kind !== filter) return false;
     return needle === "" || nameOf(operation.studentId).toLowerCase().includes(needle);
   });
+}
+
+export type DynamicsMetric = "received" | "payments" | "lessons";
+export type SeriesPoint = { month: string; value: number };
+
+export function chartSeries(history: MonthStat[], metric: DynamicsMetric): SeriesPoint[] {
+  return history.map((item) => ({ month: item.month, value: item[metric] }));
+}
+
+export function seriesDomain(points: SeriesPoint[]): [number, number] {
+  if (points.length === 0) return [0, 1];
+  const values = points.map((point) => point.value);
+  const min = Math.min(...values);
+  const max = Math.max(...values);
+  const pad = Math.max((max - min) * 0.35, max * 0.05);
+  return [Math.max(0, Math.floor(min - pad)), Math.ceil(max + pad)];
 }

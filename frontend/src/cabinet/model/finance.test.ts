@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { FinanceOperation, ScheduleLesson } from "../mocks/types";
-import { expectedIncome, filterOperations, growthPercent, lessonsAhead, monthIndex, monthKeyOf, shiftMonth } from "./finance";
+import { chartSeries, expectedIncome, seriesDomain, filterOperations, growthPercent, lessonsAhead, monthIndex, monthKeyOf, shiftMonth } from "./finance";
 
 describe("месяцы", () => {
   it("берёт ключ месяца из даты", () => {
@@ -81,5 +81,36 @@ describe("filterOperations", () => {
 
   it("возвращает всё без фильтров", () => {
     expect(filterOperations(operations, "all", "", nameOf)).toHaveLength(3);
+  });
+});
+
+describe("chartSeries", () => {
+  const history = [
+    { month: "2026-10", received: 7_357_000, payments: 38, lessons: 52 },
+    { month: "2026-11", received: 8_240_000, payments: 42, lessons: 54 },
+  ];
+
+  it("берёт выбранный показатель по месяцам", () => {
+    expect(chartSeries(history, "payments")).toEqual([
+      { month: "2026-10", value: 38 },
+      { month: "2026-11", value: 42 },
+    ]);
+  });
+});
+
+describe("seriesDomain", () => {
+  it("оставляет запас, чтобы разница между месяцами была видна, и не уходит ниже нуля", () => {
+    const [min, max] = seriesDomain([
+      { month: "a", value: 100 },
+      { month: "b", value: 200 },
+    ]);
+    expect(min).toBeGreaterThan(0);
+    expect(min).toBeLessThan(100);
+    expect(max).toBeGreaterThan(200);
+    expect(seriesDomain([{ month: "a", value: 1 }])[0]).toBeGreaterThanOrEqual(0);
+  });
+
+  it("не падает на пустом списке", () => {
+    expect(seriesDomain([])).toEqual([0, 1]);
   });
 });

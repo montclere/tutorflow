@@ -128,6 +128,7 @@ export function getFinanceOverview(month: string): FinanceOverview {
   return {
     month,
     months: history.map((item) => item.month),
+    history,
     stat,
     receivedGrowth: stat && previous ? growthPercent(stat.received, previous.received) : null,
     expected: expectedIncome(

@@ -1,4 +1,5 @@
 import { routes, studentRoutes, teacherRoutes } from "../../config/routes.ts";
+import { formatRubles } from "../model/format.ts";
 import { plural } from "../model/plural.ts";
 import type { AttentionKind } from "../mocks/types.ts";
 
@@ -385,8 +386,10 @@ export const cabinet = {
       export: "Экспорт в Excel",
       addPayment: "Оплата",
       monthNames: ["январь", "февраль", "март", "апрель", "май", "июнь", "июль", "август", "сентябрь", "октябрь", "ноябрь", "декабрь"],
+      monthShort: ["Янв", "Фев", "Мар", "Апр", "Май", "Июн", "Июл", "Авг", "Сен", "Окт", "Ноя", "Дек"],
       received: {
         title: (month: string) => `Пришло денег за ${month}`,
+        chartLabel: "Приход по месяцам",
         growth: (percent: number, monthIndex: number) => `${percent > 0 ? "+" : percent < 0 ? "−" : ""}${Math.abs(percent)}% к ${monthsDative[monthIndex] ?? ""}`,
         summary: (payments: number, lessons: number) =>
           `${payments} ${plural(payments, paymentForms)} · ${lessons} ${plural(lessons, lessonForms)} ${plural(lessons, doneForms)}`,
@@ -395,6 +398,23 @@ export const cabinet = {
         expected: { label: "Ожидается до конца месяца", note: "поурочные уроки и долги" },
         debt: { label: "Должны сейчас", note: (count: number) => (count === 0 ? "долгов нет" : `${count} ${plural(count, studentForms)}`) },
         prepaid: { label: "Предоплаты", note: (lessons: number) => `${lessons} ${plural(lessons, lessonForms)} вперёд` },
+      },
+      dynamics: {
+        title: "Динамика",
+        metricLabel: "Показатель",
+        metrics: [
+          { id: "received", label: "Получено" },
+          { id: "payments", label: "Оплат" },
+          { id: "lessons", label: "Уроков" },
+        ] as const,
+        chartLabel: (metric: string) => `Динамика по месяцам: ${metric}`,
+        value: {
+          received: (kopecks: number) => formatRubles(kopecks),
+          payments: (count: number) => `${count} ${plural(count, paymentForms)}`,
+          lessons: (count: number) => `${count} ${plural(count, lessonForms)}`,
+        },
+        range: (from: string, to: string) => `${from} – ${to}`,
+        open: "Нажмите на месяц, чтобы открыть его",
       },
       debts: {
         title: "Долги и абонементы",
@@ -423,6 +443,9 @@ export const cabinet = {
         emptyMonth: "В этом месяце операций нет",
         emptySearch: "Ничего не нашли",
         listLabel: "Операции",
+        collapsedRows: 5,
+        showAll: (count: number) => `Показать все · ${count}`,
+        collapse: "Свернуть",
       },
     },
   },

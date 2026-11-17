@@ -1,5 +1,5 @@
-import { Search } from "lucide-react";
-import { useState } from "react";
+import { ChevronDown, ChevronUp, Search } from "lucide-react";
+import { useLayoutEffect, useRef, useState, type ReactNode } from "react";
 import { cabinet } from "../../content/cabinet.ru";
 import { getStudent } from "../../data";
 import type { FinanceOperation } from "../../mocks/types";
@@ -7,6 +7,7 @@ import { formatShortDate } from "../../model/dates";
 import { filterOperations, type OperationFilter } from "../../model/finance";
 import { formatSigned } from "../../model/format";
 import { Avatar } from "../../ui/Avatar";
+import { Button } from "../../ui/Button";
 import { Card } from "../../ui/Card";
 import { cx } from "../../ui/cx";
 import { EmptyState } from "../../ui/EmptyState";
@@ -16,6 +17,50 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { ToggleGroup, ToggleGroupItem } from "@/shared/ui/kit/toggle-group";
 
 const text = cabinet.teacher.finance.operations;
+
+type Heights = { full: number; collapsed: number };
+
+/**
+ * Показывает первые `limit` строк и плавно раскрывает остальные.
+ * Высоту «свёрнуто» берём по низу последней видимой строки, поэтому она подходит и таблице, и списку карточек.
+ */
+function Expandable({ limit, rowSelector, expanded, className, children }: { limit: number; rowSelector: string; expanded: boolean; className?: string; children: ReactNode }) {
+  const inner = useRef<HTMLDivElement>(null);
+  const [heights, setHeights] = useState<Heights | null>(null);
+
+  useLayoutEffect(() => {
+    const element = inner.current;
+    if (!element) return;
+    const measure = () => {
+      const full = element.offsetHeight;
+      const last = element.querySelectorAll<HTMLElement>(rowSelector)[limit - 1];
+      const collapsed = last ? Math.min(full, Math.ceil(last.getBoundingClientRect().bottom - element.getBoundingClientRect().top)) : full;
+      setHeights((current) => (current && current.full === full && current.collapsed === collapsed ? current : { full, collapsed }));
+    };
+    measure();
+    const observer = new ResizeObserver(measure);
+    observer.observe(element);
+    return () => observer.disconnect();
+  }, [limit, rowSelector]);
+
+  const hasMore = heights !== null && heights.collapsed < heights.full;
+
+  return (
+    <div
+      className={cx("relative overflow-hidden transition-[height] duration-300 ease-out motion-reduce:transition-none", className)}
+      style={heights ? { height: expanded ? heights.full : heights.collapsed } : undefined}
+    >
+      <div ref={inner}>{children}</div>
+      <div
+        aria-hidden="true"
+        className={cx(
+          "pointer-events-none absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-card to-transparent transition-opacity duration-300 motion-reduce:transition-none",
+          hasMore && !expanded ? "opacity-100" : "opacity-0",
+        )}
+      />
+    </div>
+  );
+}
 
 function Amount({ value }: { value: number }) {
   return (
@@ -30,8 +75,10 @@ function methodOf(operation: FinanceOperation): string {
 export function OperationsCard({ operations }: { operations: FinanceOperation[] }) {
   const [filter, setFilter] = useState<OperationFilter>("all");
   const [query, setQuery] = useState("");
+  const [expanded, setExpanded] = useState(false);
 
   const filtered = filterOperations(operations, filter, query, (id) => getStudent(id).name);
+  const hasMore = filtered.length > text.collapsedRows;
 
   return (
     <Card title={text.title}>
@@ -69,7 +116,7 @@ export function OperationsCard({ operations }: { operations: FinanceOperation[] 
         ) : (
           <>
             <div className="max-[520px]:hidden">
-              <div className="overflow-hidden rounded-xl border">
+              <Expandable limit={text.collapsedRows} rowSelector="tbody tr" expanded={expanded} className="rounded-xl border">
                 <Table aria-label={text.listLabel}>
                   <TableHeader>
                     <TableRow className="hover:bg-transparent">
@@ -104,10 +151,11 @@ export function OperationsCard({ operations }: { operations: FinanceOperation[] 
                     })}
                   </TableBody>
                 </Table>
-              </div>
+              </Expandable>
             </div>
 
-            <ul className="m-0 hidden list-none flex-col gap-2 p-0 max-[520px]:flex" aria-label={text.listLabel}>
+            <Expandable limit={text.collapsedRows} rowSelector="li" expanded={expanded} className="hidden max-[520px]:block">
+              <ul className="m-0 flex list-none flex-col gap-2 p-0" aria-label={text.listLabel}>
               {filtered.map((operation) => {
                 const student = getStudent(operation.studentId);
                 return (
@@ -124,7 +172,16 @@ export function OperationsCard({ operations }: { operations: FinanceOperation[] 
                   </li>
                 );
               })}
-            </ul>
+              </ul>
+            </Expandable>
+
+            {hasMore && (
+              <div className="flex justify-center">
+                <Button icon={expanded ? ChevronUp : ChevronDown} aria-expanded={expanded} onClick={() => setExpanded((current) => !current)}>
+                  {expanded ? text.collapse : text.showAll(filtered.length)}
+                </Button>
+              </div>
+            )}
           </>
         )}
       </div>

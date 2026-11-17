@@ -8,9 +8,13 @@ import { useNotifier } from "../../ui/Notifications";
 import { Button as KitButton } from "@/shared/ui/kit/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/shared/ui/kit/dropdown-menu";
 import { DebtsCard } from "./DebtsCard";
+import { DynamicsCard } from "./DynamicsCard";
 import { MoneyTiles } from "./MoneyTiles";
 import { OperationsCard } from "./OperationsCard";
+import styles from "./finance.module.css";
 import { useFinanceUrl } from "./useFinanceUrl";
+
+const rise = (delay: number) => ({ "--delay": `${delay}ms` }) as React.CSSProperties;
 
 const text = cabinet.teacher.finance;
 
@@ -49,8 +53,17 @@ export function FinancePage() {
 
       <div className="flex flex-col gap-4">
         <MoneyTiles data={data} />
-        <DebtsCard data={data} />
-        <OperationsCard key={month} operations={data.operations} />
+        <div className="grid grid-cols-[minmax(0,1fr)] gap-4 min-[1181px]:grid-cols-[minmax(0,3fr)_minmax(0,2fr)]">
+          <div className={`${styles.rise} [&>*]:h-full`} style={rise(320)}>
+            <DynamicsCard history={data.history} month={month} onPick={go} />
+          </div>
+          <div className={`${styles.rise} [&>*]:h-full`} style={rise(400)}>
+            <DebtsCard data={data} />
+          </div>
+        </div>
+        <div className={styles.rise} style={rise(480)}>
+          <OperationsCard key={month} operations={data.operations} />
+        </div>
       </div>
     </>
   );
