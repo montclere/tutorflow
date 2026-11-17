@@ -1,4 +1,5 @@
 import { env } from "../config/env";
+import { routes } from "../config/routes";
 import { landing } from "../content/landing.ru";
 import { SignupCta } from "../features/signup/ui/SignupCta";
 import { Object3D } from "../shared/decor/Object3D";
@@ -35,11 +36,9 @@ export function Hero() {
         <p className={styles.subtitle}>{text.subtitle}</p>
         <div className={styles.actions}>
           <SignupCta place="hero" label={text.cta} />
-          {env.demoUrl && (
-            <Button variant="ghost" href={env.demoUrl}>
-              {text.demo}
-            </Button>
-          )}
+          <Button variant="ghost" href={env.demoUrl ?? routes.teacherCabinet}>
+            {text.demo}
+          </Button>
         </div>
       </div>
     </section>

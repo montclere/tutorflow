@@ -1,13 +1,20 @@
 .page {
+  min-height: 100vh;
+  padding-bottom: 40px;
+}
+
+.inner {
   max-width: 1240px;
   margin: 0 auto;
-  padding: 28px 20px 40px;
+}
+
+.gutter {
+  padding: 0 20px;
 }
 
 .frame {
   position: relative;
   overflow: hidden;
-  border-radius: var(--radius-frame);
   background-color: var(--color-blue);
   background-image: var(--grid-pattern);
   background-position: -1px -1px;
@@ -18,22 +25,30 @@
   --focus-ring: var(--color-blue);
   position: relative;
   z-index: 4;
-  padding: 56px 26px 30px;
+  padding: 56px 0 30px;
   border-radius: var(--radius-frame) var(--radius-frame) 0 0;
   background: var(--color-paper);
 }
 
+.sheetInner {
+  padding: 0 26px;
+}
+
 @media (max-width: 560px) {
   .page {
-    padding: 12px 10px 28px;
+    padding-bottom: 28px;
   }
 
-  .frame {
-    border-radius: var(--radius-frame-mobile);
+  .gutter {
+    padding: 0 10px;
+  }
+
+  .sheetInner {
+    padding: 0 14px;
   }
 
   .sheet {
-    padding: 18px 14px 22px;
+    padding: 18px 0 22px;
     border-radius: var(--radius-frame-mobile) var(--radius-frame-mobile) 0 0;
   }
 }

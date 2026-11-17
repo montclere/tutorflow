@@ -1,7 +1,7 @@
 .ticker {
   position: relative;
   z-index: 5;
-  margin: 4px -30px -26px;
+  margin: 4px -3vw -26px;
   overflow: hidden;
   background: var(--color-lime);
   box-shadow: var(--shadow-float);

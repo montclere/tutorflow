@@ -27,22 +27,30 @@ export function App() {
     <>
       <div className={styles.page}>
         <div className={styles.frame}>
-          <Header onLogin={openLogin} />
+          <div className={styles.inner}>
+            <Header onLogin={openLogin} />
+          </div>
           <main>
-            <Hero />
+            <div className={styles.inner}>
+              <Hero />
+            </div>
             <Ticker />
             <div className={styles.sheet}>
-              <SignupSection {...signup} />
-              <HowItWorks />
-              <Features />
-              <Telegram />
-              <Pricing />
-              <Faq />
-              <FinalCta />
+              <div className={`${styles.inner} ${styles.sheetInner}`}>
+                <SignupSection {...signup} />
+                <HowItWorks />
+                <Features />
+                <Telegram />
+                <Pricing />
+                <Faq />
+                <FinalCta />
+              </div>
             </div>
           </main>
         </div>
-        <Footer />
+        <div className={`${styles.inner} ${styles.gutter}`}>
+          <Footer />
+        </div>
       </div>
       <MobileCta />
     </>
