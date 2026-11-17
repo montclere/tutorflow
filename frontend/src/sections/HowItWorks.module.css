@@ -1,0 +1,128 @@
+.section {
+  margin-top: 46px;
+}
+
+.flow {
+  position: relative;
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 12px;
+}
+
+.flow::before {
+  content: "";
+  position: absolute;
+  top: 34px;
+  right: 6%;
+  left: 6%;
+  border-top: 3px dashed var(--color-line-dashed);
+}
+
+.step {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-height: 236px;
+  padding: 18px 16px;
+  border-radius: var(--radius-card);
+  background: var(--color-mist);
+}
+
+.number {
+  display: grid;
+  place-items: center;
+  width: 52px;
+  height: 52px;
+  border-radius: var(--radius-md);
+  background: var(--color-blue);
+  color: var(--color-paper);
+  font-family: var(--font-display);
+  font-weight: 900;
+  font-size: var(--fs-lg);
+  box-shadow: 0 6px 0 var(--color-blue-deep);
+  transform: rotate(-6deg);
+}
+
+.step:nth-child(even) .number {
+  background: var(--color-lime);
+  color: var(--color-ink);
+  box-shadow: 0 6px 0 var(--color-lime-shadow);
+  transform: rotate(5deg);
+}
+
+.title {
+  margin-top: 8px;
+  font-family: var(--font-display);
+  font-weight: 900;
+  font-size: var(--fs-base);
+  line-height: 1.05;
+  letter-spacing: -0.02em;
+  text-transform: uppercase;
+}
+
+.text {
+  color: var(--color-muted);
+  font-weight: 600;
+  font-size: var(--fs-sm);
+}
+
+.demo {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: auto;
+}
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  padding: 8px 11px;
+  border-radius: var(--radius-input);
+  font-weight: 800;
+  font-size: var(--fs-xs);
+}
+
+.white {
+  background: var(--color-paper);
+  box-shadow: 0 2px 0 var(--color-line);
+}
+
+.blue {
+  background: var(--color-blue);
+  color: var(--color-paper);
+}
+
+.lime {
+  background: var(--color-lime);
+}
+
+.minus {
+  color: var(--color-error);
+}
+
+.plus {
+  color: var(--color-positive);
+}
+
+@media (max-width: 1100px) {
+  .flow {
+    grid-template-columns: repeat(3, 1fr);
+  }
+
+  .flow::before {
+    display: none;
+  }
+}
+
+@media (max-width: 860px) {
+  .flow {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+@media (max-width: 560px) {
+  .flow {
+    grid-template-columns: 1fr;
+  }
+}

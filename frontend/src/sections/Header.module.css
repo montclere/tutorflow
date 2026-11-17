@@ -1,0 +1,39 @@
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 22px 26px;
+}
+
+.nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.link {
+  padding: 7px 13px;
+  border: 1.5px solid var(--color-on-blue-border);
+  border-radius: var(--radius-pill);
+  color: var(--color-paper);
+  font-weight: 700;
+  font-size: var(--fs-xs);
+  text-decoration: none;
+}
+
+.link:hover {
+  background: var(--color-on-blue-hover);
+}
+
+@media (max-width: 860px) {
+  .nav {
+    display: none;
+  }
+}
+
+@media (max-width: 560px) {
+  .header {
+    padding: 16px;
+  }
+}

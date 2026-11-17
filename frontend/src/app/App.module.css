@@ -1,0 +1,39 @@
+.page {
+  max-width: 1240px;
+  margin: 0 auto;
+  padding: 28px 20px 40px;
+}
+
+.frame {
+  position: relative;
+  overflow: hidden;
+  border-radius: var(--radius-frame);
+  background-color: var(--color-blue);
+  background-image: var(--grid-pattern);
+  background-position: -1px -1px;
+  background-size: var(--grid-size) var(--grid-size);
+}
+
+.sheet {
+  --focus-ring: var(--color-blue);
+  position: relative;
+  z-index: 4;
+  padding: 56px 26px 30px;
+  border-radius: var(--radius-frame) var(--radius-frame) 0 0;
+  background: var(--color-paper);
+}
+
+@media (max-width: 560px) {
+  .page {
+    padding: 12px 10px 28px;
+  }
+
+  .frame {
+    border-radius: var(--radius-frame-mobile);
+  }
+
+  .sheet {
+    padding: 18px 14px 22px;
+    border-radius: var(--radius-frame-mobile) var(--radius-frame-mobile) 0 0;
+  }
+}

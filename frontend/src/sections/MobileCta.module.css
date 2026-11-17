@@ -1,0 +1,15 @@
+/* Удвоенный класс перебивает display базовой кнопки независимо от порядка подключения CSS-модулей. */
+.cta.cta {
+  display: none;
+}
+
+@media (max-width: 560px) {
+  .cta.cta {
+    position: fixed;
+    right: 10px;
+    bottom: 10px;
+    left: 10px;
+    z-index: 55;
+    display: flex;
+  }
+}

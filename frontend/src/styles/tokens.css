@@ -1,0 +1,102 @@
+:root {
+  color-scheme: light;
+
+  --color-outer: #1530b4;
+  --color-blue: #2346e6;
+  --color-blue-hover: #1a3bd8;
+  --color-blue-deep: #1b37c8;
+  --color-blue-soft: #c9d3ff;
+  --color-lime: #cdfc3a;
+  --color-lime-shadow: #9cc419;
+  --color-ink: #0d1542;
+  --color-paper: #ffffff;
+  --color-mist: #eff1f7;
+  --color-muted: #5d6788;
+  --color-error: #d23c3c;
+  --color-positive: #0f7a50;
+  --color-negative-on-dark: #ffeaea;
+  --color-line: #dfe3ee;
+  --color-line-soft: #e4e7f0;
+  --color-line-dashed: #c9cfe2;
+  --color-avatar: #ffd9a8;
+  --color-chat-screen: #dbe4ff;
+  --color-art-lime-light: #f4ffc4;
+  --color-art-lime-mid: #b6e025;
+  --color-art-lime-dark: #8fb915;
+  --color-art-lime-shade: #5d7a08;
+  --color-art-periwinkle: #9fb0f5;
+  --color-art-paper-blue: #d9e0ff;
+  --color-art-plane-shade: #8ea0ef;
+  --color-grid-line: rgb(255 255 255 / 0.07);
+  --color-on-blue-border: rgb(255 255 255 / 0.55);
+  --color-on-blue-hover: rgb(255 255 255 / 0.12);
+  --color-on-dark-muted: rgb(255 255 255 / 0.75);
+  --color-on-dark-surface: rgb(255 255 255 / 0.1);
+  --color-glass: rgb(40 70 220 / 0.38);
+  --color-glass-border: rgb(255 255 255 / 0.4);
+  --color-focus-ring-soft: rgb(35 70 230 / 0.12);
+
+  --font-display: "Unbounded", "Arial Black", sans-serif;
+  --font-body: "Manrope", "Segoe UI", Arial, sans-serif;
+
+  --fs-2xs: 11px;
+  --fs-xs: 12px;
+  --fs-sm: 13.5px;
+  --fs-md: 14.5px;
+  --fs-base: 16px;
+  --fs-lg: 18px;
+  --fs-xl: 20px;
+  --fs-2xl: 24px;
+  --fs-3xl: 30px;
+  --fs-hero: clamp(44px, 10.6vw, 150px);
+  --fs-final: clamp(40px, 8.4vw, 116px);
+  --fs-section: clamp(24px, 3vw, 36px);
+  --fs-signup: clamp(28px, 3.6vw, 46px);
+  --fs-telegram: clamp(28px, 3.8vw, 50px);
+  --fs-tile-hero: clamp(26px, 3vw, 38px);
+  --fs-price: clamp(40px, 5vw, 58px);
+  --fs-score: 46px;
+
+  --radius-phone: 42px;
+  --radius-frame: 36px;
+  --radius-screen: 32px;
+  --radius-section: 30px;
+  --radius-plan: 28px;
+  --radius-frame-mobile: 26px;
+  --radius-tile: 26px;
+  --radius-card: 24px;
+  --radius-section-mobile: 22px;
+  --radius-lg: 20px;
+  --radius-card-sm: 18px;
+  --radius-md: 16px;
+  --radius-control: 14px;
+  --radius-input: 12px;
+  --radius-sm: 10px;
+  --radius-xs: 8px;
+  --radius-2xs: 6px;
+  --radius-notch: 3px;
+  --radius-pill: 999px;
+  --radius-round: 50%;
+
+  --grid-size: 56px;
+  --grid-pattern:
+    linear-gradient(var(--color-grid-line) 1px, transparent 1px),
+    linear-gradient(90deg, var(--color-grid-line) 1px, transparent 1px);
+
+  --shadow-lime-button: 0 8px 0 var(--color-lime-shadow);
+  --shadow-lime-button-hover: 0 6px 0 var(--color-lime-shadow);
+  --shadow-lime-button-active: 0 2px 0 var(--color-lime-shadow);
+  --shadow-float: 0 20px 40px rgb(8 20 90 / 0.25);
+  --shadow-sticker: 0 10px 20px rgb(8 20 90 / 0.25);
+  --shadow-object: drop-shadow(0 18px 22px rgb(8 20 90 / 0.35));
+  --shadow-phone: 0 30px 60px rgb(13 21 66 / 0.3);
+  --shadow-card: 0 10px 30px rgb(13 21 66 / 0.12);
+  --shadow-message: 0 2px 6px rgb(13 21 66 / 0.06);
+
+  /* Цвет фокуса переопределяется на светлых и лаймовых поверхностях, чтобы рамка оставалась контрастной. */
+  --focus-ring: var(--color-lime);
+
+  --duration-badge: 16s;
+  --duration-ticker: 26s;
+  --duration-press: 0.12s;
+}

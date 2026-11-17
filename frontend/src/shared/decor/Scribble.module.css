@@ -1,0 +1,22 @@
+.scribble {
+  position: absolute;
+  z-index: 2;
+  height: auto;
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  pointer-events: none;
+}
+
+.lime {
+  color: var(--color-lime);
+}
+
+.blue {
+  color: var(--color-blue);
+}
+
+.ink {
+  color: var(--color-ink);
+}
