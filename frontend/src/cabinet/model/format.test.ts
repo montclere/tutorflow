@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { formatLessons, formatPackage, formatRubles, formatSigned, formatTimer, formatTimesPerWeek } from "./format";
+import { formatCountdown, formatLessons, formatPackage, formatRubles, formatSigned, formatTimer, formatTimesPerWeek } from "./format";
 
 describe("format", () => {
   it("форматирует рубли из копеек", () => {
@@ -35,5 +35,14 @@ describe("склонения и подписи", () => {
 
   it("описывает абонемент", () => {
     expect(formatPackage(8, 125000, 1)).toMatch(/^8 × 1\s250 ₽ · осталось 1$/);
+  });
+});
+
+describe("formatCountdown", () => {
+  it("пишет минуты и часы", () => {
+    expect(formatCountdown(25)).toBe("через 25 мин");
+    expect(formatCountdown(60)).toBe("через 1 ч");
+    expect(formatCountdown(95)).toBe("через 1 ч 35 мин");
+    expect(formatCountdown(-5)).toBe("через 0 мин");
   });
 });

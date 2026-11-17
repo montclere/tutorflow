@@ -1,10 +1,8 @@
-import { Bell, Menu, Search } from "lucide-react";
-import { type FormEvent } from "react";
+import { Bell, Menu } from "lucide-react";
 import { studentPerson, teacherPerson } from "../mocks/people";
 import { cabinet, type Role } from "../content/cabinet.ru";
 import { Avatar } from "../ui/Avatar";
 import { IconButton } from "../ui/Button";
-import { ICON_SIZE } from "../ui/Icon";
 import { useNotifier } from "../ui/Notifications";
 import styles from "./layout.module.css";
 
@@ -13,11 +11,6 @@ type Props = { role: Role; menuOpen: boolean; onToggleMenu: () => void };
 export function Topbar({ role, menuOpen, onToggleMenu }: Props) {
   const { notifySoon } = useNotifier();
   const person = role === "teacher" ? teacherPerson : studentPerson;
-
-  const search = (event: FormEvent) => {
-    event.preventDefault();
-    notifySoon(cabinet.shell.searchLabel);
-  };
 
   return (
     <header className={styles.top}>
@@ -30,10 +23,6 @@ export function Topbar({ role, menuOpen, onToggleMenu }: Props) {
           aria-controls="cabinet-menu"
           onClick={onToggleMenu}
         />
-        <form className={styles.search} role="search" onSubmit={search}>
-          <Search size={ICON_SIZE} aria-hidden="true" />
-          <input placeholder={cabinet.shell.searchPlaceholder} aria-label={cabinet.shell.searchLabel} />
-        </form>
       </div>
       <div className={styles.me}>
         <span className={styles.bell}>

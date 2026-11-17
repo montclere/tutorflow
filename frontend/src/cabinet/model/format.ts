@@ -34,3 +34,11 @@ export function formatTimesPerWeek(count: number): string {
 export function formatPackage(lessons: number, priceKopecks: number, left: number): string {
   return `${lessons} × ${formatRubles(priceKopecks)} · осталось ${left}`;
 }
+
+export function formatCountdown(minutes: number): string {
+  const safe = Math.max(0, minutes);
+  if (safe < 60) return `через ${safe} мин`;
+  const hours = Math.floor(safe / 60);
+  const rest = safe % 60;
+  return rest ? `через ${hours} ч ${rest} мин` : `через ${hours} ч`;
+}

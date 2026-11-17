@@ -59,8 +59,6 @@ export const cabinet = {
     menuLabel: "Меню",
     openMenu: "Открыть меню",
     closeMenu: "Закрыть меню",
-    searchLabel: "Поиск",
-    searchPlaceholder: "Поиск: ученик, задание, тема",
     notificationsLabel: "Уведомления",
     skip: "К содержимому",
   },
@@ -78,24 +76,13 @@ export const cabinet = {
   teacher: {
     overview: {
       greeting: (name: string) => `Добрый день, ${name}`,
-      addTask: "Задание",
-      addLesson: "Урок",
       today: {
-        title: "Сегодня",
-        tabsLabel: "День",
-        days: [
-          { id: "today", label: "Сегодня" },
-          { id: "tomorrow", label: "Завтра" },
-        ] as const,
-        tabLabel: (label: string, count: number) => `${label} · ${count}`,
+        title: "Ближайшие занятия",
+        tomorrow: "Завтра",
         join: "Войти",
         empty: "Уроков нет",
-        status: {
-          done: "Проведён",
-          paid: "Оплачено",
-          debt: "Долг",
-          soon: (minutes: number) => `через ${minutes} мин`,
-        },
+        debt: "Долг",
+        doneLabel: "Проведён",
       },
       attention: {
         title: "Требует внимания",
@@ -111,16 +98,11 @@ export const cabinet = {
         lessonDone: "Урок отмечен проведённым",
       },
       week: {
-        title: "Неделя",
-        summary: (lessons: number, load: number) => `${lessons} ${plural(lessons, lessonForms)} · загрузка ${load}%`,
+        title: "Нагрузка недели",
+        lessons: (count: number) => plural(count, lessonForms),
+        load: (percent: number) => `Загрузка ${percent}%`,
         chartLabel: "Уроков по дням недели",
-        maxFreeWindows: 3,
         barLabel: (day: string, count: number) => `${day}: ${count} ${plural(count, lessonForms)}`,
-        freeWindows: (windows: string[]) => (windows.length ? `Свободно: ${windows.join(" · ")}` : "Свободных окон нет"),
-        share: "Поделиться",
-        shareIntro: "Свободные окна на неделе:",
-        copied: "Окна скопированы",
-        copyFailed: "Не удалось скопировать",
       },
       exams: {
         title: "Подготовка к экзаменам",

@@ -115,24 +115,7 @@
   border-bottom: 1px solid var(--cab-line);
 }
 
-.topLeft { display: flex; align-items: center; gap: var(--space-3); }
-
-.search {
-  display: flex;
-  align-items: center;
-  gap: var(--space-2);
-  width: min(340px, 50vw);
-  padding: 9px 12px;
-  border: 1px solid var(--cab-line);
-  border-radius: 12px;
-  background: var(--color-paper);
-  color: var(--color-muted);
-}
-
-.search { transition: border-color 0.15s; }
-.search:hover { border-color: var(--color-blue); }
-.search:focus-within { border-color: var(--color-blue); outline: 3px solid var(--focus-ring); outline-offset: 2px; }
-.search input { width: 100%; border: 0; outline: 0; background: transparent; }
+.topLeft { display: flex; min-width: 0; align-items: center; gap: var(--space-3); }
 
 .me { display: flex; align-items: center; gap: var(--space-3); }
 .who small { display: block; color: var(--color-muted); font-size: var(--fs-xs); line-height: 1.2; }
