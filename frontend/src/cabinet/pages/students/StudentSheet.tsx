@@ -13,7 +13,8 @@ import { ScrollArea } from "@/shared/ui/kit/scroll-area";
 import { Sheet, SheetContent, SheetDescription, SheetTitle } from "@/shared/ui/kit/sheet";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/shared/ui/kit/tabs";
 import { StudentOverview } from "./StudentOverview";
-import { LessonsTab, NotesTab, PaymentsTab, TasksTab } from "./StudentTabs";
+import { TasksTab } from "./StudentTasks";
+import { LessonsTab, NotesTab, PaymentsTab } from "./StudentTabs";
 import { balanceClass, formatBalance, nextLessonText } from "./StudentsTable";
 
 const students = cabinet.teacher.students;
@@ -28,10 +29,10 @@ type Props = {
 
 function Tile({ label, value, note, valueClass }: { label: string; value: string; note?: string; valueClass?: string }) {
   return (
-    <div className="grid min-w-0 content-start gap-1 rounded-xl border bg-card p-3">
-      <span className="text-xs font-bold text-muted-foreground">{label}</span>
-      <b className={cx("font-[family-name:var(--font-display)] text-sm leading-snug font-extrabold tabular-nums", valueClass)}>{value}</b>
-      {note && <span className="text-xs font-semibold text-muted-foreground tabular-nums">{note}</span>}
+    <div className="grid min-w-0 content-start gap-1 rounded-2xl border bg-card p-4">
+      <span className="text-sm font-bold text-muted-foreground">{label}</span>
+      <b className={cx("font-[family-name:var(--font-display)] text-lg leading-snug font-extrabold tabular-nums", valueClass)}>{value}</b>
+      {note && <span className="text-sm font-semibold text-muted-foreground tabular-nums">{note}</span>}
     </div>
   );
 }
@@ -50,15 +51,15 @@ export function StudentSheet({ student, today, onClose, onCloseAutoFocus }: Prop
 
   return (
     <Sheet open={student !== null} onOpenChange={(open) => !open && onClose()}>
-      <SheetContent className="w-full gap-0 p-0 sm:max-w-[580px]" onCloseAutoFocus={onCloseAutoFocus}>
+      <SheetContent className="w-full gap-0 p-0 sm:max-w-[640px]" onCloseAutoFocus={onCloseAutoFocus}>
         {student && (
           <ScrollArea className="min-h-0 flex-1">
             <div className="grid grid-cols-[minmax(0,1fr)] gap-5 p-5 sm:p-6">
               <div className="flex items-center gap-4 pr-10">
                 <Avatar initials={student.initials} color={student.color} large />
                 <div className="min-w-0">
-                  <SheetTitle className="m-0 font-[family-name:var(--font-display)] text-xl leading-tight font-black tracking-tight">{student.name}</SheetTitle>
-                  <SheetDescription className="m-0 text-sm font-semibold">{text.since(student.goal, formatDayMonth(student.startedAt))}</SheetDescription>
+                  <SheetTitle className="m-0 font-[family-name:var(--font-display)] text-2xl leading-tight font-black tracking-tight">{student.name}</SheetTitle>
+                  <SheetDescription className="m-0 text-base font-semibold">{text.since(student.goal, formatDayMonth(student.startedAt))}</SheetDescription>
                 </div>
               </div>
 
@@ -87,7 +88,7 @@ export function StudentSheet({ student, today, onClose, onCloseAutoFocus }: Prop
                 </DropdownMenu>
               </div>
 
-              <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+              <div className="grid grid-cols-2 gap-3">
                 <Tile label={text.tiles.balance} value={formatBalance(student.balance)} valueClass={balanceClass(student.balance)} />
                 <Tile label={text.tiles.next} value={nextLessonText(student, today)} />
                 <Tile label={text.tiles.tariff} {...tariff(student)} />

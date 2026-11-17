@@ -45,7 +45,18 @@ export type Student = {
 export type StudentRecord = Omit<Student, "schedule" | "nextLesson">;
 
 export type PaymentMove = { date: string; title: string; amount: number };
-export type AssignedTask = { title: string; status: "todo" | "wait" | "done"; result: string | null };
+export type TaskMistake = { number: string; topic: string; answer: string; correct: string };
+export type TaskScore = { correct: number; total: number };
+export type AssignedTask = {
+  title: string;
+  status: "todo" | "wait" | "done";
+  assignedAt: string;
+  due?: string;
+  submittedAt?: string;
+  timeMin?: number;
+  score: TaskScore | null;
+  mistakes: TaskMistake[];
+};
 export type StudentNote = { date: string; text: string };
 
 export type StudentDetails = {

@@ -63,12 +63,9 @@ export function StudentsPage() {
       <PageHead
         title={text.title}
         actions={
-          <>
-            <Button onClick={() => notifySoon(text.import)}>{text.import}</Button>
-            <Button variant="primary" icon={Plus} onClick={() => notifySoon(text.invite)}>
-              {text.invite}
-            </Button>
-          </>
+          <Button variant="primary" icon={Plus} onClick={() => notifySoon(text.invite)}>
+            {text.invite}
+          </Button>
         }
       />
       <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
