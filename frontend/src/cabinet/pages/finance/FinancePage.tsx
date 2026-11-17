@@ -1,12 +1,13 @@
-import { ChevronLeft, ChevronRight, Download, Plus } from "lucide-react";
+import { ChevronLeft, ChevronRight, Ellipsis, Plus } from "lucide-react";
 import { cabinet } from "../../content/cabinet.ru";
 import { getCurrentMonth, getFinanceMonths, getFinanceOverview } from "../../data";
 import { shiftMonth } from "../../model/finance";
 import { formatMonthTitle } from "../../model/dates";
 import { Button, IconButton } from "../../ui/Button";
 import { useNotifier } from "../../ui/Notifications";
+import { Button as KitButton } from "@/shared/ui/kit/button";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/shared/ui/kit/dropdown-menu";
 import { DebtsCard } from "./DebtsCard";
-import { IncomeChart } from "./IncomeChart";
 import { MoneyTiles } from "./MoneyTiles";
 import { OperationsCard } from "./OperationsCard";
 import { useFinanceUrl } from "./useFinanceUrl";
@@ -30,9 +31,16 @@ export function FinancePage() {
           <IconButton icon={ChevronRight} label={text.next} disabled={!months.includes(next)} onClick={() => go(next)} />
         </div>
         <div className="flex flex-wrap gap-2">
-          <Button icon={Download} onClick={() => notifySoon(text.export)}>
-            {text.export}
-          </Button>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <KitButton variant="secondary" size="icon" aria-label={text.menuLabel}>
+                <Ellipsis aria-hidden="true" />
+              </KitButton>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem onSelect={() => notifySoon(text.export)}>{text.export}</DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
           <Button variant="primary" icon={Plus} onClick={() => notifySoon(text.addPayment)}>
             {text.addPayment}
           </Button>
@@ -41,10 +49,7 @@ export function FinancePage() {
 
       <div className="flex flex-col gap-4">
         <MoneyTiles data={data} />
-        <div className="grid grid-cols-[minmax(0,1fr)] gap-4 min-[1181px]:grid-cols-[minmax(0,3fr)_minmax(0,2fr)]">
-          <IncomeChart data={data} onPick={go} />
-          <DebtsCard data={data} />
-        </div>
+        <DebtsCard data={data} />
         <OperationsCard key={month} operations={data.operations} />
       </div>
     </>

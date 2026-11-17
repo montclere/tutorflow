@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { FinanceOperation, ScheduleLesson } from "../mocks/types";
-import { averageCheck, expectedIncome, filterOperations, growthPercent, lessonsAhead, monthIndex, monthKeyOf, shiftMonth } from "./finance";
+import { expectedIncome, filterOperations, growthPercent, lessonsAhead, monthIndex, monthKeyOf, shiftMonth } from "./finance";
 
 describe("месяцы", () => {
   it("берёт ключ месяца из даты", () => {
@@ -29,13 +29,6 @@ describe("growthPercent", () => {
   });
 });
 
-describe("averageCheck", () => {
-  it("делит заработок на число уроков", () => {
-    expect(averageCheck(7_614_000, 54)).toBe(141_000);
-    expect(averageCheck(100, 0)).toBe(0);
-  });
-});
-
 describe("expectedIncome", () => {
   const lessons: ScheduleLesson[] = [
     { id: "1", studentId: "a", date: "2026-11-17", start: "12:00", durationMin: 60, type: "individual", recurring: true },
@@ -43,14 +36,19 @@ describe("expectedIncome", () => {
     { id: "3", studentId: "b", date: "2026-11-20", start: "12:00", durationMin: 60, type: "individual", recurring: true },
     { id: "4", studentId: "b", date: "2026-12-01", start: "12:00", durationMin: 60, type: "individual", recurring: true },
   ];
-  const price = (id: string) => (id === "a" ? 100_000 : 150_000);
+  const price = (id: string) => (id === "a" ? 100_000 : id === "b" ? 150_000 : null);
 
-  it("суммирует предстоящие уроки месяца по цене ученика", () => {
-    expect(expectedIncome(lessons, price, "2026-11", "2026-11-17", "14:35")).toEqual({ amount: 250_000, lessons: 2 });
+  it("суммирует предстоящие поурочные уроки месяца и добавляет долги", () => {
+    expect(expectedIncome(lessons, price, "2026-11", "2026-11-17", "14:35", 120_000)).toEqual({ amount: 370_000, lessons: 2 });
   });
 
-  it("не считает уроки других месяцев", () => {
-    expect(expectedIncome(lessons, price, "2026-12", "2026-11-17", "14:35")).toEqual({ amount: 150_000, lessons: 1 });
+  it("не считает уроки из абонементов", () => {
+    const withPackage: ScheduleLesson[] = [...lessons, { id: "5", studentId: "pack", date: "2026-11-25", start: "12:00", durationMin: 60, type: "individual", recurring: true }];
+    expect(expectedIncome(withPackage, price, "2026-11", "2026-11-17", "14:35", 0)).toEqual({ amount: 250_000, lessons: 2 });
+  });
+
+  it("не добавляет долги к другим месяцам и не считает их уроки в текущем", () => {
+    expect(expectedIncome(lessons, price, "2026-12", "2026-11-17", "14:35", 120_000)).toEqual({ amount: 150_000, lessons: 1 });
   });
 });
 

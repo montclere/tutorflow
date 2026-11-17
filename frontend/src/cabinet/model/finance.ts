@@ -21,19 +21,29 @@ export function growthPercent(current: number, previous: number): number | null 
   return previous > 0 ? Math.round(((current - previous) / previous) * 100) : null;
 }
 
-export function averageCheck(earned: number, lessons: number): number {
-  return lessons > 0 ? Math.round(earned / lessons) : 0;
-}
-
+/**
+ * Ожидаемый приход: предстоящие поурочные уроки месяца по цене урока плюс текущие долги.
+ * Уроки из абонементов не считаются (priceOf возвращает null) — они уже оплачены.
+ * Долги добавляются только к текущему месяцу: в прошлых и будущих они не «ожидаются».
+ */
 export function expectedIncome(
   lessons: ScheduleLesson[],
-  priceOf: (studentId: string) => number,
+  priceOf: (studentId: string) => number | null,
   month: string,
   today: string,
   now: string,
+  debt: number,
 ): { amount: number; lessons: number } {
-  const planned = lessons.filter((lesson) => monthKeyOf(lesson.date) === month && !isPast(lesson, today, now));
-  return { amount: planned.reduce((sum, lesson) => sum + priceOf(lesson.studentId), 0), lessons: planned.length };
+  let amount = 0;
+  let count = 0;
+  for (const lesson of lessons) {
+    if (monthKeyOf(lesson.date) !== month || isPast(lesson, today, now)) continue;
+    const price = priceOf(lesson.studentId);
+    if (price === null) continue;
+    amount += price;
+    count += 1;
+  }
+  return { amount: amount + (month === monthKeyOf(today) ? debt : 0), lessons: count };
 }
 
 export function lessonsAhead(student: Pick<Student, "balance" | "payment">): number {

@@ -122,20 +122,35 @@ export function getFinanceOverview(month: string): FinanceOverview {
   const previous = history.find((item) => item.month === shiftMonth(month, -1));
   const debtors = active.filter((student) => student.balance < 0);
   const prepaid = active.filter((student) => student.balance > 0);
+  const debtAmount = debtors.reduce((sum, student) => sum - student.balance, 0);
 
   return {
     month,
     months: history.map((item) => item.month),
-    history,
     stat,
     receivedGrowth: stat && previous ? growthPercent(stat.received, previous.received) : null,
-    expected: expectedIncome(schedule.lessons, (id) => getStudent(id).payment.pricePerLesson, month, schedule.today, schedule.now),
-    debt: { amount: debtors.reduce((sum, student) => sum - student.balance, 0), count: debtors.length },
+    expected: expectedIncome(
+      schedule.lessons,
+      (id) => {
+        const { model, pricePerLesson } = getStudent(id).payment;
+        return model === "per_lesson" ? pricePerLesson : null;
+      },
+      month,
+      schedule.today,
+      schedule.now,
+      debtAmount,
+    ),
+    debt: { amount: debtAmount, count: debtors.length },
     prepaid: {
       amount: prepaid.reduce((sum, student) => sum + student.balance, 0),
       lessons: prepaid.reduce((sum, student) => sum + lessonsAhead(student), 0),
     },
-    debtors: debtors.map((student) => ({ studentId: student.id, amount: -student.balance, days: debtDays[student.id] ?? 0 })),
+    debtors: debtors.map((student) => ({
+      studentId: student.id,
+      amount: -student.balance,
+      days: debtDays[student.id] ?? 0,
+      payer: student.parent ? student.parent.relation.toLowerCase() : null,
+    })),
     packages: active.flatMap((student) => {
       const pack = student.payment.package;
       return student.payment.model === "package" && pack ? [{ studentId: student.id, left: pack.left, total: pack.lessons, ending: pack.left <= LOW_PACKAGE_LEFT }] : [];

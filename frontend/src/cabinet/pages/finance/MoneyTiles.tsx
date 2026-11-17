@@ -1,51 +1,65 @@
-import { Info } from "lucide-react";
 import { cabinet } from "../../content/cabinet.ru";
 import type { FinanceOverview } from "../../mocks/types";
 import { monthIndex, shiftMonth } from "../../model/finance";
 import { formatRubles } from "../../model/format";
 import { cx } from "../../ui/cx";
+import { Badge } from "@/shared/ui/kit/badge";
 import { Card } from "@/shared/ui/kit/card";
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/shared/ui/kit/tooltip";
 
-const text = cabinet.teacher.finance.tiles;
+const received = cabinet.teacher.finance.received;
+const tiles = cabinet.teacher.finance.tiles;
+const monthNames = cabinet.teacher.finance.monthNames;
 
-type TileProps = { label: string; hint: string; value: string; note: string; valueClass?: string; noteClass?: string };
+type TileProps = { label: string; value: string; note: string; valueClass?: string; className?: string };
 
-function Tile({ label, hint, value, note, valueClass, noteClass }: TileProps) {
+function Tile({ label, value, note, valueClass, className }: TileProps) {
   return (
-    <Card className="gap-2 px-5">
-      <div className="flex min-h-8 items-start justify-between gap-2">
-        <span className="min-w-0 text-xs font-bold text-muted-foreground">{label}</span>
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <button
-              type="button"
-              aria-label={`${text.hintLabel}: ${label}`}
-              className="grid size-6 flex-none place-items-center rounded-md border-0 bg-transparent text-muted-foreground transition-colors duration-150 outline-none hover:bg-secondary hover:text-foreground focus-visible:ring-[3px] focus-visible:ring-ring/40 active:bg-accent motion-reduce:transition-none"
-            >
-              <Info size={15} aria-hidden="true" />
-            </button>
-          </TooltipTrigger>
-          <TooltipContent className="max-w-60">{hint}</TooltipContent>
-        </Tooltip>
-      </div>
-      <b className={cx("font-[family-name:var(--font-display)] text-2xl leading-none font-black tracking-tight tabular-nums max-[520px]:text-xl", valueClass)}>{value}</b>
-      <span className={cx("text-xs font-bold text-muted-foreground tabular-nums", noteClass)}>{note}</span>
+    <Card className={cx("justify-center gap-1 px-5 py-4", className)}>
+      <span className="text-sm font-bold text-muted-foreground">{label}</span>
+      <b className={cx("font-[family-name:var(--font-display)] text-2xl leading-tight font-black tracking-tight tabular-nums", valueClass)}>{value}</b>
+      <span className="text-sm font-semibold text-muted-foreground tabular-nums">{note}</span>
     </Card>
   );
 }
 
+function Growth({ percent, month }: { percent: number; month: string }) {
+  const text = received.growth(percent, monthIndex(shiftMonth(month, -1)));
+  return percent >= 0 ? (
+    <Badge variant="highlight" className="px-3 py-1 text-sm tabular-nums">
+      {text}
+    </Badge>
+  ) : (
+    <span className="inline-flex rounded-full bg-white/15 px-3 py-1 text-sm font-bold tabular-nums">{text}</span>
+  );
+}
+
 export function MoneyTiles({ data }: { data: FinanceOverview }) {
-  const growth = data.receivedGrowth;
-  const growthNote = growth === null ? text.noGrowth : text.growth(growth, monthIndex(shiftMonth(data.month, -1)));
-  const growthClass = growth === null || growth === 0 ? undefined : growth > 0 ? "text-success" : "text-destructive";
+  const stat = data.stat;
 
   return (
-    <div className="grid grid-cols-4 gap-4 max-[1180px]:grid-cols-2">
-      <Tile {...text.received} value={formatRubles(data.stat?.received ?? 0)} note={growthNote} noteClass={growthClass} />
-      <Tile {...text.expected} value={formatRubles(data.expected.amount)} note={text.expectedNote(data.expected.lessons)} />
-      <Tile {...text.debt} value={formatRubles(data.debt.amount)} note={text.debtNote(data.debt.count)} valueClass={data.debt.amount > 0 ? "text-destructive" : undefined} />
-      <Tile {...text.prepaid} value={formatRubles(data.prepaid.amount)} note={text.prepaidNote(data.prepaid.lessons)} />
+    <div className="grid grid-cols-[minmax(0,1fr)] gap-4 min-[1181px]:grid-cols-[minmax(0,3fr)_minmax(0,2fr)]">
+      <Card className="justify-between gap-6 border-transparent bg-primary px-6 py-6 text-primary-foreground">
+        <span className="text-base font-bold text-white/80">{received.title(monthNames[monthIndex(data.month)] ?? "")}</span>
+        <div className="flex flex-wrap items-center gap-x-4 gap-y-3">
+          <b className="font-[family-name:var(--font-display)] text-5xl leading-none font-black tracking-tight tabular-nums max-[520px]:text-4xl">
+            {formatRubles(stat?.received ?? 0)}
+          </b>
+          {data.receivedGrowth !== null && <Growth percent={data.receivedGrowth} month={data.month} />}
+        </div>
+        {stat && <span className="text-sm font-semibold text-white/75 tabular-nums">{received.summary(stat.payments, stat.lessons)}</span>}
+      </Card>
+
+      <div className="grid grid-cols-[minmax(0,1fr)] gap-4">
+        <Tile label={tiles.expected.label} value={formatRubles(data.expected.amount)} note={tiles.expected.note} />
+        <Tile
+          label={tiles.debt.label}
+          value={formatRubles(data.debt.amount)}
+          note={tiles.debt.note(data.debt.count)}
+          valueClass={data.debt.amount > 0 ? "text-destructive" : undefined}
+          className={data.debt.amount > 0 ? "border-destructive" : undefined}
+        />
+        <Tile label={tiles.prepaid.label} value={formatRubles(data.prepaid.amount)} note={tiles.prepaid.note(data.prepaid.lessons)} />
+      </div>
     </div>
   );
 }
