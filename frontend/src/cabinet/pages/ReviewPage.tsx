@@ -36,7 +36,7 @@ export function ReviewPage() {
               const owner = getStudent(entry.studentId);
               return (
                 <button key={entry.title} type="button" className={styles.qitem} aria-pressed={entryIndex === index} onClick={() => setIndex(entryIndex)}>
-                  <Avatar initials={owner.initials} tone={owner.tone} />
+                  <Avatar initials={owner.initials} color={owner.color} />
                   <span>
                     <b>{owner.name}</b>
                     <small>{entry.title}</small>

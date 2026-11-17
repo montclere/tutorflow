@@ -42,7 +42,7 @@ export function ExamsCard({ exams }: { exams: ExamPrep[] }) {
           return (
             <ListRow
               key={item.studentId}
-              lead={<Avatar initials={student.initials} tone={student.tone} />}
+              lead={<Avatar initials={student.initials} color={student.color} />}
               title={name}
               note={
                 <>

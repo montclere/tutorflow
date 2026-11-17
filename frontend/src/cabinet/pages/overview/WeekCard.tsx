@@ -49,7 +49,7 @@ export function WeekCard({ week }: { week: WeekPlan }) {
       </ol>
       <Separator />
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <p className="m-0 min-w-0 flex-1 text-sm font-semibold text-muted-foreground">{text.freeWindows(week.freeWindows)}</p>
+        <p className="m-0 min-w-0 flex-1 text-sm font-semibold text-muted-foreground">{text.freeWindows(week.freeWindows.slice(0, text.maxFreeWindows))}</p>
         <Button size="sm" icon={Share2} onClick={share}>
           {text.share}
         </Button>

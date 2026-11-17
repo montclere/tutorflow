@@ -24,7 +24,7 @@ export const examNumbers: ExamNumber[] = [
 
 export const taskLab: TaskLab = {
   params: [
-    { label: "Предмет", options: ["Математика", "Физика", "Русский язык", "Английский"] },
+    { label: "Предмет", options: ["Математика", "Алгебра", "Геометрия"] },
     { label: "Экзамен", options: ["ЕГЭ профиль 2026", "ЕГЭ база 2026", "ОГЭ 2026", "Без экзамена"] },
     { label: "Источник", options: ["Банк + аналоги", "Только банк ФИПИ", "Только ИИ", "Моя библиотека"] },
     { label: "Сложность", options: ["Средняя", "Лёгкая", "Сложная", "Как на экзамене"] },
@@ -57,7 +57,7 @@ export const taskLab: TaskLab = {
   mine: [
     { title: "Квадратные уравнения", cards: 10, assigned: "3 ученикам", average: "78%" },
     { title: "Вариант ЕГЭ №1 (аналоги)", cards: 19, assigned: "2 ученикам", average: "61%" },
-    { title: "Past Perfect: упражнения", cards: 12, assigned: "1 ученику", average: "85%" },
+    { title: "Функции и графики: упражнения", cards: 12, assigned: "1 ученику", average: "85%" },
     { title: "Вероятность: №4 и №5", cards: 15, assigned: "4 ученикам", average: "72%" },
   ],
   aiReply: (request) => `Готово. Обновила карточки по запросу «${request}». Проверьте перед отправкой.`,

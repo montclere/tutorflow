@@ -17,24 +17,25 @@ const fallbackVariants = cva(
   "flex size-full items-center justify-center font-[family-name:var(--font-display)] text-xs font-extrabold text-foreground",
   {
     variants: {
-      tone: {
+      color: {
         peach: "bg-[var(--cab-tone-peach)]",
         mint: "bg-[var(--cab-tone-mint)]",
         rose: "bg-[var(--cab-tone-rose)]",
         sky: "bg-[var(--cab-tone-sky)]",
         lilac: "bg-[var(--cab-tone-lilac)]",
+        teal: "bg-[var(--cab-tone-teal)]",
       },
     },
-    defaultVariants: { tone: "sky" },
+    defaultVariants: { color: "sky" },
   }
 )
 
 function AvatarFallback({
   className,
-  tone,
+  color,
   ...props
 }: React.ComponentProps<typeof AvatarPrimitive.Fallback> & VariantProps<typeof fallbackVariants>) {
-  return <AvatarPrimitive.Fallback data-slot="avatar-fallback" className={cn(fallbackVariants({ tone }), className)} {...props} />
+  return <AvatarPrimitive.Fallback data-slot="avatar-fallback" className={cn(fallbackVariants({ color }), className)} {...props} />
 }
 
 export { Avatar, AvatarFallback }

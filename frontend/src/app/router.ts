@@ -15,9 +15,14 @@ export function usePathname() {
   return useSyncExternalStore(subscribe, () => window.location.pathname);
 }
 
-export function navigate(path: string) {
-  if (path === window.location.pathname) return;
+export function useSearch() {
+  return useSyncExternalStore(subscribe, () => window.location.search);
+}
+
+export function navigate(path: string, options: { scroll?: boolean } = {}) {
+  const { scroll = true } = options;
+  if (path === window.location.pathname + window.location.search) return;
   window.history.pushState(null, "", path);
   window.dispatchEvent(new Event(NAVIGATE_EVENT));
-  window.scrollTo(0, 0);
+  if (scroll) window.scrollTo(0, 0);
 }

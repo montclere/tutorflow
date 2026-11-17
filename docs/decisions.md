@@ -29,7 +29,7 @@
 - Альтернативы: писать компоненты вручную на Radix (больше кода без выгоды) и полный Tailwind с preflight (ломает стили лендинга).
 - Зависимости (версии зафиксированы): `lucide-react`, `radix-ui`, `sonner`, `class-variance-authority`, `clsx`, `tailwind-merge`; dev: `tailwindcss`, `@tailwindcss/vite`, `tw-animate-css`.
 - Маршрутизация — минимальный роутер на History API (`frontend/src/app/router.ts`), библиотека маршрутов не нужна.
-- Вместо `DropdownMenu` из списка shadcn подходящего места в «Обзоре» нет, компонент не подключён.
+- Для «Расписания» добавлены Popover, Sheet, Command, Select, ToggleGroup, Calendar, DropdownMenu, Switch; зависимости `cmdk`, `react-day-picker`, `date-fns` (нужны Command и Calendar). Календарная сетка недели и месяца написана на CSS Grid без календарных библиотек.
 
 ## SIGNUP — страница регистрации
 

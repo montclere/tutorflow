@@ -5,7 +5,7 @@ export const studentHome: StudentHome = {
   greeting: "Привет, Александр",
   subtitle: "До ЕГЭ 191 день · серия 4 дня",
   stats: [
-    { label: "Ближайший урок", value: "Ср 16:00", note: "Математика · Анна К.", highlight: true },
+    { label: "Ближайший урок", value: "Сегодня 15:00", note: "Математика · Анна К.", highlight: true },
     { label: "Заданий к сдаче", value: "2", note: "ближайшее до пт" },
     { label: "Решено за неделю", value: "34", note: "в тренажёре" },
     { label: "Пробный вариант", value: "61%", note: "14 первичных баллов" },

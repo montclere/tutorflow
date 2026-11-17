@@ -4,7 +4,7 @@ import { teacherRoutes } from "../../../config/routes";
 import { Card, CardAction, CardHeader } from "@/shared/ui/kit/card";
 import { cabinet } from "../../content/cabinet.ru";
 import { getStudent } from "../../data";
-import type { LessonRow } from "../../mocks/types";
+import type { LessonRow, LessonStatus, Tone } from "../../mocks/types";
 import { Avatar } from "../../ui/Avatar";
 import { Button, LinkButton } from "../../ui/Button";
 import { cx } from "../../ui/cx";
@@ -17,6 +17,12 @@ import { Tabs } from "../../ui/Tabs";
 const text = cabinet.teacher.overview.today;
 
 type Day = (typeof text.days)[number]["id"];
+
+const statusTones: Record<LessonStatus, Tone> = { done: "ok", soon: "blue", paid: "ok", debt: "bad" };
+
+function statusLabel(lesson: LessonRow): string {
+  return lesson.status === "soon" ? text.status.soon(lesson.minutes) : text.status[lesson.status];
+}
 
 export function TodayCard({ lessons }: { lessons: Record<Day, LessonRow[]> }) {
   const { notifySoon } = useNotifier();
@@ -47,20 +53,20 @@ export function TodayCard({ lessons }: { lessons: Record<Day, LessonRow[]> }) {
               const student = getStudent(lesson.studentId);
               return (
                 <ListRow
-                  key={`${day}-${lesson.time}`}
+                  key={lesson.id}
                   muted={lesson.past}
                   lead={
                     <>
                       <span className={cx("w-12 flex-none font-[family-name:var(--font-display)] text-sm font-extrabold tabular-nums", lesson.past && "text-muted-foreground")}>
                         {lesson.time}
                       </span>
-                      <Avatar initials={student.initials} tone={student.tone} muted={lesson.past} />
+                      <Avatar initials={student.initials} color={student.color} muted={lesson.past} />
                     </>
                   }
                   title={student.name}
                   note={lesson.subject}
                 >
-                  <Pill tone={lesson.statusTone}>{lesson.statusLabel}</Pill>
+                  <Pill tone={statusTones[lesson.status]}>{statusLabel(lesson)}</Pill>
                   <Button size="sm" variant={index === nextIndex ? "primary" : "default"} onClick={() => notifySoon(text.join)}>
                     {text.join}
                   </Button>

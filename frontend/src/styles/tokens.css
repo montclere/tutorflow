@@ -136,3 +136,20 @@
   --space-5: 20px;
   --space-6: 24px;
 }
+
+:root {
+  --cab-tone-peach-strong: #c76a0a;
+  --cab-tone-mint-strong: #1a8f63;
+  --cab-tone-rose-strong: #d94a4a;
+  --cab-tone-sky-strong: #2f5be0;
+  --cab-tone-lilac-strong: #9446c9;
+  --cab-tone-teal-strong: #0d8591;
+  --cab-tone-teal: #d3f1f4;
+}
+
+:root {
+  --schedule-hour-height: 64px;
+  --schedule-time-width: 56px;
+  --schedule-day-min-width: 148px;
+  --schedule-today-bg: rgb(35 70 230 / 0.05);
+}

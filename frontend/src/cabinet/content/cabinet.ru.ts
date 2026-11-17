@@ -14,7 +14,9 @@ export type IconName =
   | "chart";
 
 const lessonForms: [string, string, string] = ["урок", "урока", "уроков"];
+const activeForms: [string, string, string] = ["активный", "активных", "активных"];
 const dayForms: [string, string, string] = ["день", "дня", "дней"];
+const windowForms: [string, string, string] = ["свободное окно", "свободных окна", "свободных окон"];
 
 export type Role = "teacher" | "student";
 
@@ -38,6 +40,7 @@ const studentNav: NavItem[] = [
 ];
 
 export const cabinet = {
+  weekdays: ["Пн", "Вт", "Ср", "Чт", "Пт", "Сб", "Вс"],
   roles: [
     { id: "teacher", label: "Репетитор", path: routes.teacherCabinet },
     { id: "student", label: "Ученик", path: routes.studentCabinet },
@@ -84,6 +87,12 @@ export const cabinet = {
         tabLabel: (label: string, count: number) => `${label} · ${count}`,
         join: "Войти",
         empty: "Уроков нет",
+        status: {
+          done: "Проведён",
+          paid: "Оплачено",
+          debt: "Долг",
+          soon: (minutes: number) => `через ${minutes} мин`,
+        },
       },
       attention: {
         title: "Требует внимания",
@@ -102,6 +111,7 @@ export const cabinet = {
         title: "Неделя",
         summary: (lessons: number, load: number) => `${lessons} ${plural(lessons, lessonForms)} · загрузка ${load}%`,
         chartLabel: "Уроков по дням недели",
+        maxFreeWindows: 3,
         barLabel: (day: string, count: number) => `${day}: ${count} ${plural(count, lessonForms)}`,
         freeWindows: (windows: string[]) => (windows.length ? `Свободно: ${windows.join(" · ")}` : "Свободных окон нет"),
         share: "Поделиться",
@@ -121,14 +131,93 @@ export const cabinet = {
     },
     schedule: {
       title: "Расписание",
-      prevLabel: "Предыдущая неделя",
-      nextLabel: "Следующая неделя",
       addLesson: "Урок",
-      tableLabel: "Расписание на неделю",
+      today: "Сегодня",
+      tomorrow: "Завтра",
+      pickDate: "Выбрать дату",
+      views: [
+        { id: "day", label: "День" },
+        { id: "week", label: "Неделя" },
+        { id: "month", label: "Месяц" },
+        { id: "list", label: "Список" },
+      ] as const,
+      viewLabel: "Вид расписания",
+      step: {
+        day: { prev: "Предыдущий день", next: "Следующий день" },
+        week: { prev: "Предыдущая неделя", next: "Следующая неделя" },
+        month: { prev: "Предыдущий месяц", next: "Следующий месяц" },
+        list: { prev: "Предыдущие дни", next: "Следующие дни" },
+      },
+      filters: {
+        student: "Ученик",
+        allStudents: "Все ученики",
+        searchStudent: "Найти ученика",
+        noStudents: "Ученик не найден",
+        type: "Тип урока",
+        allTypes: "Все типы",
+        subject: "Предмет",
+        allSubjects: "Все предметы",
+        colorBy: "Цвет",
+        weekend: "Выходные",
+      },
+      types: { individual: "Индивидуальный", group: "Групповой", trial: "Пробный" },
+      colorModes: [
+        { id: "student", label: "По ученикам" },
+        { id: "payment", label: "По оплате" },
+      ] as const,
+      summary: (lessons: number, windows: number) =>
+        `${lessons} ${plural(lessons, lessonForms)} · ${windows} ${plural(windows, windowForms)}`,
+      pay: { paid: "оплачено", debt: "долг", low: "пакет" },
+      payFull: { paid: "Оплачено", debt: "Долг", low: "Пакет заканчивается" },
+      recurring: "Регулярный урок",
+      free: "свободно",
+      freeLabel: (day: string, start: string, end: string) => `Свободное окно: ${day}, ${start}–${end}`,
+      now: "Сейчас",
+      weekGridLabel: "Недельное расписание",
+      monthLabel: "Расписание на месяц",
+      monthDay: (count: number) => `${count} ${plural(count, lessonForms)}`,
+      noLessons: "Уроков нет",
+      emptyList: "Ближайших уроков нет",
+      emptyFiltered: "По выбранным фильтрам уроков нет",
+      next: {
+        title: "Следующий урок",
+        topic: "Прошлая тема",
+        homework: "Домашнее задание",
+        balance: "Баланс",
+        note: "Заметка",
+        empty: "Больше уроков нет",
+      },
+      lesson: {
+        title: "Урок",
+        duration: (minutes: number) => `${minutes} мин`,
+        join: "Войти",
+        move: "Перенести",
+        cancel: "Отменить",
+        done: "Проведён",
+      },
+      quick: {
+        title: "Новый урок",
+        student: "Ученик",
+        chooseStudent: "Выберите ученика",
+        duration: "Длительность",
+        durations: [
+          { value: "45", label: "45 минут" },
+          { value: "60", label: "60 минут" },
+          { value: "90", label: "90 минут" },
+        ],
+        defaultDuration: "60",
+        repeat: "Повтор",
+        repeats: [
+          { value: "none", label: "Не повторять" },
+          { value: "weekly", label: "Каждую неделю" },
+        ],
+        defaultRepeat: "none",
+        save: "Создать урок",
+      },
     },
     students: {
       title: "Ученики",
-      subtitle: "5 активных",
+      subtitle: (count: number) => `${count} ${plural(count, activeForms)}`,
       import: "Импорт",
       invite: "Пригласить",
       columns: ["Ученик", "Предмет", "Уроков", "Баланс", "Прогресс", ""],

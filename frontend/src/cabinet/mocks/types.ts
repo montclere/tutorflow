@@ -1,5 +1,6 @@
+export type PaymentStatus = "paid" | "debt" | "low";
 export type Tone = "blue" | "lime" | "ok" | "bad" | "warn" | "grey";
-export type AvatarTone = "peach" | "mint" | "rose" | "sky" | "lilac";
+export type StudentColor = "peach" | "mint" | "rose" | "sky" | "lilac" | "teal";
 export type RichPart = string | { sup: string } | { sub: string };
 export type Rich = RichPart[];
 
@@ -7,25 +8,33 @@ export type Student = {
   id: string;
   name: string;
   initials: string;
-  tone: AvatarTone;
+  color: StudentColor;
   subject: string;
+  status: "active" | "trial";
+  payment: PaymentStatus;
+  lastTopic: string;
+  homework: string;
+  note: string;
   balanceKopecks: number;
   lessons: number;
   progress: number;
 };
 
-export type Person = { name: string; initials: string; tone: AvatarTone; roleLabel: string };
+export type Person = { name: string; initials: string; color: StudentColor; roleLabel: string };
 
 export type StatData = { label: string; value: string; note: string; highlight?: boolean };
 
 export type TaskStatus = { title: string; note: string; tone: Tone; status: string };
 
+export type LessonStatus = "done" | "soon" | "paid" | "debt";
+
 export type LessonRow = {
+  id: string;
   time: string;
   studentId: string;
   subject: string;
-  statusLabel: string;
-  statusTone: Tone;
+  status: LessonStatus;
+  minutes: number;
   past: boolean;
 };
 
@@ -34,6 +43,13 @@ export type AttentionItem = { kind: AttentionKind; title: string; note: string }
 
 export type WeekDay = { label: string; lessons: number; today?: boolean };
 export type WeekPlan = { days: WeekDay[]; capacity: number; freeWindows: string[] };
+
+export type OverviewBase = {
+  teacherName: string;
+  attention: AttentionItem[];
+  weekCapacity: number;
+  exams: ExamPrep[];
+};
 
 export type ExamPrep = {
   studentId: string;
@@ -54,9 +70,6 @@ export type TeacherOverview = {
   week: WeekPlan;
   exams: ExamPrep[];
 };
-
-export type ScheduleEvent = { day: number; hour: number; studentId: string; tone: "blue" | "ok" | "bad" };
-export type Schedule = { range: string; days: string[]; todayIndex: number; hours: string[]; events: ScheduleEvent[] };
 
 export type Operation = { date: string; studentId: string; title: string; amountKopecks: number };
 export type Finance = { month: string; stats: StatData[]; operations: Operation[] };
@@ -121,3 +134,29 @@ export type ExamData = {
 };
 
 export type Progress = { stats: StatData[]; levels: number[] };
+
+export type LessonType = "individual" | "group" | "trial";
+
+export type LessonTemplate = {
+  id: string;
+  studentId: string;
+  weekday: number;
+  start: string;
+  durationMin: number;
+  type: Exclude<LessonType, "trial">;
+  groupTitle?: string;
+};
+
+export type ScheduleLesson = {
+  id: string;
+  studentId: string;
+  date: string;
+  start: string;
+  durationMin: number;
+  type: LessonType;
+  recurring: boolean;
+  groupTitle?: string;
+};
+
+export type WorkHours = { start: string; end: string; minFreeWindowMin: number };
+export type ScheduleData = { today: string; now: string; work: WorkHours; lessons: ScheduleLesson[] };

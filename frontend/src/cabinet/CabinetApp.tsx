@@ -7,7 +7,7 @@ import { HomeworkPage } from "./pages/HomeworkPage";
 import { OverviewPage } from "./pages/overview/OverviewPage";
 import { ProgressPage } from "./pages/ProgressPage";
 import { ReviewPage } from "./pages/ReviewPage";
-import { SchedulePage } from "./pages/SchedulePage";
+import { SchedulePage } from "./pages/schedule/SchedulePage";
 import { StudentHomePage } from "./pages/StudentHomePage";
 import { StudentsPage } from "./pages/StudentsPage";
 import { TasksPage } from "./pages/TasksPage";

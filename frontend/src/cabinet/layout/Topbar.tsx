@@ -40,7 +40,7 @@ export function Topbar({ role, menuOpen, onToggleMenu }: Props) {
           <IconButton icon={Bell} label={cabinet.shell.notificationsLabel} onClick={() => notifySoon(cabinet.shell.notificationsLabel)} />
           <i className={styles.dot} aria-hidden="true" />
         </span>
-        <Avatar initials={person.initials} tone={person.tone} />
+        <Avatar initials={person.initials} color={person.color} />
         <div className={styles.who}>
           <b>{person.name}</b>
           <small>{person.roleLabel}</small>

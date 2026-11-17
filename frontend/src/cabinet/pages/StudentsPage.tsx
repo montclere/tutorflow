@@ -27,7 +27,7 @@ export function StudentsPage() {
     <>
       <PageHead
         title={text.title}
-        subtitle={text.subtitle}
+        subtitle={text.subtitle(students.length)}
         actions={
           <>
             <Button onClick={() => notifySoon(text.import)}>{text.import}</Button>
@@ -43,7 +43,7 @@ export function StudentsPage() {
             <tr key={student.id}>
               <td>
                 <div className={ui.cellPerson}>
-                  <Avatar initials={student.initials} tone={student.tone} />
+                  <Avatar initials={student.initials} color={student.color} />
                   <b>{student.name}</b>
                 </div>
               </td>
