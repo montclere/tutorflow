@@ -2,6 +2,10 @@ export const routes = {
   home: "/",
   teacherCabinet: "/teacher",
   studentCabinet: "/student",
+  parentCabinet: "/parent",
+  // Ссылки-приглашения: секрет во фрагменте #token=… (docs/api/students.md).
+  invite: "/invite",
+  parentInvite: "/parent-invite",
   offer: "/offer",
   privacy: "/privacy",
 } as const;

@@ -1,6 +1,31 @@
-import { describe, expect, it } from "vitest";
-import { ApiError } from "../../../shared/api/client";
-import { toAuthErrorCode } from "./http";
+import { afterEach, describe, expect, it, vi } from "vitest";
+import { ApiError, clearApiContext } from "../../../shared/api/client";
+import { httpAuthApi, toAuthErrorCode } from "./http";
+
+const json = (body: unknown, status = 200) => new Response(JSON.stringify(body), { status, headers: { "Content-Type": "application/json" } });
+
+afterEach(() => {
+  vi.unstubAllGlobals();
+});
+
+describe("регистрация", () => {
+  it("репетитор — entrypoint teacher без токена; по приглашению — invitation с токеном на обоих шагах", async () => {
+    clearApiContext();
+    const bodies: unknown[] = [];
+    const responses = [json({ csrf_token: "t" }), json({ challenge_id: "a" }, 202), json({ challenge_id: "b" }, 202), json({ account: {}, csrf_token: "t2" }, 201)];
+    vi.stubGlobal("fetch", async (_url: string, init: RequestInit) => {
+      if (init.body) bodies.push(JSON.parse(String(init.body)));
+      return responses.shift();
+    });
+    const contact = { type: "email", value: "a@b.ru" } as const;
+    await httpAuthApi.startRegistration(contact);
+    await httpAuthApi.startRegistration(contact, "tok");
+    await httpAuthApi.completeRegistration({ challengeId: "b", code: "12345678", password: "p", displayName: "Илья", timezone: "UTC", invitationToken: "tok" });
+    expect(bodies[0]).toEqual({ login_contact: contact, entrypoint: "teacher" });
+    expect(bodies[1]).toEqual({ login_contact: contact, entrypoint: "invitation", invitation_token: "tok" });
+    expect(bodies[2]).toMatchObject({ challenge_id: "b", invitation_token: "tok" });
+  });
+});
 
 describe("toAuthErrorCode", () => {
   it("переводит стабильные коды сервера", () => {

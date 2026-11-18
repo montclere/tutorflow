@@ -29,7 +29,7 @@ export function ProfileStep({ wizard, state }: SignupWizardModel) {
         {text.back}
       </button>
       <h3 className={styles.title}>{text.title}</h3>
-      <p className={styles.hint}>{text.hint}</p>
+      <p className={styles.hint}>{wizard.invitation ? landing.wizard.invitation.profileHint : text.hint}</p>
       <form className={styles.form} noValidate onSubmit={submit}>
         <div className={styles.field}>
           <label className={styles.label} htmlFor={ids.name}>

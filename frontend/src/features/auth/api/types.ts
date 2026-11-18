@@ -5,7 +5,8 @@ export type Profile = { displayName: string; timezone: string; version: number }
 
 export type Cabinets = { teacherEnabled: boolean; studentAvailable: boolean; parentAvailable: boolean };
 
-export type RegistrationInput = { challengeId: string; code: string; password: string; displayName: string; timezone: string };
+/** invitationToken — регистрация по ссылке-приглашению (entrypoint invitation, docs/api/identity.md). */
+export type RegistrationInput = { challengeId: string; code: string; password: string; displayName: string; timezone: string; invitationToken?: string };
 export type PasswordResetInput = { challengeId: string; code: string; password: string };
 
 export type AuthErrorCode =
@@ -31,7 +32,7 @@ export class AuthError extends Error {
 
 /** Вход и регистрация по договору docs/api/identity.md. Методы возвращают challenge_id там, где сервер его выдаёт. */
 export interface AuthApi {
-  startRegistration(contact: Contact): Promise<string>;
+  startRegistration(contact: Contact, invitationToken?: string): Promise<string>;
   completeRegistration(input: RegistrationInput): Promise<void>;
   login(contact: Contact, password: string): Promise<void>;
   startPasswordReset(contact: Contact): Promise<string>;

@@ -30,12 +30,19 @@ type WizardState = {
   profileErrors: ProfileErrors;
 };
 
+export type CabinetKind = "teacher" | "student" | "parent";
+
 type WizardDeps = {
   api: AuthApi;
   track: Track;
   timezone: Timezone | null;
-  openCabinet: () => void;
+  openCabinet: (cabinet: CabinetKind) => void;
   now?: () => number;
+  /**
+   * Страница приглашения: после входа или регистрации — onSignedIn вместо выбора кабинета;
+   * invitationToken передаётся в регистрацию (entrypoint invitation, docs/api/identity.md).
+   */
+  invitation?: { token?: string; onSignedIn: () => void };
 };
 
 const firstStep: Record<Mode, Step> = { register: "contact", login: "login", reset: "resetContact" };
@@ -70,7 +77,7 @@ export function progressOf(step: Step): number | null {
 
 const errorCode = (error: unknown): AuthErrorCode => (error instanceof AuthError ? error.code : "unknown");
 
-export function createSignupWizard({ api, track, timezone, openCabinet, now = Date.now }: WizardDeps) {
+export function createSignupWizard({ api, track, timezone, openCabinet, now = Date.now, invitation }: WizardDeps) {
   let state = initialState;
   const listeners = new Set<() => void>();
 
@@ -104,18 +111,27 @@ export function createSignupWizard({ api, track, timezone, openCabinet, now = Da
       update({ error: "invalidContact" });
       return false;
     }
-    const result = await run(() => (state.mode === "reset" ? api.startPasswordReset(contact) : api.startRegistration(contact)));
+    const result = await run(() => (state.mode === "reset" ? api.startPasswordReset(contact) : api.startRegistration(contact, invitation?.token)));
     if (!result.ok) return false;
     track("signup_code_sent");
     update({ challengeId: result.value, code: emptyCode(), resendAvailableAt: now() + RESEND_DELAY_MS });
     return true;
   }
 
-  /** После входа: если кабинет репетитора уже включён — сразу в кабинет, иначе — шаг включения. */
+  /**
+   * После входа: кабинет репетитора, если включён; иначе — кабинет ученика или родителя, если они есть;
+   * иначе — шаг включения кабинета репетитора. По приглашению — назад к принятию ссылки.
+   */
   async function afterSignIn() {
+    if (invitation) {
+      invitation.onSignedIn();
+      return;
+    }
     const cabinets = await run(() => api.cabinets());
     if (!cabinets.ok) return;
-    if (cabinets.value.teacherEnabled) openCabinet();
+    if (cabinets.value.teacherEnabled) openCabinet("teacher");
+    else if (cabinets.value.studentAvailable) openCabinet("student");
+    else if (cabinets.value.parentAvailable) openCabinet("parent");
     else goTo("done");
   }
 
@@ -128,6 +144,9 @@ export function createSignupWizard({ api, track, timezone, openCabinet, now = Da
     },
 
     timezone,
+
+    /** Форма на странице приглашения — свои тексты: аккаунт, а не кабинет репетитора. */
+    invitation: invitation !== undefined,
 
     restart(mode: Mode = "register") {
       update({ ...initialState, mode, step: firstStep[mode], consent: state.consent });
@@ -205,11 +224,13 @@ export function createSignupWizard({ api, track, timezone, openCabinet, now = Da
           password: state.password,
           displayName: state.name.trim(),
           timezone: timezone?.id || "UTC",
+          invitationToken: invitation?.token,
         }),
       );
       if (result.ok) {
         track("signup_complete");
         goTo("done", { password: "" });
+        invitation?.onSignedIn();
       } else if (result.code === "invalidCode") {
         // Неверный или устаревший код выясняется только здесь — возвращаем к вводу кода.
         track("signup_code_error");
@@ -221,7 +242,7 @@ export function createSignupWizard({ api, track, timezone, openCabinet, now = Da
     /** Кабинет репетитора включается явно (IDN-15), затем — переход в него. */
     async enterCabinet() {
       const result = await run(() => api.enableTeacherCabinet());
-      if (result.ok) openCabinet();
+      if (result.ok) openCabinet("teacher");
     },
 
     async submitLogin() {

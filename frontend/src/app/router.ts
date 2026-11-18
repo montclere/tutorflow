@@ -19,10 +19,12 @@ export function useSearch() {
   return useSyncExternalStore(subscribe, () => window.location.search);
 }
 
-export function navigate(path: string, options: { scroll?: boolean } = {}) {
-  const { scroll = true } = options;
-  if (path === window.location.pathname + window.location.search) return;
-  window.history.pushState(null, "", path);
+/** replace — без новой записи в истории: «назад» не вернёт, например, на ссылку-приглашение с секретом. */
+export function navigate(path: string, options: { scroll?: boolean; replace?: boolean } = {}) {
+  const { scroll = true, replace = false } = options;
+  if (path === window.location.pathname + window.location.search && !window.location.hash) return;
+  if (replace) window.history.replaceState(null, "", path);
+  else window.history.pushState(null, "", path);
   window.dispatchEvent(new Event(NAVIGATE_EVENT));
   if (scroll) window.scrollTo(0, 0);
 }

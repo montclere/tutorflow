@@ -9,6 +9,7 @@ import { SIGNUP_START_ID } from "./signupStart";
 import styles from "./wizard.module.css";
 
 const text = landing.wizard.contact;
+const invitationText = landing.wizard.invitation;
 const types: ContactType[] = ["email", "phone"];
 
 /** Первый шаг регистрации: почта или телефон и согласие с офертой (SIGNUP-1, SIGNUP-2). */
@@ -30,8 +31,8 @@ export function ContactStep(model: SignupWizardModel) {
   return (
     <>
       <ModeTabs {...model} />
-      <h3 className={styles.title}>{text.title}</h3>
-      <p className={styles.hint}>{text.hint}</p>
+      <h3 className={styles.title}>{wizard.invitation ? invitationText.title : text.title}</h3>
+      <p className={styles.hint}>{wizard.invitation ? invitationText.hint : text.hint}</p>
       <form className={styles.form} noValidate onSubmit={submit}>
         <div className={styles.field}>
           <span id={typeLabelId} className={styles.label}>
@@ -90,12 +91,17 @@ export function ContactStep(model: SignupWizardModel) {
           {text.submit}
         </Button>
       </form>
-      <button type="button" className={styles.textButton} aria-expanded={state.studentNoteOpen} aria-controls={noteId} onClick={wizard.toggleStudentNote}>
-        {text.studentToggle}
-      </button>
-      <p id={noteId} className={styles.note} hidden={!state.studentNoteOpen}>
-        {text.studentNote}
-      </p>
+      {/* Ученику и родителю нужна ссылка репетитора; на странице приглашения она уже открыта. */}
+      {!wizard.invitation && (
+        <>
+          <button type="button" className={styles.textButton} aria-expanded={state.studentNoteOpen} aria-controls={noteId} onClick={wizard.toggleStudentNote}>
+            {text.studentToggle}
+          </button>
+          <p id={noteId} className={styles.note} hidden={!state.studentNoteOpen}>
+            {text.studentNote}
+          </p>
+        </>
+      )}
     </>
   );
 }

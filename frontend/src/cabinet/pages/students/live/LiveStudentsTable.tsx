@@ -1,20 +1,14 @@
 import { ChevronRight } from "lucide-react";
 import type { TeacherCard } from "../../../api/students";
 import { cabinet } from "../../../content/cabinet.ru";
-import { initialsOf, pickColor } from "../../../model/newStudent";
+import { cardColor } from "../../../model/cardColor";
+import { initialsOf } from "../../../model/newStudent";
 import { Avatar } from "../../../ui/Avatar";
 import { cx } from "../../../ui/cx";
 import { TruncatedText } from "../../../ui/TruncatedText";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/shared/ui/kit/table";
 
 const text = cabinet.teacher.live;
-
-/** Цвет аватара стабилен для карточки: зависит от ID, а не от места в списке. */
-export function cardColor(id: string) {
-  let hash = 0;
-  for (const char of id) hash = (hash * 31 + char.charCodeAt(0)) >>> 0;
-  return pickColor(hash);
-}
 
 export function CardAvatar({ card, large }: { card: TeacherCard; large?: boolean }) {
   return <Avatar initials={initialsOf(card.name)} color={cardColor(card.id)} muted={card.status === "archived"} large={large} />;

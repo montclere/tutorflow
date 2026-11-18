@@ -5,7 +5,7 @@ import { createSignupWizard, progressOf, RESEND_DELAY_MS } from "./wizard";
 const digits = (value: string) => value.split("");
 const PASSWORD = "тестовая фраза для входа";
 
-function setup(overrides: Partial<AuthApi> = {}) {
+function setup(overrides: Partial<AuthApi> = {}, invitation?: { token?: string; onSignedIn: () => void }) {
   const api: AuthApi = {
     startRegistration: vi.fn(async () => "ch-1"),
     completeRegistration: vi.fn(async () => undefined),
@@ -21,7 +21,7 @@ function setup(overrides: Partial<AuthApi> = {}) {
   const track = vi.fn();
   const openCabinet = vi.fn();
   let time = 1_000_000;
-  const wizard = createSignupWizard({ api, track, timezone: { id: "Asia/Novosibirsk", label: "Новосибирск" }, openCabinet, now: () => time });
+  const wizard = createSignupWizard({ api, track, timezone: { id: "Asia/Novosibirsk", label: "Новосибирск" }, openCabinet, now: () => time, invitation });
   return { api, track, openCabinet, wizard, advance: (ms: number) => (time += ms) };
 }
 
@@ -58,7 +58,7 @@ describe("регистрация", () => {
     wizard.setContactType("phone");
     wizard.setContact("+7 (999) 123-45-67");
     await wizard.submitContact();
-    expect(api.startRegistration).toHaveBeenCalledWith({ type: "phone", value: "+79991234567" });
+    expect(api.startRegistration).toHaveBeenCalledWith({ type: "phone", value: "+79991234567" }, undefined);
     expect(wizard.getState().step).toBe("code");
   });
 
@@ -120,7 +120,7 @@ describe("регистрация", () => {
     const { wizard, api, openCabinet } = setup();
     await wizard.enterCabinet();
     expect(api.enableTeacherCabinet).toHaveBeenCalled();
-    expect(openCabinet).toHaveBeenCalled();
+    expect(openCabinet).toHaveBeenCalledWith("teacher");
   });
 });
 
@@ -132,11 +132,20 @@ describe("вход", () => {
     wizard.setPassword(PASSWORD);
     await wizard.submitLogin();
     expect(api.login).toHaveBeenCalledWith({ type: "email", value: "anna@mail.ru" }, PASSWORD);
-    expect(openCabinet).toHaveBeenCalled();
+    expect(openCabinet).toHaveBeenCalledWith("teacher");
   });
 
-  it("без кабинета репетитора предлагает его включить", async () => {
+  it("ученик без кабинета репетитора попадает в кабинет ученика", async () => {
     const { wizard, openCabinet } = setup({ cabinets: vi.fn(async () => ({ teacherEnabled: false, studentAvailable: true, parentAvailable: false })) });
+    wizard.restart("login");
+    wizard.setContact("anna@mail.ru");
+    wizard.setPassword(PASSWORD);
+    await wizard.submitLogin();
+    expect(openCabinet).toHaveBeenCalledWith("student");
+  });
+
+  it("без кабинетов предлагает включить кабинет репетитора", async () => {
+    const { wizard, openCabinet } = setup({ cabinets: vi.fn(async () => ({ teacherEnabled: false, studentAvailable: false, parentAvailable: false })) });
     wizard.restart("login");
     wizard.setContact("+79991234567");
     wizard.setPassword(PASSWORD);
@@ -183,5 +192,32 @@ describe("восстановление пароля", () => {
     await wizard.submitReset();
     expect(wizard.getState().profileErrors.password).toBe("passwordLength");
     expect(api.completePasswordReset).not.toHaveBeenCalled();
+  });
+});
+
+describe("по приглашению", () => {
+  it("регистрация передаёт токен на обоих шагах и возвращает к принятию ссылки", async () => {
+    const onSignedIn = vi.fn();
+    const { wizard, api, openCabinet } = setup({}, { token: "tok", onSignedIn });
+    expect(wizard.invitation).toBe(true);
+    await toProfile(wizard);
+    expect(api.startRegistration).toHaveBeenCalledWith({ type: "email", value: "anna@mail.ru" }, "tok");
+    wizard.setName("Илья");
+    wizard.setPassword(PASSWORD);
+    await wizard.submitProfile();
+    expect(api.completeRegistration).toHaveBeenCalledWith(expect.objectContaining({ invitationToken: "tok" }));
+    expect(onSignedIn).toHaveBeenCalled();
+    expect(openCabinet).not.toHaveBeenCalled();
+  });
+
+  it("вход не выбирает кабинет, а возвращает к принятию ссылки", async () => {
+    const onSignedIn = vi.fn();
+    const { wizard, api } = setup({}, { onSignedIn });
+    wizard.restart("login");
+    wizard.setContact("anna@mail.ru");
+    wizard.setPassword(PASSWORD);
+    await wizard.submitLogin();
+    expect(onSignedIn).toHaveBeenCalled();
+    expect(api.cabinets).not.toHaveBeenCalled();
   });
 });

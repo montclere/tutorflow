@@ -5,6 +5,8 @@ import { legalDocOf } from "./app/legal";
 import { LegalPage } from "./app/LegalPage";
 import { usePathname } from "./app/router";
 import { CabinetApp, isCabinetPath } from "./cabinet/CabinetApp";
+import { env } from "./config/env";
+import { LearnerApp, learnerPageOf } from "./learner/LearnerApp";
 import "./styles/fonts";
 // Стили уведомлений файлом из сборки: свой <style> sonner вставить не может — его режет CSP.
 import "sonner/dist/styles.css";
@@ -13,6 +15,9 @@ import "./styles/tailwind.css";
 
 function Root() {
   const pathname = usePathname().replace(/(.)\/$/, "$1");
+  // Рабочая сборка: приглашения и кабинеты ученика и родителя по API; в демо /student — тестовый кабинет.
+  const learnerPage = env.demo ? null : learnerPageOf(pathname);
+  if (learnerPage) return <LearnerApp pathname={pathname} page={learnerPage} />;
   if (isCabinetPath(pathname)) return <CabinetApp pathname={pathname} />;
   const legalDoc = legalDocOf(pathname);
   return legalDoc ? <LegalPage doc={legalDoc} /> : <App />;

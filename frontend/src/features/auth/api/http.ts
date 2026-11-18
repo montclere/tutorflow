@@ -2,6 +2,7 @@ import { ApiError, clearApiContext, request } from "../../../shared/api/client";
 import { AuthError, type AuthApi, type AuthErrorCode, type Contact } from "./types";
 
 const loginContact = (contact: Contact) => ({ login_contact: { type: contact.type, value: contact.value } });
+const entrypoint = (invitationToken?: string) => (invitationToken ? { entrypoint: "invitation", invitation_token: invitationToken } : { entrypoint: "teacher" });
 
 /** Перевод ошибки API в код интерфейса: сервер отвечает стабильными code (docs/api/README.md). */
 export function toAuthErrorCode(error: unknown): AuthErrorCode {
@@ -31,12 +32,23 @@ async function call<T>(operation: () => Promise<T>): Promise<T> {
 type CabinetsView = { teacher_enabled: boolean; student_available: boolean; parent_available: boolean };
 
 export const httpAuthApi: AuthApi = {
-  startRegistration: (contact) =>
-    call(async () => (await request<{ challenge_id: string }>("/auth/registrations", "POST", { ...loginContact(contact), entrypoint: "teacher" })).challenge_id),
+  // По ссылке-приглашению тот же токен нужен на обоих шагах; на пути репетитора он запрещён.
+  startRegistration: (contact, invitationToken) =>
+    call(
+      async () =>
+        (await request<{ challenge_id: string }>("/auth/registrations", "POST", { ...loginContact(contact), ...entrypoint(invitationToken) })).challenge_id,
+    ),
 
-  completeRegistration: ({ challengeId, code, password, displayName, timezone }) =>
+  completeRegistration: ({ challengeId, code, password, displayName, timezone, invitationToken }) =>
     call(async () => {
-      await request("/auth/registrations/complete", "POST", { challenge_id: challengeId, code, password, display_name: displayName, timezone });
+      await request("/auth/registrations/complete", "POST", {
+        challenge_id: challengeId,
+        code,
+        password,
+        display_name: displayName,
+        timezone,
+        ...(invitationToken ? { invitation_token: invitationToken } : {}),
+      });
     }),
 
   login: (contact, password) =>
