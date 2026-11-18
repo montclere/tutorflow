@@ -1,8 +1,9 @@
 import { ChevronRight } from "lucide-react";
 import { cabinet } from "../../content/cabinet.ru";
 import type { Student } from "../../mocks/types";
-import { formatRubles } from "../../model/format";
-import { formatNextLesson, paymentStatus } from "../../model/students";
+import { formatRubles, formatTimesPerWeek } from "../../model/format";
+import { lessonsAhead } from "../../model/finance";
+import { debtLessons, formatNextLesson, lastHomework, paymentStatus } from "../../model/students";
 import { Avatar } from "../../ui/Avatar";
 import { cx } from "../../ui/cx";
 import { TruncatedText } from "../../ui/TruncatedText";
@@ -37,16 +38,54 @@ function isSoon(next: string): boolean {
   return next.startsWith(text.nextLesson.today) || next.startsWith(text.nextLesson.tomorrow);
 }
 
-function Balance({ student, inline }: { student: Student; inline?: boolean }) {
+/** Подпись под суммой объясняет её в уроках: за сколько уроков долг или на сколько хватит предоплаты. */
+function balanceNote(student: Student): { text: string; warn: boolean } | null {
   const left = student.payment.package?.left;
+  if (paymentStatus(student) === "low" && left !== undefined) return { text: text.packageLow(left), warn: true };
+  if (student.balance < 0) return { text: text.balanceNote.debt(debtLessons(student)), warn: false };
+  const ahead = lessonsAhead(student);
+  return ahead > 0 ? { text: text.balanceNote.prepaid(ahead), warn: false } : null;
+}
+
+function Balance({ student, inline }: { student: Student; inline?: boolean }) {
+  const note = balanceNote(student);
   return (
     <span className={cx("flex items-start gap-1", inline ? "flex-row flex-wrap items-center gap-2" : "flex-col")}>
       <span className={cx("inline-flex rounded-full px-3 py-1 text-sm font-extrabold whitespace-nowrap tabular-nums", balanceBadge(student.balance))}>
         {formatBalance(student.balance)}
       </span>
-      {paymentStatus(student) === "low" && left !== undefined && (
-        <span className="text-xs font-bold text-[var(--cab-warn)]">{text.packageLow(left)}</span>
-      )}
+      {note && <span className={cx("text-xs font-bold", note.warn ? "text-[var(--cab-warn)]" : "text-muted-foreground")}>{note.text}</span>}
+    </span>
+  );
+}
+
+function Schedule({ student }: { student: Student }) {
+  const { timesPerWeek, days, time } = student.schedule;
+  if (timesPerWeek === 0) return <span className="text-sm font-semibold text-muted-foreground">{text.noSchedule}</span>;
+  return (
+    <span className="grid">
+      <b className="text-sm font-bold whitespace-nowrap">{days.join(", ")}</b>
+      {/* Разное время по дням ничего не говорит в таблице — тогда показываем частоту. */}
+      <span className="text-sm font-semibold whitespace-nowrap text-muted-foreground tabular-nums">{time === text.mixedTime ? formatTimesPerWeek(timesPerWeek) : time}</span>
+    </span>
+  );
+}
+
+const GOOD_HOMEWORK_SHARE = 0.8;
+
+function Homework({ student }: { student: Student }) {
+  const homework = lastHomework(student);
+  if (!homework) return <span className="text-sm font-semibold text-muted-foreground">{text.homework.none}</span>;
+  const label = homework.state === "missing" ? text.homework.missing : text.homework.done(homework.done, homework.total);
+  const tone =
+    homework.state === "missing"
+      ? "bg-[var(--cab-bad-soft)] text-destructive"
+      : homework.done / homework.total >= GOOD_HOMEWORK_SHARE
+        ? "bg-[var(--cab-ok-soft)] text-success"
+        : "bg-[var(--cab-warn-soft)] text-[var(--cab-warn)]";
+  return (
+    <span className={cx("inline-flex rounded-full px-2.5 py-1 text-sm font-extrabold whitespace-nowrap tabular-nums", tone)} aria-label={text.homework.label(label)}>
+      {label}
     </span>
   );
 }
@@ -69,7 +108,7 @@ function NextLesson({ student, today }: { student: Student; today: string }) {
 
 type Props = { students: Student[]; today: string; selectedId: string | null; onOpen: (id: string) => void };
 
-/** В таблице только главное: кто, когда следующий урок и что с оплатой (STUDENTS-1). */
+/** В таблице главное: кто, когда занимается, следующий урок, как с ДЗ и с оплатой (STUDENTS-1). */
 export function StudentsTable({ students, today, selectedId, onOpen }: Props) {
   return (
     <div className="max-[520px]:hidden">
@@ -93,7 +132,7 @@ export function StudentsTable({ students, today, selectedId, onOpen }: Props) {
                 data-state={student.id === selectedId ? "selected" : undefined}
                 onClick={() => onOpen(student.id)}
               >
-                <TableCell className="w-[48%] max-w-0 px-4 py-4 pl-6">
+                <TableCell className="w-[30%] max-w-0 px-4 py-4 pl-6">
                   <div className="flex items-center gap-3.5">
                     <Avatar initials={student.initials} color={student.color} />
                     <div className="min-w-0">
@@ -113,7 +152,13 @@ export function StudentsTable({ students, today, selectedId, onOpen }: Props) {
                   </div>
                 </TableCell>
                 <TableCell className="px-4 py-4">
+                  <Schedule student={student} />
+                </TableCell>
+                <TableCell className="px-4 py-4">
                   <NextLesson student={student} today={today} />
+                </TableCell>
+                <TableCell className="px-4 py-4">
+                  <Homework student={student} />
                 </TableCell>
                 <TableCell className="px-4 py-4">
                   <Balance student={student} />

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { LessonTemplate, ScheduleLesson, Student } from "../mocks/types";
-import { countByStatus, deriveSchedule, filterStudents, formatNextLesson, nextLessonOf, paymentStatus, templatesFromLessons } from "./students";
+import { countByStatus, deriveSchedule, filterStudents, formatNextLesson, nextLessonOf, paymentStatus, debtLessons, lastHomework, templatesFromLessons } from "./students";
 
 function student(partial: Partial<Student>): Student {
   return { id: "s", name: "Анна Мельник", status: "active", balance: 0, payment: { model: "per_lesson", pricePerLesson: 100000 }, ...partial } as Student;
@@ -102,5 +102,26 @@ describe("templatesFromLessons", () => {
       [2, "16:30"],
       [4, "17:00"],
     ]);
+  });
+});
+
+describe("lastHomework", () => {
+  const lesson = (date: string, homework: { title: string; done: number | null; total: number } | null) => ({ date, topic: "t", status: "done" as const, homework });
+
+  it("берёт самое свежее ДЗ", () => {
+    expect(lastHomework({ recentLessons: [lesson("2026-11-10", { title: "a", done: 7, total: 8 }), lesson("2026-11-13", { title: "b", done: 9, total: 10 })] })).toEqual({ state: "done", done: 9, total: 10 });
+  });
+
+  it("не сданное ДЗ и отсутствие ДЗ", () => {
+    expect(lastHomework({ recentLessons: [lesson("2026-11-16", { title: "a", done: null, total: 10 })] })).toEqual({ state: "missing" });
+    expect(lastHomework({ recentLessons: [lesson("2026-11-16", null)] })).toBeNull();
+  });
+});
+
+describe("debtLessons", () => {
+  it("округляет долг до уроков вверх", () => {
+    expect(debtLessons({ balance: -120000, payment: { model: "per_lesson", pricePerLesson: 120000 } })).toBe(1);
+    expect(debtLessons({ balance: -130000, payment: { model: "per_lesson", pricePerLesson: 120000 } })).toBe(2);
+    expect(debtLessons({ balance: 50000, payment: { model: "per_lesson", pricePerLesson: 120000 } })).toBe(0);
   });
 });

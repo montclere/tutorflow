@@ -77,3 +77,19 @@ export function templatesFromLessons(studentId: string, lessons: ScheduleLesson[
   }
   return templates;
 }
+
+export type HomeworkState = { state: "missing" } | { state: "done"; done: number; total: number } | null;
+
+/** Последнее заданное ДЗ ученика: не сдано или сколько решено; null — ДЗ ещё не задавали. */
+export function lastHomework(student: Pick<Student, "recentLessons">): HomeworkState {
+  const lesson = [...student.recentLessons].sort((a, b) => b.date.localeCompare(a.date)).find((item) => item.homework);
+  const homework = lesson?.homework;
+  if (!homework) return null;
+  return homework.done === null ? { state: "missing" } : { state: "done", done: homework.done, total: homework.total };
+}
+
+/** За сколько уроков долг — округляем вверх: даже часть урока — это урок, за который не заплатили. */
+export function debtLessons(student: Pick<Student, "balance" | "payment">): number {
+  const price = student.payment.pricePerLesson;
+  return student.balance < 0 && price > 0 ? Math.ceil(-student.balance / price) : 0;
+}

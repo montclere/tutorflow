@@ -244,10 +244,20 @@ export const cabinet = {
       searchPlaceholder: "Найти ученика",
       debtors: "Должники",
       // В таблице только главное, остальное — в карточке ученика (STUDENTS-1).
-      columns: ["Ученик", "Следующий урок", "Баланс"],
-      balance: { debt: "Долг", prepaid: "Предоплата", zero: "0 ₽" },
-      waiting: "ждём подключения",
-      packageLow: (left: number) => `пакет: ${left} ${plural(left, lessonForms)}`,
+      columns: ["Ученик", "Расписание", "Следующий урок", "ДЗ", "Оплата"],
+      balance: { debt: "Долг", prepaid: "Оплачено вперёд", zero: "Всё оплачено" },
+      balanceNote: {
+        debt: (lessons: number) => `за ${lessons} ${plural(lessons, lessonForms)}`,
+        prepaid: (lessons: number) => `хватит на ${lessons} ${plural(lessons, lessonForms)}`,
+      },
+      homework: {
+        missing: "Не сдано",
+        done: (done: number, total: number) => `${done} из ${total}`,
+        none: "—",
+        label: (state: string) => `Последнее ДЗ: ${state}`,
+      },
+      waiting: "не подключён",
+      packageLow: (left: number) => `в пакете ${left} ${plural(left, lessonForms)}`,
       listLabel: "Список учеников",
       openCard: (name: string) => `Открыть карточку: ${name}`,
       noSchedule: "Не задано",
@@ -325,7 +335,7 @@ export const cabinet = {
         assignSchedule: "Назначить расписание",
         openLesson: (date: string, topic: string) => `Открыть урок ${date}: ${topic}`,
         inviteCopied: "Ссылка-приглашение скопирована",
-        tiles: { balance: "Долг / предоплата", next: "Следующий урок", tariff: "Тариф", done: "Уроков проведено" },
+        tiles: { balance: "Оплата", next: "Следующий урок", tariff: "Тариф", done: "Уроков проведено" },
         tariff: {
           package: (left: number, total: number) => `осталось ${left} из ${total}`,
         },
