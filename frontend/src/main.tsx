@@ -5,6 +5,9 @@ import { legalDocOf } from "./app/legal";
 import { LegalPage } from "./app/LegalPage";
 import { usePathname } from "./app/router";
 import { CabinetApp, isCabinetPath } from "./cabinet/CabinetApp";
+import "./styles/fonts";
+// Стили уведомлений файлом из сборки: свой <style> sonner вставить не может — его режет CSP.
+import "sonner/dist/styles.css";
 import "./styles/global.css";
 import "./styles/tailwind.css";
 

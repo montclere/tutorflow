@@ -20,6 +20,10 @@ export default defineConfig({
       OG_IMAGE_ALT: landing.meta.ogImageAlt,
     }),
   ],
+  build: {
+    // CSP (deploy/Caddyfile) не пускает data:-шрифты: файлы шрифтов всегда отдельные, остальное — по умолчанию Vite.
+    assetsInlineLimit: (file) => (/\.(woff2?|ttf|otf)$/.test(file) ? false : undefined),
+  },
   test: {
     include: ["src/**/*.test.ts"],
   },
