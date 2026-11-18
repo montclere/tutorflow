@@ -34,7 +34,8 @@ const types = cabinet.teacher.schedule.types;
 const DEFAULT_DURATION = 60;
 const MAX_CONFLICTS_SHOWN = 2;
 
-export type NewLessonSeed = Partial<Pick<LessonDraft, "studentId" | "date" | "start">>;
+/** repeatWeekly — сразу с повтором по дню недели (например, «Назначить расписание» в карточке ученика). */
+export type NewLessonSeed = Partial<Pick<LessonDraft, "studentId" | "date" | "start">> & { repeatWeekly?: boolean };
 
 type Props = {
   seed: NewLessonSeed | null;
@@ -117,7 +118,7 @@ function initialDraft(seed: NewLessonSeed, today: string, now: string, work: Par
     start: seed.start ?? defaultStart(work, date, today, now),
     durationMin: durationOf(seed.studentId),
     type: "individual",
-    repeat: { kind: "none" },
+    repeat: seed.repeatWeekly ? { kind: "weekly", weekdays: [weekdayIndex(date)], until: schoolYearEnd(date) } : { kind: "none" },
     link: "",
   };
 }

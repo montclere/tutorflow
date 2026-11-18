@@ -1,12 +1,14 @@
 import { cabinet } from "../../content/cabinet.ru";
-import type { RecentLesson, Student, Tone } from "../../mocks/types";
-import { formatShortDate } from "../../model/dates";
+import { CalendarPlus } from "lucide-react";
+import type { RecentLesson, ScheduleLesson, Student, Tone } from "../../mocks/types";
 import { formatTimesPerWeek } from "../../model/format";
-import { LinkButton } from "../../ui/Button";
+import { Button, LinkButton } from "../../ui/Button";
 import { useNotifier } from "../../ui/Notifications";
 import { Pill } from "../../ui/Pill";
 import { RowList } from "../../ui/RowList";
+import { inviteLink } from "./NewStudentDialog";
 import { StudentEmpty, StudentSection } from "./StudentSection";
+import { HistoryRow } from "./StudentTabs";
 
 const text = cabinet.teacher.students.sheet.overview;
 const RECENT_COUNT = 3;
@@ -29,8 +31,19 @@ function Fact({ label, children }: { label: string; children: React.ReactNode })
   );
 }
 
-export function StudentOverview({ student }: { student: Student }) {
-  const { notifySoon } = useNotifier();
+type Props = { student: Student; onOpenLesson: (lesson: ScheduleLesson) => void; onAssignSchedule: () => void };
+
+export function StudentOverview({ student, onOpenLesson, onAssignSchedule }: Props) {
+  const { notify } = useNotifier();
+
+  const copyInvite = async () => {
+    try {
+      await navigator.clipboard.writeText(inviteLink(student.id));
+      notify(cabinet.teacher.students.sheet.inviteCopied);
+    } catch {
+      // Буфер обмена недоступен — ничего не делаем, ссылку можно взять в окне «Новый ученик».
+    }
+  };
   const { schedule, parent } = student;
   const scheduleLine =
     schedule.timesPerWeek === 0
@@ -41,7 +54,14 @@ export function StudentOverview({ student }: { student: Student }) {
   return (
     <div className="grid grid-cols-[minmax(0,1fr)] gap-4">
       <StudentSection title={text.schedule}>
-        <p className="m-0 text-base font-bold tabular-nums">{scheduleLine}</p>
+        {schedule.timesPerWeek === 0 ? (
+          // Вместо «Не задано» — сразу действие (STUDENTS-5).
+          <Button icon={CalendarPlus} onClick={onAssignSchedule}>
+            {cabinet.teacher.students.sheet.assignSchedule}
+          </Button>
+        ) : (
+          <p className="m-0 text-base font-bold tabular-nums">{scheduleLine}</p>
+        )}
       </StudentSection>
 
       <StudentSection title={text.recent}>
@@ -50,11 +70,9 @@ export function StudentOverview({ student }: { student: Student }) {
         ) : (
           <RowList>
             {recent.map((lesson) => (
-              <div key={lesson.date} className="flex flex-wrap items-center gap-x-3 gap-y-1 py-3">
-                <span className="w-14 flex-none text-sm font-bold text-muted-foreground tabular-nums">{formatShortDate(lesson.date)}</span>
-                <span className="min-w-28 flex-1 text-base font-bold">{lesson.topic}</span>
+              <HistoryRow key={lesson.date} student={student} lesson={lesson} onOpenLesson={onOpenLesson}>
                 <Homework lesson={lesson} />
-              </div>
+              </HistoryRow>
             ))}
           </RowList>
         )}
@@ -64,11 +82,11 @@ export function StudentOverview({ student }: { student: Student }) {
         <StudentSection title={text.contacts}>
           <dl className="m-0 grid gap-4">
             <Fact label={text.telegram}>
-              {student.telegramConnected ? <Pill tone="ok">{text.connected}</Pill> : <LinkButton onClick={() => notifySoon(text.telegram)}>{text.notConnected}</LinkButton>}
+              {student.telegramConnected ? <Pill tone="ok">{text.connected}</Pill> : <LinkButton onClick={copyInvite}>{text.notConnected}</LinkButton>}
             </Fact>
             {parent && (
               <Fact label={text.parent}>
-                {parent.relation}: {parent.name}
+                {[parent.relation, parent.name].filter(Boolean).join(": ")}
                 <span className="block text-muted-foreground tabular-nums">{parent.phone}</span>
               </Fact>
             )}

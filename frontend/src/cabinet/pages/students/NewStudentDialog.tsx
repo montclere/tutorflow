@@ -35,7 +35,7 @@ function Field({ label, hint, error, children }: { label: string; hint?: string;
 }
 
 // Ссылка-заготовка: рабочую выдаст сервер (STUDENTS-6).
-function inviteLink(id: string): string {
+export function inviteLink(id: string): string {
   return `${window.location.origin}/join/${id}`;
 }
 

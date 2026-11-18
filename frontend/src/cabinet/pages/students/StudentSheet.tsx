@@ -1,7 +1,8 @@
 import { Ellipsis, Plus } from "lucide-react";
 import { useState } from "react";
 import { cabinet } from "../../content/cabinet.ru";
-import type { Student } from "../../mocks/types";
+import { removeStudent, setStudentStatus } from "../../data";
+import type { ScheduleLesson, Student, StudentStatus } from "../../mocks/types";
 import { formatDayMonth } from "../../model/dates";
 import { formatRubles } from "../../model/format";
 import { Avatar } from "../../ui/Avatar";
@@ -12,7 +13,10 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSepara
 import { ScrollArea } from "@/shared/ui/kit/scroll-area";
 import { Sheet, SheetContent, SheetDescription, SheetTitle } from "@/shared/ui/kit/sheet";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/shared/ui/kit/tabs";
-import { NewLessonSheet } from "../schedule/NewLessonSheet";
+import { LessonSheet } from "../schedule/LessonSheet";
+import { NewLessonSheet, type NewLessonSeed } from "../schedule/NewLessonSheet";
+import { PaymentDialog } from "./PaymentDialog";
+import { RemoveStudentDialog } from "./RemoveStudentDialog";
 import { StudentOverview } from "./StudentOverview";
 import { TasksTab } from "./StudentTasks";
 import { LessonsTab, NotesTab, PaymentsTab } from "./StudentTabs";
@@ -47,9 +51,24 @@ function tariff(student: Student): { value: string; note?: string } {
 }
 
 export function StudentSheet({ student, today, onClose, onCloseAutoFocus }: Props) {
-  const { notifySoon } = useNotifier();
+  const { notify, notifySoon } = useNotifier();
   const [tab, setTab] = useState("overview");
-  const [newLessonFor, setNewLessonFor] = useState<string | null>(null);
+  const [newLesson, setNewLesson] = useState<NewLessonSeed | null>(null);
+  const [paymentFor, setPaymentFor] = useState<Student | null>(null);
+  const [removing, setRemoving] = useState<Student | null>(null);
+  const [lesson, setLesson] = useState<ScheduleLesson | null>(null);
+
+  const moveTo = (target: Student, status: StudentStatus) => {
+    setStudentStatus(target.id, status);
+    notify(text.statusDone[status](target.name));
+  };
+
+  const confirmRemove = (target: Student) => {
+    removeStudent(target.id);
+    setRemoving(null);
+    onClose();
+    notify(text.remove.done(target.name));
+  };
 
   return (
     <>
@@ -67,10 +86,10 @@ export function StudentSheet({ student, today, onClose, onCloseAutoFocus }: Prop
                 </div>
 
                 <div className="flex flex-wrap gap-2">
-                  <Button variant="primary" icon={Plus} onClick={() => setNewLessonFor(student.id)}>
+                  <Button variant="primary" icon={Plus} onClick={() => setNewLesson({ studentId: student.id })}>
                     {text.actions.lesson}
                   </Button>
-                  <Button icon={Plus} onClick={() => notifySoon(text.actions.payment)}>
+                  <Button icon={Plus} onClick={() => setPaymentFor(student)}>
                     {text.actions.payment}
                   </Button>
                   <Button icon={Plus} onClick={() => notifySoon(text.actions.task)}>
@@ -81,10 +100,12 @@ export function StudentSheet({ student, today, onClose, onCloseAutoFocus }: Prop
                       <Button icon={Ellipsis}>{text.actions.more}</Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
-                      <DropdownMenuItem onSelect={() => notifySoon(text.moreItems.pause)}>{text.moreItems.pause}</DropdownMenuItem>
-                      <DropdownMenuItem onSelect={() => notifySoon(text.moreItems.archive)}>{text.moreItems.archive}</DropdownMenuItem>
+                      {/* Пункты зависят от текущего статуса (STUDENTS-4). */}
+                      {student.status !== "active" && <DropdownMenuItem onSelect={() => moveTo(student, "active")}>{text.moreItems.restore}</DropdownMenuItem>}
+                      {student.status === "active" && <DropdownMenuItem onSelect={() => moveTo(student, "pause")}>{text.moreItems.pause}</DropdownMenuItem>}
+                      {student.status !== "archive" && <DropdownMenuItem onSelect={() => moveTo(student, "archive")}>{text.moreItems.archive}</DropdownMenuItem>}
                       <DropdownMenuSeparator />
-                      <DropdownMenuItem variant="destructive" onSelect={() => notifySoon(text.moreItems.remove)}>
+                      <DropdownMenuItem variant="destructive" onSelect={() => setRemoving(student)}>
                         {text.moreItems.remove}
                       </DropdownMenuItem>
                     </DropdownMenuContent>
@@ -107,10 +128,10 @@ export function StudentSheet({ student, today, onClose, onCloseAutoFocus }: Prop
                     ))}
                   </TabsList>
                   <TabsContent value="overview">
-                    <StudentOverview student={student} />
+                    <StudentOverview student={student} onOpenLesson={setLesson} onAssignSchedule={() => setNewLesson({ studentId: student.id, repeatWeekly: true })} />
                   </TabsContent>
                   <TabsContent value="lessons">
-                    <LessonsTab student={student} />
+                    <LessonsTab student={student} onOpenLesson={setLesson} />
                   </TabsContent>
                   <TabsContent value="payments">
                     <PaymentsTab student={student} />
@@ -128,7 +149,10 @@ export function StudentSheet({ student, today, onClose, onCloseAutoFocus }: Prop
         </SheetContent>
       </Sheet>
       {/* «+ Урок» открывает ту же панель, что в расписании, с этим учеником (SCHEDULE-1). */}
-      <NewLessonSheet seed={newLessonFor ? { studentId: newLessonFor } : null} onClose={() => setNewLessonFor(null)} />
+      <NewLessonSheet seed={newLesson} onClose={() => setNewLesson(null)} />
+      <PaymentDialog student={paymentFor} onClose={() => setPaymentFor(null)} />
+      <RemoveStudentDialog student={removing} onCancel={() => setRemoving(null)} onConfirm={confirmRemove} />
+      <LessonSheet lesson={lesson} onClose={() => setLesson(null)} />
     </>
   );
 }
