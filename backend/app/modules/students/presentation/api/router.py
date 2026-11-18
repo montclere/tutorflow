@@ -254,6 +254,7 @@ def students_router(
             *TEACHER_ERRORS,
             ProblemCode.RESOURCE_NOT_FOUND,
             ProblemCode.VERSION_CONFLICT,
+            ProblemCode.STUDENT_CARD_HAS_OPEN_LESSONS,
         ),
     )
     async def archive(
@@ -376,5 +377,95 @@ def students_router(
             "student_available": bool(await students.cabinet_cards(actor, "student", 1, None)),
             "parent_available": bool(await students.cabinet_cards(actor, "parent", 1, None)),
         }
+
+    @router.post(
+        "/teacher/student-cards/{student_card_id}/parent-applications",
+        status_code=201,
+        dependencies=csrf,
+        responses={
+            **CREATED_RESOURCE,
+            **problem_responses(*TEACHER_ERRORS, *OBJECT_ERRORS, *MUTATION_ERRORS),
+        },
+    )
+    async def issue_parent_link(
+        student_card_id: UUID,
+        response: Response,
+        students: Annotated[Students, Depends(get_students, scope="function")],
+        actor: Annotated[AccountSummary, Depends(get_actor, scope="function")],
+    ):
+        await rate("invitation_issue", str(actor.account_id), 50, 86400)
+        row, token = await students.issue_parent_link(actor, student_card_id)
+        response.headers["Location"] = (
+            f"/api/v1/teacher/parent-applications/{row['application_id']}"
+        )
+        return {"application": row, "invitation_token": token}
+
+    @router.get(
+        "/teacher/student-cards/{student_card_id}/parent-applications",
+        responses=problem_responses(*TEACHER_ERRORS, *OBJECT_ERRORS, *LIST_ERRORS),
+    )
+    async def parent_applications(
+        student_card_id: UUID,
+        students: Annotated[Students, Depends(get_students, scope="function")],
+        actor: Annotated[AccountSummary, Depends(get_actor, scope="function")],
+        limit: Limit = 20,
+        cursor: Cursor = None,
+    ):
+        page = Pagination(
+            key, f"parent-applications:{actor.account_id}:{student_card_id}", limit, cursor
+        )
+        rows = await students.parent_requests(actor, student_card_id, limit + 1, page.position)
+        return page.result(
+            rows, lambda row: (row[0].created_at, row[0].application_id), lambda row: row[1]
+        )
+
+    @router.post(
+        "/parent-applications/apply",
+        status_code=202,
+        dependencies=csrf,
+        responses=problem_responses(
+            *JSON_BODY_ERRORS,
+            *MUTATION_ERRORS,
+            ProblemCode.INVITATION_UNAVAILABLE,
+            ProblemCode.RATE_LIMITED,
+        ),
+    )
+    async def apply_parent(
+        data: InvitationToken,
+        students: Annotated[Students, Depends(get_students, scope="function")],
+        actor: Annotated[AccountSummary, Depends(get_actor, scope="function")],
+    ):
+        await rate("invitation_accept", str(actor.account_id), 40, 3600)
+        return await students.apply_for_parent_access(actor, data.invitation_token)
+
+    @router.get(
+        "/teacher/parent-applications/{application_id}",
+        responses=problem_responses(*TEACHER_ERRORS, *OBJECT_ERRORS),
+    )
+    async def parent_request_detail(
+        application_id: UUID,
+        students: Annotated[Students, Depends(get_students, scope="function")],
+        actor: Annotated[AccountSummary, Depends(get_actor, scope="function")],
+    ):
+        return await students.parent_request_detail(actor, application_id)
+
+    @router.post(
+        "/teacher/parent-applications/{application_id}/{decision}",
+        dependencies=csrf,
+        responses=problem_responses(
+            *TEACHER_ERRORS,
+            *OBJECT_ERRORS,
+            *MUTATION_ERRORS,
+            ProblemCode.PARENT_APPLICATION_CONFLICT,
+        ),
+    )
+    async def decide_parent(
+        application_id: UUID,
+        decision: Literal["approve", "reject", "revoke"],
+        students: Annotated[Students, Depends(get_students, scope="function")],
+        actor: Annotated[AccountSummary, Depends(get_actor, scope="function")],
+    ):
+        states = {"approve": "approved", "reject": "rejected", "revoke": "revoked"}
+        return await students.decide_parent(actor, application_id, states[decision])
 
     return router

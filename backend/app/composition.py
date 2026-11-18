@@ -20,6 +20,9 @@ from app.modules.identity.infrastructure.delivery import (
 from app.modules.identity.infrastructure.passwords import ArgonPasswords
 from app.modules.identity.infrastructure.repository import PostgresIdentity
 from app.modules.identity.presentation.router import check_csrf, identity_router
+from app.modules.lessons.application.schedule import Schedule
+from app.modules.lessons.infrastructure.repository import PostgresCalendars
+from app.modules.lessons.presentation.router import lessons_router
 from app.modules.students.application.students import Students
 from app.modules.students.infrastructure.persistence.repositories import PostgresStudents
 from app.modules.students.presentation.api.router import students_router
@@ -33,6 +36,7 @@ from app.shared.infrastructure.rate_limit import PostgresRateLimiter
 class Services:
     identity: Identity
     students: Students
+    schedule: Schedule
 
     @property
     def student_card_access(self) -> StudentCardAccess:
@@ -44,7 +48,7 @@ def build_routers(
     engine: AsyncEngine,
     rate_engine: AsyncEngine,
     delivery: CodeDelivery | None,
-) -> tuple[APIRouter, APIRouter]:
+) -> tuple[APIRouter, ...]:
     sessions = async_sessionmaker(engine, expire_on_commit=False)
     activity_sessions = async_sessionmaker(rate_engine, expire_on_commit=False)
     passwords = ArgonPasswords()
@@ -81,15 +85,25 @@ def build_routers(
     async def services(request: Request) -> AsyncIterator[Services]:
         async with sessions.begin() as db:
             directory = PostgresIdentity(db)
+            calendars = PostgresCalendars(db)
             students = Students(
                 PostgresStudents(db, request.state.request_id),
                 directory,
                 settings.secret_key,
                 settings.invitation_hours,
+                calendars,
             )
             yield Services(
                 Identity(directory, channel, passwords, students, settings.secret_key, policy),
                 students,
+                Schedule(
+                    students,
+                    calendars,
+                    settings.lesson_min_minutes,
+                    settings.lesson_max_minutes,
+                    settings.lesson_horizon_days,
+                    settings.lesson_max_series,
+                ),
             )
 
     async def get_identity(
@@ -101,6 +115,11 @@ def build_routers(
         context: Annotated[Services, Depends(services, scope="function")],
     ) -> Students:
         return context.students
+
+    async def get_schedule(
+        context: Annotated[Services, Depends(services, scope="function")],
+    ) -> Schedule:
+        return context.schedule
 
     async def get_session(
         request: Request, context: Annotated[Services, Depends(services, scope="function")]
@@ -135,4 +154,5 @@ def build_routers(
             settings.secure_cookie,
         ),
         students_router(get_students, get_actor, get_csrf, rate, settings.secret_key),
+        lessons_router(get_schedule, get_actor, get_csrf, settings.secret_key),
     )

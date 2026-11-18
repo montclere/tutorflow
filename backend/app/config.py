@@ -31,6 +31,10 @@ class Settings:
     smtp_tls: bool = True
     smsc_api_key: str | None = field(default=None, repr=False)
     smsc_sender: str | None = None
+    lesson_min_minutes: int = 15
+    lesson_max_minutes: int = 240
+    lesson_horizon_days: int = 365
+    lesson_max_series: int = 26
 
     def __post_init__(self):
         if self.app_env not in {"development", "production"}:

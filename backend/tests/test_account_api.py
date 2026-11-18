@@ -812,3 +812,294 @@ def test_rate_limit_retry_after_rounds_up_to_the_window(database, monkeypatch):
         assert response.json()["code"] == "rate_limited"
         assert response.headers["retry-after"] == "9"
         assert response.headers["cache-control"] == "no-store"
+
+
+def test_shared_lesson_lifecycle_and_lazy_series(database):
+    from datetime import UTC, datetime, timedelta
+
+    from sqlalchemy import create_engine, text
+
+    inbox = Inbox()
+    with TestClient(
+        create_app(Settings(database, "t" * 48), delivery=inbox), base_url="https://testserver"
+    ) as teacher:
+        register(teacher, inbox)
+        assert teacher.put("/api/v1/me/teacher-cabinet").status_code == 201
+        invitation, _ = issue(teacher, STUDENT)
+        student, parent, stranger = (peer(teacher) for _ in range(3))
+        register(student, inbox, token=invitation)
+        accepted = student.post("/api/v1/invitations/accept", json={"invitation_token": invitation})
+        assert accepted.status_code == 201, accepted.text
+        card_id = accepted.json()["student_card_id"]
+        register(parent, inbox)
+        register(stranger, inbox)
+
+        base = datetime.now(UTC).replace(second=0, microsecond=0) + timedelta(days=1)
+        result = teacher.post(
+            "/api/v1/teacher/lesson-series",
+            json={
+                "student_card_id": card_id,
+                "first_local_start": base.replace(tzinfo=None).isoformat(),
+                "timezone": "UTC",
+                "duration_minutes": 60,
+                "count": 3,
+                "title": "Дроби",
+                "private_note": "Заметка преподавателя",
+                "client_request_id": str(uuid4()),
+            },
+        )
+        assert result.status_code == 201, result.text
+        series = result.json()
+        first, second, third = series["lessons"]
+        second_id = second["lesson_id"]
+
+        engine = create_engine(database)
+        try:
+            with engine.connect() as conn:
+                assert (
+                    conn.scalar(
+                        text(
+                            "select jsonb_exists(payload->'lessons', :lesson) "
+                            "from lesson_calendars where card_id=:card"
+                        ),
+                        {"lesson": second_id, "card": card_id},
+                    )
+                    is False
+                )
+            assert student.get(f"/api/v1/student/lessons/{second_id}").json()["title"] == "Дроби"
+            with engine.connect() as conn:
+                assert (
+                    conn.scalar(
+                        text(
+                            "select jsonb_exists(payload->'lessons', :lesson) "
+                            "from lesson_calendars where card_id=:card"
+                        ),
+                        {"lesson": second_id, "card": card_id},
+                    )
+                    is False
+                )
+        finally:
+            engine.dispose()
+
+        card_url = f"/api/v1/teacher/student-cards/{card_id}/parent-applications"
+        issued = teacher.post(card_url)
+        assert issued.status_code == 201, issued.text
+        token = issued.json()["invitation_token"]
+        application = parent.post(
+            "/api/v1/parent-applications/apply", json={"invitation_token": token}
+        )
+        assert application.status_code == 202, application.text
+        assert "student_card_id" not in application.json()
+        assert parent.get(f"/api/v1/parent/lessons/{second_id}").status_code == 404
+        assert (
+            stranger.post(
+                "/api/v1/parent-applications/apply", json={"invitation_token": token}
+            ).status_code
+            == 400
+        )
+        approved = teacher.post(
+            f"/api/v1/teacher/parent-applications/{application.json()['application_id']}/approve"
+        )
+        assert approved.status_code == 200, approved.text
+        parent_url = f"/api/v1/parent/lessons/{second_id}"
+        parent_view = parent.get(parent_url)
+        assert parent_view.status_code == 200, parent_view.text
+        assert "private_note" not in parent_view.json()
+        assert stranger.get(parent_url).status_code == 404
+
+        alert = parent.post(
+            parent_url + "/absence-notices", json={"expected_version": 1, "reason": "Поездка"}
+        )
+        assert alert.status_code == 201, alert.text
+        assert (
+            student.get(f"/api/v1/student/lessons/{second_id}/absence-notices").json()["items"][0][
+                "reason"
+            ]
+            == "Поездка"
+        )
+        proposal = parent.post(
+            parent_url + "/reschedule-requests",
+            json={
+                "expected_version": parent.get(parent_url).json()["version"],
+                "proposed_starts_at": (base + timedelta(days=8)).isoformat(),
+                "reason": "Нужна другая дата",
+            },
+        )
+        assert proposal.status_code == 201, proposal.text
+        request_id = proposal.json()["request_id"]
+        assert parent.get(parent_url).json()["starts_at"] == second["starts_at"]
+        decision = teacher.post(
+            f"/api/v1/teacher/reschedule-requests/{request_id}/resolve",
+            json={"decision": "accept", "expected_version": 1},
+        )
+        assert decision.status_code == 200, decision.text
+        moved = parent.get(parent_url).json()
+        assert moved["lesson_id"] == second_id and moved["starts_at"] != second["starts_at"]
+
+        lesson_url = f"/api/v1/teacher/lessons/{second_id}"
+        edit = teacher.patch(
+            lesson_url, json={"title": "Контрольная", "expected_version": moved["version"]}
+        )
+        assert edit.status_code == 200, edit.text
+        series_url = f"/api/v1/teacher/lesson-series/{series['series_id']}"
+        revision = teacher.get(series_url).json()["version"]
+        update = teacher.patch(
+            series_url + "/content", json={"title": "Проценты", "expected_version": revision}
+        )
+        assert update.status_code == 200, update.text
+        assert parent.get(parent_url).json()["title"] == "Контрольная"
+        assert (
+            teacher.get(f"/api/v1/teacher/lessons/{first['lesson_id']}").json()["title"]
+            == "Проценты"
+        )
+        assert (
+            teacher.get(f"/api/v1/teacher/lessons/{third['lesson_id']}").json()["title"]
+            == "Проценты"
+        )
+        activity = parent.get(parent_url + "/activity").json()["items"]
+        assert any(item.get("changed_fields") == ["title"] for item in activity)
+        assert all("actor_account_id" not in item for item in activity)
+
+        virtual_url = f"/api/v1/teacher/lessons/{third['lesson_id']}"
+        etag = teacher.get(virtual_url).headers["etag"]
+        assert teacher.delete(virtual_url, headers={"If-Match": etag}).status_code == 204
+        assert teacher.get(virtual_url).status_code == 404
+        assert len(teacher.get(series_url).json()["lessons"]) == 2
+        leave = teacher.get(f"/api/v1/teacher/student-cards/{card_id}/parent-access").json()[
+            "items"
+        ][0]
+        assert (
+            teacher.delete(f"/api/v1/parent-access/{leave['parent_access_id']}").status_code == 204
+        )
+        assert parent.get(parent_url).status_code == 404
+
+
+def test_teacher_cannot_book_two_cards_at_the_same_time(database):
+    from datetime import UTC, datetime, timedelta
+
+    inbox = Inbox()
+    with TestClient(
+        create_app(Settings(database, "t" * 48), delivery=inbox), base_url="https://testserver"
+    ) as teacher:
+        register(teacher, inbox)
+        assert teacher.put("/api/v1/me/teacher-cabinet").status_code == 201
+        card_ids = []
+        for _ in range(2):
+            link, _ = issue(teacher, STUDENT)
+            learner = peer(teacher)
+            register(learner, inbox, token=link)
+            joined = learner.post("/api/v1/invitations/accept", json={"invitation_token": link})
+            assert joined.status_code == 201, joined.text
+            card_ids.append(joined.json()["student_card_id"])
+        clients = [peer(teacher), peer(teacher)]
+        for client in clients:
+            client.cookies.update(teacher.cookies)
+            client.headers["X-CSRF-Token"] = teacher.headers["X-CSRF-Token"]
+        start = datetime.now(UTC).replace(second=0, microsecond=0) + timedelta(days=2)
+        barrier = Barrier(2)
+
+        def book(index):
+            barrier.wait(timeout=5)
+            return clients[index].post(
+                "/api/v1/teacher/lessons",
+                json={
+                    "student_card_id": card_ids[index],
+                    "starts_at": start.isoformat(),
+                    "duration_minutes": 60,
+                    "title": "Занятие",
+                    "client_request_id": str(uuid4()),
+                },
+            )
+
+        with ThreadPoolExecutor(max_workers=2) as pool:
+            results = list(pool.map(book, range(2)))
+        assert sorted(result.status_code for result in results) == [201, 409]
+        loser = next(result for result in results if result.status_code == 409)
+        assert loser.json()["code"] == "lesson_time_conflict"
+
+
+def test_record_completed_lesson_and_restore_cancelled_lesson(database):
+    from datetime import UTC, datetime, timedelta
+
+    inbox = Inbox()
+    with TestClient(
+        create_app(Settings(database, "t" * 48), delivery=inbox), base_url="https://testserver"
+    ) as teacher:
+        register(teacher, inbox)
+        assert teacher.put("/api/v1/me/teacher-cabinet").status_code == 201
+        link, _ = issue(teacher, STUDENT)
+        learner = peer(teacher)
+        register(learner, inbox, token=link)
+        joined = learner.post("/api/v1/invitations/accept", json={"invitation_token": link})
+        assert joined.status_code == 201, joined.text
+        card_id = joined.json()["student_card_id"]
+        now = datetime.now(UTC).replace(second=0, microsecond=0)
+        data = {
+            "student_card_id": card_id,
+            "title": "Правописание",
+            "duration_minutes": 45,
+            "starts_at": (now - timedelta(days=1)).isoformat(),
+            "client_request_id": str(uuid4()),
+        }
+        first = teacher.post("/api/v1/teacher/lessons/record-completed", json=data)
+        assert first.status_code == 201, first.text
+        url = first.headers["location"]
+        repeat = teacher.post("/api/v1/teacher/lessons/record-completed", json=data)
+        assert repeat.status_code == 200 and repeat.json()["lesson_id"] == first.json()["lesson_id"]
+        history = learner.get(
+            "/api/v1/student/lessons",
+            params={
+                "view": "history",
+                "from": (now - timedelta(days=2)).isoformat(),
+                "to": now.isoformat(),
+            },
+        )
+        assert history.json()["items"][0]["status"] == "completed"
+        reset = teacher.post(url + "/attendance/reset", json={"expected_version": 1})
+        assert reset.status_code == 200 and reset.json()["status"] == "scheduled"
+        assert not learner.get(
+            "/api/v1/student/lessons",
+            params={
+                "view": "history",
+                "from": (now - timedelta(days=2)).isoformat(),
+                "to": now.isoformat(),
+            },
+        ).json()["items"]
+
+        future = {
+            **data,
+            "starts_at": (now + timedelta(days=2)).isoformat(),
+            "client_request_id": str(uuid4()),
+        }
+        added = teacher.post("/api/v1/teacher/lessons", json=future)
+        assert added.status_code == 201, added.text
+        url = added.headers["location"]
+        assert (
+            teacher.post(
+                url + "/cancel",
+                json={
+                    "expected_version": 1,
+                    "reason": "Отпуск",
+                },
+            ).json()["outcome_reason"]
+            == "Отпуск"
+        )
+        duplicate = teacher.post(
+            "/api/v1/teacher/lessons",
+            json={
+                **future,
+                "client_request_id": str(uuid4()),
+                "title": "Другое занятие",
+            },
+        )
+        assert duplicate.status_code == 201, duplicate.text
+        restore = teacher.post(url + "/restore", json={"expected_version": 2})
+        assert restore.status_code == 409 and teacher.get(url).json()["status"] == "cancelled"
+        assert (
+            teacher.delete(duplicate.headers["location"], headers={"If-Match": '"1"'}).status_code
+            == 204
+        )
+        restored = teacher.post(url + "/restore", json={"expected_version": 2})
+        assert restored.status_code == 200 and restored.headers.get("location") is None
+        assert restored.json()["lesson_id"] == added.json()["lesson_id"]
+        assert restored.json()["outcome_reason"] is None

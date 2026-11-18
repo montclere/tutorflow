@@ -32,7 +32,7 @@
 | GET /teacher/student-cards | limit, cursor, status | 200 список TeacherStudentCard; только свои |
 | GET /teacher/student-cards/{student_card_id} | — | 200 TeacherStudentCard |
 | PATCH /teacher/student-cards/{student_card_id} | `{student_card_name?, subject?, learning_goal?, private_note?, expected_version}` | 200 TeacherStudentCard; хотя бы одно изменяемое поле |
-| POST /teacher/student-cards/{student_card_id}/archive | `{expected_version}` | 200 TeacherStudentCard |
+| POST /teacher/student-cards/{student_card_id}/archive | `{expected_version}` | 200 TeacherStudentCard или 409 `student_card_has_open_lessons` |
 | POST /teacher/student-cards/{student_card_id}/restore | `{expected_version}` | 200 TeacherStudentCard |
 | GET /student/student-cards | limit, cursor | 200 список StudentCabinetCard; только связанные активные |
 | GET /student/student-cards/{student_card_id} | — | 200 StudentCabinetCard |
@@ -46,3 +46,15 @@
 `StudentCabinetCard`: `student_card_id, student_card_name, subject, learning_goal, teacher_display_name`. `ParentCabinetCard`: те же поля и собственный `parent_access_id`. `teacher_display_name` берётся из личного профиля преподавателя. Контакт возвращает только identity для владельца. Закрытую заметку видит только преподаватель карточки.
 
 `ParentAccessSummary`: `parent_access_id, student_card_id, parent_display_name, status`. Преподаватель видит только разрешения к своим карточкам. Родитель не видит другие разрешения даже при знании ID. История и новые виды доступа появятся только в собственных контрактах будущих этапов.
+
+## Подключение родителя к существующей карточке
+
+| Метод и путь | Вход | Успех |
+| --- | --- | --- |
+| POST /teacher/student-cards/{student_card_id}/parent-applications | — | 201 `{application, invitation_token}`. `Location` ведёт на заявку, секрет возвращается один раз |
+| GET /teacher/student-cards/{student_card_id}/parent-applications | limit, cursor | 200 список заявок карточки для владельца |
+| GET /teacher/parent-applications/{application_id} | — | 200 заявка для владельца |
+| POST /parent-applications/apply | `{invitation_token}` | 202 `{application_id, status}` после входа |
+| POST /teacher/parent-applications/{application_id}/{decision} | `approve`, `reject` или `revoke` в пути | 200 заявка с решением |
+
+Только преподаватель-владелец выдаёт доступ. Родитель до одобрения получает ID и статус заявки. Информация о карточке и её история остаются закрыты. Статусы от `pending` и `awaiting_review` до `approved`, `rejected`, `revoked` или `expired`. Устаревшая команда решения даёт 409 `parent_application_conflict`. [Предметные правила](../adr/students.md#приглашение-родителя-к-существующей-карточке)
