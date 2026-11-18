@@ -1,8 +1,8 @@
 import { ChevronRight } from "lucide-react";
 import { cabinet } from "../../content/cabinet.ru";
 import type { Student } from "../../mocks/types";
-import { formatPackage, formatRubles, formatTimesPerWeek } from "../../model/format";
-import { formatNextLesson } from "../../model/students";
+import { formatRubles } from "../../model/format";
+import { formatNextLesson, paymentStatus } from "../../model/students";
 import { Avatar } from "../../ui/Avatar";
 import { cx } from "../../ui/cx";
 import { TruncatedText } from "../../ui/TruncatedText";
@@ -21,22 +21,10 @@ export function formatBalance(balance: number): string {
   return text.balance.zero;
 }
 
+/** Ноль — тоже чип, нейтральный: колонка баланса выглядит ровно. */
 function balanceBadge(balance: number): string {
   if (balance < 0) return "bg-[var(--cab-bad-soft)] text-destructive";
-  return balance > 0 ? "bg-[var(--cab-ok-soft)] text-success" : "text-muted-foreground";
-}
-
-function scheduleText(student: Student) {
-  const { timesPerWeek, days } = student.schedule;
-  return timesPerWeek === 0 ? { title: text.noSchedule, note: "" } : { title: formatTimesPerWeek(timesPerWeek), note: days.join(", ") };
-}
-
-function paymentText(student: Student) {
-  const { model, pricePerLesson, package: pack } = student.payment;
-  if (model === "package" && pack) {
-    return { title: text.payment.package, note: formatPackage(pack.lessons, pack.price, pack.left) };
-  }
-  return { title: text.payment.perLesson, note: text.payment.pricePerLesson(formatRubles(pricePerLesson)) };
+  return balance > 0 ? "bg-[var(--cab-ok-soft)] text-success" : "bg-secondary text-muted-foreground";
 }
 
 export function nextLessonText(student: Student, today: string): string {
@@ -45,8 +33,43 @@ export function nextLessonText(student: Student, today: string): string {
     : text.noNextLesson;
 }
 
+function isSoon(next: string): boolean {
+  return next.startsWith(text.nextLesson.today) || next.startsWith(text.nextLesson.tomorrow);
+}
+
+function Balance({ student, inline }: { student: Student; inline?: boolean }) {
+  const left = student.payment.package?.left;
+  return (
+    <span className={cx("flex items-start gap-1", inline ? "flex-row flex-wrap items-center gap-2" : "flex-col")}>
+      <span className={cx("inline-flex rounded-full px-3 py-1 text-sm font-extrabold whitespace-nowrap tabular-nums", balanceBadge(student.balance))}>
+        {formatBalance(student.balance)}
+      </span>
+      {paymentStatus(student) === "low" && left !== undefined && (
+        <span className="text-xs font-bold text-[var(--cab-warn)]">{text.packageLow(left)}</span>
+      )}
+    </span>
+  );
+}
+
+function Waiting({ student }: { student: Student }) {
+  if (student.telegramConnected) return null;
+  return <span className="inline-flex rounded-full bg-[var(--cab-warn-soft)] px-2 py-0.5 text-xs font-bold whitespace-nowrap text-[var(--cab-warn)]">{text.waiting}</span>;
+}
+
+function NextLesson({ student, today }: { student: Student; today: string }) {
+  const next = nextLessonText(student, today);
+  if (!student.nextLesson) return <span className="text-base font-semibold text-muted-foreground">{next}</span>;
+  return (
+    <span className={cx("inline-flex items-center gap-2 text-base whitespace-nowrap tabular-nums", isSoon(next) ? "font-extrabold" : "font-semibold")}>
+      {isSoon(next) && <span className="size-2 rounded-full bg-primary" aria-hidden="true" />}
+      {next}
+    </span>
+  );
+}
+
 type Props = { students: Student[]; today: string; selectedId: string | null; onOpen: (id: string) => void };
 
+/** В таблице только главное: кто, когда следующий урок и что с оплатой (STUDENTS-1). */
 export function StudentsTable({ students, today, selectedId, onOpen }: Props) {
   return (
     <div className="max-[520px]:hidden">
@@ -55,30 +78,26 @@ export function StudentsTable({ students, today, selectedId, onOpen }: Props) {
           <TableHeader>
             <TableRow className="hover:bg-transparent">
               {text.columns.map((column) => (
-                <TableHead key={column} className="h-12 bg-secondary px-4 text-sm font-bold text-muted-foreground first:pl-6">
+                <TableHead key={column} className="h-11 px-4 text-xs font-bold tracking-wide text-muted-foreground uppercase first:pl-6">
                   {column}
                 </TableHead>
               ))}
-              <TableHead className="w-10 bg-secondary px-4" />
+              <TableHead className="w-10 px-4" />
             </TableRow>
           </TableHeader>
           <TableBody>
-            {students.map((student) => {
-              const schedule = scheduleText(student);
-              const payment = paymentText(student);
-              const next = nextLessonText(student, today);
-              const soon = next.startsWith(text.nextLesson.today) || next.startsWith(text.nextLesson.tomorrow);
-              return (
-                <TableRow
-                  key={student.id}
-                  className="group cursor-pointer transition-colors duration-150 hover:bg-secondary/50 focus-within:bg-secondary data-[state=selected]:bg-accent motion-reduce:transition-none"
-                  data-state={student.id === selectedId ? "selected" : undefined}
-                  onClick={() => onOpen(student.id)}
-                >
-                  <TableCell className="max-w-80 px-4 py-4 pl-6">
-                    <div className="flex items-center gap-3.5">
-                      <Avatar initials={student.initials} color={student.color} />
-                      <div className="min-w-0">
+            {students.map((student) => (
+              <TableRow
+                key={student.id}
+                className="group cursor-pointer transition-colors duration-150 hover:bg-secondary/50 focus-within:bg-secondary data-[state=selected]:bg-accent motion-reduce:transition-none"
+                data-state={student.id === selectedId ? "selected" : undefined}
+                onClick={() => onOpen(student.id)}
+              >
+                <TableCell className="w-[48%] max-w-0 px-4 py-4 pl-6">
+                  <div className="flex items-center gap-3.5">
+                    <Avatar initials={student.initials} color={student.color} />
+                    <div className="min-w-0">
+                      <span className="flex min-w-0 items-center gap-2">
                         <button
                           type="button"
                           data-student-button={student.id}
@@ -87,32 +106,23 @@ export function StudentsTable({ students, today, selectedId, onOpen }: Props) {
                         >
                           {student.name}
                         </button>
-                        <TruncatedText text={student.goal} className="text-sm font-semibold text-muted-foreground" />
-                      </div>
+                        <Waiting student={student} />
+                      </span>
+                      {student.goal && <TruncatedText text={student.goal} className="text-sm font-semibold text-muted-foreground" />}
                     </div>
-                  </TableCell>
-                  <TableCell className="px-4 py-4">
-                    <b className="block text-base">{schedule.title}</b>
-                    <span className="text-sm font-semibold text-muted-foreground">{schedule.note}</span>
-                  </TableCell>
-                  <TableCell className="max-w-56 px-4 py-4">
-                    <b className="block text-base">{payment.title}</b>
-                    <TruncatedText text={payment.note} className="text-sm font-semibold text-muted-foreground tabular-nums" />
-                  </TableCell>
-                  <TableCell className="px-4 py-4 whitespace-nowrap">
-                    <span className={cx("inline-flex rounded-full px-3 py-1 text-sm font-extrabold tabular-nums", balanceBadge(student.balance))}>
-                      {formatBalance(student.balance)}
-                    </span>
-                  </TableCell>
-                  <TableCell className={cx("px-4 py-4 text-base font-bold whitespace-nowrap tabular-nums", soon ? "text-primary" : next === text.noNextLesson && "text-muted-foreground")}>
-                    {next}
-                  </TableCell>
-                  <TableCell className="px-4 py-4 pr-5">
-                    <ChevronRight size={18} className="text-muted-foreground transition-transform duration-150 group-hover:translate-x-0.5 motion-reduce:transition-none" aria-hidden="true" />
-                  </TableCell>
-                </TableRow>
-              );
-            })}
+                  </div>
+                </TableCell>
+                <TableCell className="px-4 py-4">
+                  <NextLesson student={student} today={today} />
+                </TableCell>
+                <TableCell className="px-4 py-4">
+                  <Balance student={student} />
+                </TableCell>
+                <TableCell className="px-4 py-4 pr-5">
+                  <ChevronRight size={18} className="text-muted-foreground transition-transform duration-150 group-hover:translate-x-0.5 motion-reduce:transition-none" aria-hidden="true" />
+                </TableCell>
+              </TableRow>
+            ))}
           </TableBody>
         </Table>
       </div>
@@ -136,12 +146,17 @@ export function StudentCards({ students, today, selectedId, onOpen }: Props) {
             )}
           >
             <Avatar initials={student.initials} color={student.color} />
-            <span className="min-w-0 flex-1">
-              <b className="block truncate text-base font-extrabold">{student.name}</b>
-              <span className="block truncate text-sm font-semibold text-muted-foreground">{student.goal}</span>
-              <span className="block text-sm font-bold tabular-nums">{nextLessonText(student, today)}</span>
+            {/* На телефоне баланс под именем: широкий чип справа сжимал имя. */}
+            <span className="grid min-w-0 flex-1 gap-1">
+              <span className="flex min-w-0 items-center gap-2">
+                <b className="truncate text-base font-extrabold">{student.name}</b>
+                <Waiting student={student} />
+              </span>
+              {student.goal && <span className="block truncate text-sm font-semibold text-muted-foreground">{student.goal}</span>}
+              <NextLesson student={student} today={today} />
+              <Balance student={student} inline />
             </span>
-            <span className={cx("max-w-28 text-right text-sm font-extrabold tabular-nums", balanceClass(student.balance))}>{formatBalance(student.balance)}</span>
+            <ChevronRight size={18} className="flex-none text-muted-foreground" aria-hidden="true" />
           </button>
         </li>
       ))}

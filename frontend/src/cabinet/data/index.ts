@@ -1,13 +1,13 @@
 import { cabinet } from "../content/cabinet.ru";
 import { addDays, formatLongDay, weekDates, weekdayIndex } from "../model/dates";
 import { upcomingFreeWindows } from "../model/freeSlots";
-import { expandTemplates, lessonsOn } from "../model/lessons";
+import { expandTemplates, isPast, lessonsOn } from "../model/lessons";
 import { toLessonRow, weekDays } from "../model/overview";
 import { withSubjectParam } from "../model/taskParams";
 import { students, teacherSubjects } from "../mocks/people";
 import { studentDetails } from "../mocks/studentDetails";
 import { expectedIncome, growthPercent, lessonsAhead, monthKeyOf, shiftMonth } from "../model/finance";
-import { deriveSchedule, LOW_PACKAGE_LEFT, nextLessonOf } from "../model/students";
+import { deriveSchedule, LOW_PACKAGE_LEFT, nextLessonOf, templatesFromLessons } from "../model/students";
 import { lessonTemplates, scheduleNow, scheduleRange, scheduleToday, singleLessons, workHours } from "../mocks/schedule";
 import { exam, homework, progress, studentHome, trainer } from "../mocks/student";
 import { taskLab } from "../mocks/tasks";
@@ -20,7 +20,11 @@ import type {
   Progress,
   Review,
   ScheduleData,
+  PaymentMove,
   ScheduleLesson,
+  StudentNote,
+  StudentRecord,
+  StudentStatus,
   ExamPrep,
   Student,
   StudentDetails,
@@ -50,34 +54,100 @@ export function addLessons(lessons: ScheduleLesson[]): void {
   for (const listener of scheduleListeners) listener();
 }
 
+/** Будущие уроки удалённого ученика убираем из расписания; прошлые остаются в истории. */
+function removeFutureLessonsOf(studentId: string): void {
+  schedule = { ...schedule, lessons: schedule.lessons.filter((lesson) => lesson.studentId !== studentId || isPast(lesson, schedule.today, schedule.now)) };
+  for (const listener of scheduleListeners) listener();
+}
+
 export function getSchedule(): ScheduleData {
   return schedule;
 }
 
-const allStudents: Student[] = students.map((record) => ({
-  ...record,
-  schedule: deriveSchedule(record.id, lessonTemplates, cabinet.weekdays, cabinet.teacher.students.mixedTime),
-  nextLesson: nextLessonOf(record.id, schedule.lessons, schedule.today, schedule.now),
-}));
+// Ученики — тоже хранилище в памяти вместо сервера (STUDENTS-6). Удалённые остаются в записях с пометкой removed:
+// на них ссылаются прошлые уроки и операции, а из списков они исчезают.
+let studentRecords: (StudentRecord & { removed?: boolean })[] = [...students];
+const addedDetails: Record<string, { payments: PaymentMove[]; notes: StudentNote[] }> = {};
+let studentsVersion = 0;
+const studentListeners = new Set<() => void>();
+let studentsCache: { version: number; schedule: ScheduleData; all: Student[]; visible: Student[] } | null = null;
+
+function emitStudents(): void {
+  studentsVersion += 1;
+  for (const listener of studentListeners) listener();
+}
+
+/** Подписка и на учеников, и на расписание: «следующий урок» зависит от обоих. */
+export function subscribeStudents(listener: () => void): () => void {
+  studentListeners.add(listener);
+  const unsubscribeSchedule = subscribeSchedule(listener);
+  return () => {
+    studentListeners.delete(listener);
+    unsubscribeSchedule();
+  };
+}
+
+function studentsSnapshot() {
+  if (studentsCache && studentsCache.version === studentsVersion && studentsCache.schedule === schedule) return studentsCache;
+  const all = studentRecords.map((record) => ({
+    ...record,
+    schedule: deriveSchedule(record.id, templatesFromLessons(record.id, schedule.lessons, schedule.today), cabinet.weekdays, cabinet.teacher.students.mixedTime),
+    nextLesson: nextLessonOf(record.id, schedule.lessons, schedule.today, schedule.now),
+  }));
+  studentsCache = { version: studentsVersion, schedule, all, visible: all.filter((student) => !studentRecords.find((record) => record.id === student.id)?.removed) };
+  return studentsCache;
+}
 
 export function getStudents(): Student[] {
-  return allStudents;
+  return studentsSnapshot().visible;
+}
+
+export function addStudent(record: StudentRecord): void {
+  studentRecords = [...studentRecords, record];
+  emitStudents();
+}
+
+export function setStudentStatus(id: string, status: StudentStatus): void {
+  studentRecords = studentRecords.map((record) => (record.id === id ? { ...record, status } : record));
+  emitStudents();
+}
+
+export function removeStudent(id: string): void {
+  studentRecords = studentRecords.map((record) => (record.id === id ? { ...record, removed: true } : record));
+  removeFutureLessonsOf(id);
+  emitStudents();
+}
+
+export function addPayment(id: string, move: PaymentMove): void {
+  studentRecords = studentRecords.map((record) => (record.id === id ? { ...record, balance: record.balance + move.amount } : record));
+  const added = (addedDetails[id] ??= { payments: [], notes: [] });
+  added.payments = [move, ...added.payments];
+  emitStudents();
+}
+
+export function addNote(id: string, note: StudentNote): void {
+  const added = (addedDetails[id] ??= { payments: [], notes: [] });
+  added.notes = [note, ...added.notes];
+  emitStudents();
 }
 
 const emptyDetails: StudentDetails = { payments: [], tasks: [], trainer: null, notes: [] };
 
 export function getStudentDetails(id: string): StudentDetails {
-  return studentDetails[id] ?? emptyDetails;
+  const base = studentDetails[id] ?? emptyDetails;
+  const added = addedDetails[id];
+  if (!added) return base;
+  return { ...base, payments: [...added.payments, ...base.payments], notes: [...added.notes, ...base.notes] };
 }
 
 export function getStudent(id: string): Student {
-  const student = allStudents.find((item) => item.id === id);
+  const student = studentsSnapshot().all.find((item) => item.id === id);
   if (!student) throw new Error(`Нет ученика ${id}`);
   return student;
 }
 
 function examPreps(): ExamPrep[] {
-  return allStudents.flatMap((student) => {
+  return getStudents().flatMap((student) => {
     if (student.status !== "active" || !student.exam) return [];
     const trend = overviewBase.examTrends.find((item) => item.studentId === student.id);
     return [
@@ -132,7 +202,7 @@ export function getFinanceMonths(): string[] {
 
 export function getFinanceOverview(month: string): FinanceOverview {
   const { history, operations, debtDays } = finance;
-  const active = allStudents.filter((student) => student.status === "active");
+  const active = getStudents().filter((student) => student.status === "active");
   const stat = history.find((item) => item.month === month) ?? null;
   const previous = history.find((item) => item.month === shiftMonth(month, -1));
   const debtors = active.filter((student) => student.balance < 0);

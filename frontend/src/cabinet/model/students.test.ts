@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { LessonTemplate, ScheduleLesson, Student } from "../mocks/types";
-import { countByStatus, deriveSchedule, filterStudents, formatNextLesson, nextLessonOf, paymentStatus } from "./students";
+import { countByStatus, deriveSchedule, filterStudents, formatNextLesson, nextLessonOf, paymentStatus, templatesFromLessons } from "./students";
 
 function student(partial: Partial<Student>): Student {
   return { id: "s", name: "Анна Мельник", status: "active", balance: 0, payment: { model: "per_lesson", pricePerLesson: 100000 }, ...partial } as Student;
@@ -85,5 +85,22 @@ describe("nextLesson", () => {
     expect(formatNextLesson({ date: "2026-11-18", start: "13:00" }, "2026-11-17", labels)).toBe("Завтра 13:00");
     expect(formatNextLesson({ date: "2026-11-19", start: "16:00" }, "2026-11-17", labels)).toBe("Чт 16:00");
     expect(formatNextLesson({ date: "2026-11-26", start: "16:00" }, "2026-11-17", labels)).toBe("Чт 26.11 16:00");
+  });
+});
+
+describe("templatesFromLessons", () => {
+  const lesson = (date: string, start: string, recurring = true, type: "individual" | "trial" = "individual") =>
+    ({ id: `${date}-${start}`, studentId: "s", date, start, durationMin: 60, type, recurring }) as const;
+
+  it("берёт регулярные уроки ученика на ближайшую неделю, по одному на день недели", () => {
+    const templates = templatesFromLessons(
+      "s",
+      [lesson("2026-11-18", "16:30"), lesson("2026-11-20", "17:00"), lesson("2026-11-25", "16:30"), lesson("2026-11-19", "12:00", false), lesson("2026-11-21", "12:00", true, "trial")],
+      "2026-11-17",
+    );
+    expect(templates.map((item) => [item.weekday, item.start])).toEqual([
+      [2, "16:30"],
+      [4, "17:00"],
+    ]);
   });
 });

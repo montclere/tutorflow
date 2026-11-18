@@ -1,25 +1,28 @@
 import { Plus, Search, TriangleAlert } from "lucide-react";
 import { useState } from "react";
 import { cabinet } from "../../content/cabinet.ru";
-import { getSchedule, getStudents } from "../../data";
+import { getSchedule } from "../../data";
+import { useStudents } from "../../data/useStudents";
 import { countByStatus, filterStudents } from "../../model/students";
 import { Button } from "../../ui/Button";
 import { EmptyState } from "../../ui/EmptyState";
-import { useNotifier } from "../../ui/Notifications";
 import { PageHead } from "../../ui/PageHead";
 import { Tabs } from "../../ui/Tabs";
 import { Input } from "@/shared/ui/kit/input";
 import { Toggle } from "@/shared/ui/kit/toggle";
 import { StudentCards, StudentsTable } from "./StudentsTable";
+import { NewLessonSheet, type NewLessonSeed } from "../schedule/NewLessonSheet";
+import { NewStudentDialog } from "./NewStudentDialog";
 import { StudentSheet } from "./StudentSheet";
 import { studentsHref, useStudentsUrl } from "./useStudentsUrl";
 
 const text = cabinet.teacher.students;
 
 export function StudentsPage() {
-  const { notifySoon } = useNotifier();
   const { today } = getSchedule();
-  const students = getStudents();
+  const students = useStudents();
+  const [adding, setAdding] = useState(false);
+  const [newLesson, setNewLesson] = useState<NewLessonSeed | null>(null);
   const { status, studentId, go } = useStudentsUrl();
   const [query, setQuery] = useState("");
   const [debtorsOnly, setDebtorsOnly] = useState(false);
@@ -37,7 +40,7 @@ export function StudentsPage() {
           title={text.empty.first.title}
           text={text.empty.first.text}
           action={
-            <Button variant="primary" icon={Plus} onClick={() => notifySoon(text.invite)}>
+            <Button variant="primary" icon={Plus} onClick={() => setAdding(true)}>
               {text.empty.first.action}
             </Button>
           }
@@ -63,7 +66,7 @@ export function StudentsPage() {
       <PageHead
         title={text.title}
         actions={
-          <Button variant="primary" icon={Plus} onClick={() => notifySoon(text.invite)}>
+          <Button variant="primary" icon={Plus} onClick={() => setAdding(true)}>
             {text.invite}
           </Button>
         }
@@ -103,6 +106,13 @@ export function StudentsPage() {
       )}
 
       <StudentSheet student={selected} today={today} onClose={() => go({ studentId: null })} onCloseAutoFocus={restoreFocus} />
+      <NewStudentDialog
+        open={adding}
+        onOpenChange={setAdding}
+        onFirstLesson={(id) => setNewLesson({ studentId: id })}
+        onOpenCard={(id) => go({ status: "active", studentId: id })}
+      />
+      <NewLessonSheet seed={newLesson} onClose={() => setNewLesson(null)} />
     </>
   );
 }

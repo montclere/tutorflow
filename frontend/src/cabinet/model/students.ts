@@ -1,5 +1,5 @@
 import type { LessonTemplate, NextLesson, PaymentStatus, ScheduleLesson, Student, StudentStatus } from "../mocks/types";
-import { daysBetween, weekdayIndex } from "./dates";
+import { addDays, daysBetween, weekdayIndex } from "./dates";
 import { nextLesson as nextScheduled } from "./lessons";
 
 export type StudentFilter = { status: StudentStatus; query: string; debtorsOnly: boolean };
@@ -57,4 +57,23 @@ export function formatNextLesson(next: NextLesson, today: string, labels: NextLe
   if (distance === 1) return `${labels.tomorrow} ${next.start}`;
   if (distance < 7) return `${labels.weekdays[weekdayIndex(next.date)] ?? ""} ${next.start}`;
   return `${labels.weekdays[weekdayIndex(next.date)] ?? ""} ${next.date.slice(8)}.${next.date.slice(5, 7)} ${next.start}`;
+}
+
+/**
+ * Обычное расписание ученика по его регулярным урокам на ближайшую неделю — так в карточке
+ * видно и расписание, поставленное через «Новый урок», а не только заранее заданное.
+ */
+export function templatesFromLessons(studentId: string, lessons: ScheduleLesson[], today: string): LessonTemplate[] {
+  const weekEnd = addDays(today, 6);
+  const seen = new Set<number>();
+  const templates: LessonTemplate[] = [];
+  for (const lesson of [...lessons].sort((a, b) => a.date.localeCompare(b.date))) {
+    if (lesson.studentId !== studentId || !lesson.recurring || lesson.type === "trial") continue;
+    if (lesson.date < today || lesson.date > weekEnd) continue;
+    const weekday = weekdayIndex(lesson.date);
+    if (seen.has(weekday)) continue;
+    seen.add(weekday);
+    templates.push({ id: lesson.id, studentId, weekday, start: lesson.start, durationMin: lesson.durationMin, type: lesson.type });
+  }
+  return templates;
 }
