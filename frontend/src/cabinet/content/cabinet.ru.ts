@@ -19,6 +19,7 @@ const dayForms: [string, string, string] = ["день", "дня", "дней"];
 const studentForms: [string, string, string] = ["ученик", "ученика", "учеников"];
 const paymentForms: [string, string, string] = ["оплата", "оплаты", "оплат"];
 const doneForms: [string, string, string] = ["проведён", "проведено", "проведено"];
+const dateForms: [string, string, string] = ["дата", "даты", "дат"];
 const monthsDative = ["январю", "февралю", "марту", "апрелю", "маю", "июню", "июлю", "августу", "сентябрю", "октябрю", "ноябрю", "декабрю"];
 const windowForms: [string, string, string] = ["свободное окно", "свободных окна", "свободных окон"];
 
@@ -96,6 +97,23 @@ export const cabinet = {
   teacher: {
     overview: {
       greeting: (name: string) => `Добрый день, ${name}`,
+      // Рабочая сборка: обзор из уроков API (OVERVIEW-9).
+      live: {
+        today: "Сегодня",
+        tomorrow: "Завтра",
+        upcomingTitle: "Ближайшие занятия",
+        noUpcoming: "Сегодня и завтра уроков нет",
+        toMarkTitle: "Нужна отметка",
+        toMarkHint: "Прошедшие уроки без отметки: проведён или ученик не пришёл.",
+        allMarked: "Все прошедшие уроки отмечены",
+        weekTitle: "Эта неделя",
+        week: { planned: "Запланировано", completed: "Проведено", noShow: "Не пришли", cancelled: "Отменено" },
+        firstTitle: "Начните с приглашения",
+        firstText: "Пригласите ученика — после принятия ему можно будет ставить уроки.",
+        firstAction: "К ученикам",
+        schedule: "Расписание →",
+        openLesson: (name: string, time: string) => `Открыть урок: ${name}, ${time}`,
+      },
       today: {
         title: "Ближайшие занятия",
         tomorrow: "Завтра",
@@ -201,6 +219,73 @@ export const cabinet = {
         cancel: "Отменить",
         done: "Проведён",
         studentCard: "Карточка ученика",
+        open: "Открыть урок",
+      },
+      outcome: { scheduled: "Запланирован", completed: "Проведён", no_show: "Не пришёл", cancelled: "Отменён" },
+      // Рабочая сборка: уроки по API lessons (ADR интерфейса, SCHEDULE-7…).
+      live: {
+        loading: "Загружаем расписание…",
+        failed: "Не удалось загрузить расписание",
+        retry: "Повторить",
+        facts: { title: "Тема", preparation: "Подготовка", note: "Заметка для себя", reason: "Причина" },
+        unknownStudent: "Ученик",
+        sheet: {
+          status: "Состояние",
+          cancel: "Отменить урок",
+          cancelReason: "Причина отмены",
+          cancelReasonHint: "необязательно, увидит ученик",
+          confirmCancel: "Отменить урок",
+          keep: "Не отменять",
+          completed: "Проведён",
+          noShow: "Не пришёл",
+          noShowReason: "Причина неявки",
+          reset: "Снять отметку",
+          restore: "Восстановить урок",
+          markLater: "Отметить урок можно после его окончания.",
+          done: { cancelled: "Урок отменён", completed: "Урок отмечен проведённым", no_show: "Отмечено: не пришёл", scheduled: "Урок снова запланирован" },
+        },
+        create: {
+          title: "Новый урок",
+          description: "Урок увидит ученик в своём кабинете.",
+          student: "Ученик",
+          chooseStudent: "Выберите ученика",
+          notLinkedHint: "Урок можно поставить ученику, который принял приглашение. Остальные появятся здесь после принятия.",
+          noStudents: "Пока некого записать: пригласите ученика во вкладке «Ученики».",
+          topic: "Тема урока",
+          topicPlaceholder: "Например, квадратные уравнения",
+          date: "Дата",
+          time: "Время",
+          duration: "Длительность, мин",
+          repeat: "Повторять каждую неделю",
+          count: "Сколько уроков",
+          countHint: (max: number) => `от 2 до ${max}`,
+          check: "Проверить даты",
+          conflicts: (count: number, total: number) => `${plural(count, ["Занята", "Заняты", "Заняты"])} ${count} из ${total} ${plural(total, dateForms)} — выберите другое время.`,
+          free: (total: number) => `Все ${total} ${plural(total, dateForms)} свободны.`,
+          submit: "Поставить урок",
+          submitSeries: (count: number) => `Поставить ${count} ${plural(count, lessonForms)}`,
+          created: "Урок поставлен",
+          createdSeries: (count: number) => `Поставлено уроков: ${count}`,
+          cancel: "Отмена",
+          errors: {
+            student: "Выберите ученика",
+            topic: "Напишите тему урока",
+            past: "Это время уже прошло",
+            duration: "Длительность — от 15 до 240 минут",
+            count: "В серии от 2 до 26 уроков",
+          },
+        },
+        errors: {
+          timeConflict: "Это время уже занято другим уроком.",
+          notLinked: "Ученик ещё не принял приглашение — урок поставить нельзя.",
+          stateConflict: "Сейчас это действие недоступно: урок уже изменился или ещё не закончился.",
+          versionConflict: "Урок только что изменили. Обновили расписание — проверьте и повторите.",
+          createConflict: "Такой урок уже создаётся. Обновите расписание.",
+          validation: "Проверьте дату, время и длительность.",
+          notFound: "Урок недоступен.",
+          tooManyRequests: "Слишком много попыток. Подождите немного и повторите.",
+          unavailable: "Не удалось связаться с TutorFlow. Попробуйте ещё раз.",
+        },
       },
       create: {
         title: "Новый урок",

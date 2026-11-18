@@ -5,9 +5,11 @@ import { CabinetShell } from "./layout/CabinetShell";
 import { ExamPage } from "./pages/ExamPage";
 import { FinancePage } from "./pages/finance/FinancePage";
 import { HomeworkPage } from "./pages/HomeworkPage";
+import { LiveOverviewPage } from "./pages/overview/LiveOverviewPage";
 import { OverviewPage } from "./pages/overview/OverviewPage";
 import { ProgressPage } from "./pages/ProgressPage";
 import { ReviewPage } from "./pages/ReviewPage";
+import { LiveSchedulePage } from "./pages/schedule/live/LiveSchedulePage";
 import { SchedulePage } from "./pages/schedule/SchedulePage";
 import { StudentHomePage } from "./pages/StudentHomePage";
 import { LiveStudentsPage } from "./pages/students/live/LiveStudentsPage";
@@ -21,8 +23,8 @@ import { SoonPage } from "./session/SoonPage";
 const demoOnly = (screen: ReactNode, section: "finance" | "tasks" | "review" | "student") => () => (env.demo ? screen : <SoonPage section={section} />);
 
 const screens: Record<string, () => ReactNode> = {
-  [teacherRoutes.overview]: () => <OverviewPage />,
-  [teacherRoutes.schedule]: () => <SchedulePage />,
+  [teacherRoutes.overview]: () => (env.demo ? <OverviewPage /> : <LiveOverviewPage />),
+  [teacherRoutes.schedule]: () => (env.demo ? <SchedulePage /> : <LiveSchedulePage />),
   [teacherRoutes.students]: () => (env.demo ? <StudentsPage /> : <LiveStudentsPage />),
   [teacherRoutes.tasksCreate]: demoOnly(<TasksPage tab="create" />, "tasks"),
   [teacherRoutes.tasksBank]: demoOnly(<TasksPage tab="bank" />, "tasks"),

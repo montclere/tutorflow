@@ -227,6 +227,9 @@ export type LessonTemplate = {
   groupTitle?: string;
 };
 
+/** Состояние урока по API lessons; у тестовых уроков его нет — они считаются запланированными. */
+export type LessonOutcome = "scheduled" | "completed" | "no_show" | "cancelled";
+
 export type ScheduleLesson = {
   id: string;
   studentId: string;
@@ -237,6 +240,7 @@ export type ScheduleLesson = {
   recurring: boolean;
   groupTitle?: string;
   link?: string;
+  status?: LessonOutcome;
 };
 
 export type WorkHours = { start: string; end: string; minFreeWindowMin: number };

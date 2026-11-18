@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { ScheduleLesson, WorkHours } from "../mocks/types";
-import { assignColumns, blockPosition, clipWindowsFrom, freeWindows, gridHours, nowOffsetHours } from "./scheduleLayout";
+import { assignColumns, blockPosition, clipWindowsFrom, freeWindows, gridHours, nowOffsetHours, workHoursFor } from "./scheduleLayout";
 
 const work: WorkHours = { start: "12:00", end: "20:00", minFreeWindowMin: 90 };
 
@@ -100,5 +100,15 @@ describe("clipWindowsFrom", () => {
 
   it("не трогает окна позже текущего времени", () => {
     expect(clipWindowsFrom(windows, "12:00", 90)).toEqual(windows);
+  });
+});
+
+describe("workHoursFor", () => {
+  it("расширяет сетку под ранние и поздние уроки, не дальше суток", () => {
+    const base = { start: "09:00", end: "21:00", minFreeWindowMin: 90 };
+    const lesson = (start: string, durationMin: number) => ({ id: start, studentId: "s", date: "2026-11-23", start, durationMin, type: "individual" as const, recurring: false });
+    expect(workHoursFor(base, [lesson("07:30", 60), lesson("21:10", 45)])).toMatchObject({ start: "07:00", end: "22:00" });
+    expect(workHoursFor(base, [lesson("23:30", 90)])).toMatchObject({ start: "09:00", end: "24:00" });
+    expect(workHoursFor(base, [])).toMatchObject({ start: "09:00", end: "21:00" });
   });
 });

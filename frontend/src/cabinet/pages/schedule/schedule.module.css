@@ -96,6 +96,11 @@
 .block:active { transform: translateY(1px); }
 .past { opacity: 0.6; }
 
+/* Отменённый урок остаётся на месте: его можно открыть и восстановить. */
+.cancelled { opacity: 0.55; background-image: repeating-linear-gradient(135deg, transparent 0 6px, color-mix(in srgb, var(--color-muted) 18%, transparent) 6px 8px); }
+.cancelled .blockName,
+.cancelled .rowText b { text-decoration: line-through; }
+
 .blockName,
 .blockTime {
   overflow: hidden;

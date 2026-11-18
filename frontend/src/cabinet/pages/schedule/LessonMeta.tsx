@@ -1,5 +1,5 @@
 import { cabinet } from "../../content/cabinet.ru";
-import type { PaymentStatus, ScheduleLesson, Student, Tone } from "../../mocks/types";
+import type { PaymentStatus, ScheduleLesson, Tone } from "../../mocks/types";
 import { lessonEnd } from "../../model/lessons";
 import { Pill } from "../../ui/Pill";
 
@@ -25,6 +25,18 @@ export function PaymentBadge({ payment, full }: { payment: PaymentStatus; full?:
   return <Pill tone={paymentTones[payment]}>{full ? text.payFull[payment] : text.pay[payment]}</Pill>;
 }
 
-export function lessonSummary(lesson: ScheduleLesson, student: Student): string {
-  return `${student.name} · ${lessonTime(lesson)} · ${student.goal}`;
+export function lessonSummary(lesson: ScheduleLesson, person: { name: string; goal: string }): string {
+  const status = lesson.status && lesson.status !== "scheduled" ? ` · ${text.outcome[lesson.status]}` : "";
+  return `${person.name} · ${lessonTime(lesson)}${person.goal ? ` · ${person.goal}` : ""}${status}`;
+}
+
+/** Подпись под именем: цель или тема, а у отменённого или отмеченного урока — ещё и итог. */
+export function lessonLine(lesson: ScheduleLesson, goal: string): string {
+  const outcome = lesson.status && lesson.status !== "scheduled" ? text.outcome[lesson.status] : null;
+  return [goal, outcome].filter(Boolean).join(" · ");
+}
+
+/** Отменённый урок остаётся в календаре, но перечёркнут — его можно открыть и восстановить. */
+export function isCancelled(lesson: ScheduleLesson): boolean {
+  return lesson.status === "cancelled";
 }

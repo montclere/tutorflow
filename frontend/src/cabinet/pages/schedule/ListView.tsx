@@ -1,12 +1,11 @@
 import { cabinet } from "../../content/cabinet.ru";
-import { getStudent } from "../../data";
 import type { ScheduleData, ScheduleLesson } from "../../mocks/types";
 import { formatLongDay } from "../../model/dates";
 import { groupByDate, isPast } from "../../model/lessons";
-import { paymentStatus } from "../../model/students";
 import { Avatar } from "../../ui/Avatar";
 import { cx } from "../../ui/cx";
-import { PaymentBadge, RowTime } from "./LessonMeta";
+import { isCancelled, lessonLine, PaymentBadge, RowTime } from "./LessonMeta";
+import { useSchedulePeople } from "./schedulePeople";
 import { lessonColorStyle } from "./scheduleStyle";
 import styles from "./schedule.module.css";
 
@@ -20,6 +19,7 @@ type Props = {
 };
 
 export function ListView({ data, lessons, filtered, onOpen }: Props) {
+  const people = useSchedulePeople();
   const groups = groupByDate(lessons);
 
   if (groups.length === 0) {
@@ -33,13 +33,13 @@ export function ListView({ data, lessons, filtered, onOpen }: Props) {
           <h2 className={styles.listDate}>{formatLongDay(group.date)}</h2>
           <div className={styles.listStack}>
             {group.lessons.map((lesson) => {
-              const student = getStudent(lesson.studentId);
+              const student = people.personOf(lesson);
               const past = isPast(lesson, data.today, data.now);
               return (
                 <button
                   key={lesson.id}
                   type="button"
-                  className={cx(styles.lessonRow, past && styles.lessonRowPast)}
+                  className={cx(styles.lessonRow, past && styles.lessonRowPast, isCancelled(lesson) && styles.cancelled)}
                   style={lessonColorStyle(student)}
                   onClick={() => onOpen(lesson)}
                 >
@@ -49,9 +49,9 @@ export function ListView({ data, lessons, filtered, onOpen }: Props) {
                   </span>
                   <span className={styles.rowText}>
                     <b>{student.name}</b>
-                    <span>{student.goal}</span>
+                    <span>{lessonLine(lesson, student.goal)}</span>
                   </span>
-                  {paymentStatus(student) !== "paid" && <PaymentBadge payment={paymentStatus(student)} />}
+                  {student.payment && student.payment !== "paid" && <PaymentBadge payment={student.payment} />}
                 </button>
               );
             })}

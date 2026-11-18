@@ -1,7 +1,7 @@
 import { Check, ChevronsUpDown, Users } from "lucide-react";
 import { useState } from "react";
 import { cabinet } from "../../content/cabinet.ru";
-import type { Student } from "../../mocks/types";
+import type { StudentColor } from "../../mocks/types";
 import { Avatar } from "../../ui/Avatar";
 import { cx } from "../../ui/cx";
 import { Button } from "@/shared/ui/kit/button";
@@ -10,7 +10,9 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/shared/ui/kit/popover
 
 const text = cabinet.teacher.schedule.filters;
 
-type Props = { students: Student[]; value: string | null; onChange: (studentId: string | null) => void };
+export type ComboboxStudent = { id: string; name: string; initials: string; color: StudentColor };
+
+type Props = { students: ComboboxStudent[]; value: string | null; onChange: (studentId: string | null) => void };
 
 export function StudentCombobox({ students, value, onChange }: Props) {
   const [open, setOpen] = useState(false);

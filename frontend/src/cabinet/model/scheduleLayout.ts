@@ -19,6 +19,20 @@ export function gridHours(work: WorkHours): string[] {
   return Array.from({ length: last - first }, (_, index) => formatMinutes((first + index) * 60));
 }
 
+const DAY_MINUTES = 24 * 60;
+
+/** Сетка дня расширяется под уроки окна, чтобы ранний или поздний урок не выпал из вида. */
+export function workHoursFor(base: WorkHours, lessons: ScheduleLesson[]): WorkHours {
+  let start = toMinutes(base.start);
+  let end = toMinutes(base.end);
+  for (const lesson of lessons) {
+    const from = toMinutes(lesson.start);
+    start = Math.min(start, Math.floor(from / 60) * 60);
+    end = Math.max(end, Math.min(DAY_MINUTES, Math.ceil((from + lesson.durationMin) / 60) * 60));
+  }
+  return { ...base, start: formatMinutes(start), end: formatMinutes(end) };
+}
+
 export function nowOffsetHours(now: string, work: WorkHours): number | null {
   const minutes = toMinutes(now);
   if (minutes < toMinutes(work.start) || minutes > toMinutes(work.end)) return null;

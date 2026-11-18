@@ -1,15 +1,12 @@
 import { cabinet } from "../../content/cabinet.ru";
-import { getStudent } from "../../data";
 import type { ScheduleData, ScheduleLesson } from "../../mocks/types";
-import { formatSigned } from "../../model/format";
-import { paymentStatus } from "../../model/students";
 import { isPast, lessonsOn, nextLesson } from "../../model/lessons";
 import { Avatar } from "../../ui/Avatar";
 import { Button } from "../../ui/Button";
 import { Card } from "../../ui/Card";
 import { cx } from "../../ui/cx";
-import { useNotifier } from "../../ui/Notifications";
-import { lessonTime, PaymentBadge, RowTime } from "./LessonMeta";
+import { isCancelled, lessonLine, lessonTime, PaymentBadge, RowTime } from "./LessonMeta";
+import { useSchedulePeople } from "./schedulePeople";
 import { lessonColorStyle } from "./scheduleStyle";
 import styles from "./schedule.module.css";
 
@@ -32,11 +29,13 @@ function Fact({ label, value }: { label: string; value: string }) {
 }
 
 export function DayView({ data, lessons, date, onOpen }: Props) {
-  const { notifySoon } = useNotifier();
+  const people = useSchedulePeople();
   const { today, now } = data;
   const dayLessons = lessonsOn(lessons, date);
-  const focus = date === today ? nextLesson(dayLessons, today, now) : (dayLessons[0] ?? null);
-  const focusStudent = focus ? getStudent(focus.studentId) : null;
+  // Отменённый урок не может быть «ближайшим».
+  const active = dayLessons.filter((lesson) => !isCancelled(lesson));
+  const focus = date === today ? nextLesson(active, today, now) : (active[0] ?? null);
+  const focusStudent = focus ? people.personOf(focus) : null;
 
   return (
     <>
@@ -44,13 +43,13 @@ export function DayView({ data, lessons, date, onOpen }: Props) {
         <div className={styles.listStack}>
           {dayLessons.length === 0 && <p className="m-0 rounded-xl border bg-card p-6 text-center text-sm font-semibold text-muted-foreground">{text.noLessons}</p>}
           {dayLessons.map((lesson) => {
-            const student = getStudent(lesson.studentId);
+            const student = people.personOf(lesson);
             const past = isPast(lesson, today, now);
             return (
               <button
                 key={lesson.id}
                 type="button"
-                className={cx(styles.lessonRow, past && styles.lessonRowPast)}
+                className={cx(styles.lessonRow, past && styles.lessonRowPast, isCancelled(lesson) && styles.cancelled)}
                 style={lessonColorStyle(student)}
                 onClick={() => onOpen(lesson)}
               >
@@ -60,9 +59,9 @@ export function DayView({ data, lessons, date, onOpen }: Props) {
                 </span>
                 <span className={styles.rowText}>
                   <b>{student.name}</b>
-                  <span>{student.goal}</span>
+                  <span>{lessonLine(lesson, student.goal)}</span>
                 </span>
-                {paymentStatus(student) !== "paid" && <PaymentBadge payment={paymentStatus(student)} />}
+                {student.payment && student.payment !== "paid" && <PaymentBadge payment={student.payment} />}
               </button>
             );
           })}
@@ -76,21 +75,20 @@ export function DayView({ data, lessons, date, onOpen }: Props) {
                 <div className="min-w-0">
                   <b className="block truncate text-sm">{focusStudent.name}</b>
                   <span className="text-xs font-semibold text-muted-foreground tabular-nums">
-                    {lessonTime(focus)} · {focusStudent.goal}
+                    {lessonTime(focus)}
+                    {focusStudent.goal && ` · ${focusStudent.goal}`}
                   </span>
                 </div>
               </div>
               <dl className="m-0 grid gap-3">
-                <Fact label={text.next.topic} value={focusStudent.recentLessons[0]?.topic ?? text.next.none} />
-                <Fact label={text.next.homework} value={focusStudent.recentLessons[0]?.homework?.title ?? text.next.none} />
-                <Fact label={text.next.balance} value={formatSigned(focusStudent.balance)} />
-                <Fact label={text.next.note} value={focusStudent.note} />
+                {people.factsOf(focus).map((fact) => (
+                  <Fact key={fact.label} label={fact.label} value={fact.value} />
+                ))}
               </dl>
               <div className="flex flex-wrap gap-2">
-                <Button variant="primary" onClick={() => notifySoon(text.lesson.join)}>
-                  {text.lesson.join}
+                <Button variant="primary" onClick={() => onOpen(focus)}>
+                  {text.lesson.open}
                 </Button>
-                <Button onClick={() => notifySoon(text.lesson.move)}>{text.lesson.move}</Button>
               </div>
             </div>
           ) : (

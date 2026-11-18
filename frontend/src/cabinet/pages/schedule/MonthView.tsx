@@ -1,10 +1,11 @@
 import { cabinet } from "../../content/cabinet.ru";
-import { getStudent } from "../../data";
 import type { ScheduleLesson } from "../../mocks/types";
 import { isSameMonth, monthGrid, parseDate } from "../../model/dates";
 import { lessonsOn } from "../../model/lessons";
 import { cx } from "../../ui/cx";
 import { lessonColorStyle } from "./scheduleStyle";
+import { isCancelled } from "./LessonMeta";
+import { useSchedulePeople } from "./schedulePeople";
 import styles from "./schedule.module.css";
 
 const text = cabinet.teacher.schedule;
@@ -19,8 +20,11 @@ type Props = {
   onPick: (date: string) => void;
 };
 
-export function MonthView({ lessons, date, today, onPick }: Props) {
+export function MonthView({ lessons: all, date, today, onPick }: Props) {
+  const people = useSchedulePeople();
   const weeks = monthGrid(date);
+  // В месяце — только то, что состоится или состоялось: отменённые видны в днях и списке.
+  const lessons = all.filter((lesson) => !isCancelled(lesson));
 
   return (
     <div className="overflow-hidden rounded-xl border bg-card" role="group" aria-label={text.monthLabel}>
@@ -45,12 +49,12 @@ export function MonthView({ lessons, date, today, onPick }: Props) {
               <span className={styles.monthNumber}>{parseDate(day).getDate()}</span>
               <span className={styles.dots} aria-hidden="true">
                 {dayLessons.slice(0, MAX_DOTS).map((lesson) => (
-                  <i key={lesson.id} className={styles.dot} style={lessonColorStyle(getStudent(lesson.studentId))} />
+                  <i key={lesson.id} className={styles.dot} style={lessonColorStyle(people.personOf(lesson))} />
                 ))}
               </span>
               <span className={styles.monthNames} aria-hidden="true">
                 {dayLessons.slice(0, MAX_NAMES).map((lesson) => {
-                  const student = getStudent(lesson.studentId);
+                  const student = people.personOf(lesson);
                   return (
                     <span key={lesson.id} className={styles.monthName} style={lessonColorStyle(student)}>
                       <b>{lesson.start}</b> {student.name.split(" ")[0]}
