@@ -85,10 +85,11 @@ export type LessonRow = {
 };
 
 export type AttentionKind = "lesson" | "review" | "debt" | "package" | "inactive";
-export type AttentionItem = { kind: AttentionKind; title: string; note: string };
+export type AttentionItem = { kind: AttentionKind; title: string; note: string; studentId?: string };
 
-export type WeekDay = { label: string; lessons: number; today?: boolean };
-export type WeekPlan = { days: WeekDay[]; capacity: number; freeWindows: string[] };
+export type WeekDay = { label: string; date: string; lessons: number; today?: boolean };
+export type FreeWindowLink = { date: string; label: string };
+export type WeekPlan = { days: WeekDay[]; capacity: number; freeWindows: FreeWindowLink[] };
 
 export type ExamTrend = { studentId: string; delta: number; inactiveDays?: number };
 

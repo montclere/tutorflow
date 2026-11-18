@@ -3,9 +3,9 @@ import type { WeekDay } from "../mocks/types";
 import { barHeightPercent, freeWindowsText, weekLoadPercent, weekTotal } from "./week";
 
 const days: WeekDay[] = [
-  { label: "Пн", lessons: 3 },
-  { label: "Вт", lessons: 5, today: true },
-  { label: "Ср", lessons: 0 },
+  { label: "Пн", date: "2026-11-16", lessons: 3 },
+  { label: "Вт", date: "2026-11-17", lessons: 5, today: true },
+  { label: "Ср", date: "2026-11-18", lessons: 0 },
 ];
 
 describe("week", () => {
@@ -21,7 +21,7 @@ describe("week", () => {
   it("масштабирует столбики по максимуму", () => {
     expect(barHeightPercent(5, days)).toBe(100);
     expect(barHeightPercent(3, days)).toBe(60);
-    expect(barHeightPercent(0, [{ label: "Пн", lessons: 0 }])).toBe(0);
+    expect(barHeightPercent(0, [{ label: "Пн", date: "2026-11-16", lessons: 0 }])).toBe(0);
   });
 
   it("собирает текст со свободными окнами", () => {

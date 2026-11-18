@@ -94,7 +94,7 @@ export function getTeacherOverview(): TeacherOverview {
     week: {
       days: weekDays(lessons, today, cabinet.weekdays),
       capacity: overviewBase.weekCapacity,
-      freeWindows: windows.map(({ date, window }) => `${cabinet.weekdays[weekdayIndex(date)]} ${window.start}–${window.end}`),
+      freeWindows: windows.map(({ date, window }) => ({ date, label: `${cabinet.weekdays[weekdayIndex(date)]} ${window.start}–${window.end}` })),
     },
     exams: examPreps(),
   };

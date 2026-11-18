@@ -15,6 +15,13 @@ function useIsPhone() {
   return useSyncExternalStore(subscribePhone, () => window.matchMedia(PHONE_QUERY).matches);
 }
 
+export function scheduleHref(view: ScheduleView, date: string, today: string): string {
+  const query = new URLSearchParams();
+  query.set("view", view);
+  if (date !== today) query.set("date", date);
+  return `${teacherRoutes.schedule}?${query.toString()}`;
+}
+
 export function useScheduleUrl(today: string) {
   const search = useSearch();
   const isPhone = useIsPhone();
@@ -23,11 +30,7 @@ export function useScheduleUrl(today: string) {
   const date = parseDateParam(params.get("date"), today);
 
   const go = (next: { view?: ScheduleView; date?: string }) => {
-    const query = new URLSearchParams();
-    query.set("view", next.view ?? view);
-    const nextDate = next.date ?? date;
-    if (nextDate !== today) query.set("date", nextDate);
-    navigate(`${teacherRoutes.schedule}?${query.toString()}`, { scroll: false });
+    navigate(scheduleHref(next.view ?? view, next.date ?? date, today), { scroll: false });
   };
 
   return { view, date, go };
