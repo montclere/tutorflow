@@ -179,6 +179,7 @@ export const cabinet = {
         move: "Перенести",
         cancel: "Отменить",
         done: "Проведён",
+        studentCard: "Карточка ученика",
       },
       create: {
         title: "Новый урок",

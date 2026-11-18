@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { LessonTemplate, ScheduleLesson } from "../mocks/types";
-import { expandTemplates, filterLessons, groupByDate, isPast, lessonsOn, minutesUntil, nextLesson } from "./lessons";
+import { expandTemplates, filterLessons, groupByDate, isPast, lessonPhase, lessonsOn, minutesUntil, nextLesson } from "./lessons";
 
 const templates: LessonTemplate[] = [
   { id: "t1", studentId: "a", weekday: 1, start: "15:00", durationMin: 60, type: "individual" },
@@ -57,5 +57,20 @@ describe("lessons helpers", () => {
       ["2026-11-24", 1],
       ["2026-11-28", 1],
     ]);
+  });
+});
+
+describe("lessonPhase", () => {
+  const base: ScheduleLesson = { id: "x", studentId: "s", date: "2026-11-17", start: "15:00", durationMin: 60, type: "individual", recurring: false };
+
+  it("до начала — впереди, во время — идёт, после конца — прошёл", () => {
+    expect(lessonPhase(base, "2026-11-17", "14:35")).toBe("upcoming");
+    expect(lessonPhase(base, "2026-11-17", "15:20")).toBe("live");
+    expect(lessonPhase(base, "2026-11-17", "16:00")).toBe("ended");
+  });
+
+  it("учитывает другие дни", () => {
+    expect(lessonPhase({ ...base, date: "2026-11-18" }, "2026-11-17", "23:00")).toBe("upcoming");
+    expect(lessonPhase({ ...base, date: "2026-11-16" }, "2026-11-17", "08:00")).toBe("ended");
   });
 });

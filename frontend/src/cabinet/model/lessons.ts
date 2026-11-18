@@ -54,6 +54,15 @@ export function isPast(lesson: ScheduleLesson, today: string, now: string): bool
   return toMinutes(lessonEnd(lesson)) <= toMinutes(now);
 }
 
+export type LessonPhase = "upcoming" | "live" | "ended";
+
+/** Где урок относительно «сейчас»: от этого зависят действия в карточке урока (SCHEDULE-5). */
+export function lessonPhase(lesson: ScheduleLesson, today: string, now: string): LessonPhase {
+  if (isPast(lesson, today, now)) return "ended";
+  if (lesson.date === today && toMinutes(lesson.start) <= toMinutes(now)) return "live";
+  return "upcoming";
+}
+
 export function nextLesson(lessons: ScheduleLesson[], today: string, now: string): ScheduleLesson | null {
   return [...lessons].sort(compareLessons).find((lesson) => !isPast(lesson, today, now)) ?? null;
 }
