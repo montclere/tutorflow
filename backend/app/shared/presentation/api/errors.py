@@ -71,6 +71,38 @@ PROBLEMS = {
     ProblemCode.STUDENT_CARD_ALREADY_LINKED: ProblemType(
         409, "Карточка уже привязана", "У ученика уже есть карточка у этого репетитора."
     ),
+    ProblemCode.PARENT_APPLICATION_CONFLICT: ProblemType(
+        409, "Заявка недоступна", "Обновите список заявок на доступ."
+    ),
+    ProblemCode.LESSON_STUDENT_NOT_LINKED: ProblemType(
+        409, "Ученик не подключён", "Выберите карточку с активным учеником."
+    ),
+    ProblemCode.LESSON_TIME_CONFLICT: ProblemType(
+        409, "Время уже занято", "Выберите другое время и повторите действие."
+    ),
+    ProblemCode.LESSON_STATE_CONFLICT: ProblemType(
+        409, "Действие недоступно", "Откройте актуальную карточку занятия."
+    ),
+    ProblemCode.LESSON_CREATE_CONFLICT: ProblemType(
+        409, "Запрос уже использован", "Откройте новую форму занятия."
+    ),
+    ProblemCode.LESSON_RESCHEDULE_PENDING: ProblemType(
+        409, "Перенос уже предложен", "Откройте действующее предложение."
+    ),
+    ProblemCode.LESSON_ABSENCE_NOTICE_PENDING: ProblemType(
+        409, "Предупреждение уже есть", "Откройте действующее предупреждение."
+    ),
+    ProblemCode.STUDENT_CARD_HAS_OPEN_LESSONS: ProblemType(
+        409,
+        "У карточки есть открытые уроки",
+        "Отмените будущие занятия и поставьте отметки за прошедшие.",
+    ),
+    ProblemCode.PRECONDITION_REQUIRED: ProblemType(
+        428, "Требуется версия записи", "Обновите карточку перед удалением."
+    ),
+    ProblemCode.PRECONDITION_FAILED: ProblemType(
+        412, "Версия записи изменилась", "Обновите карточку перед удалением."
+    ),
     ProblemCode.REQUEST_TOO_LARGE: ProblemType(
         413, "Запрос слишком большой", "Допустимое тело запроса — до 16 КиБ."
     ),
@@ -134,6 +166,12 @@ class FieldProblem(BaseModel):
     code: Literal["required", "invalid_value", "unknown_field"]
 
 
+class LocalTimeProblem(BaseModel):
+    series_position: int
+    local_date: str
+    code: Literal["nonexistent", "ambiguous"]
+
+
 class ProblemDetails(BaseModel):
     type: str
     title: str
@@ -143,6 +181,7 @@ class ProblemDetails(BaseModel):
     code: str
     request_id: UUID
     errors: list[FieldProblem] | None = None
+    local_time_issue: LocalTimeProblem | None = None
 
 
 def _document(
@@ -153,6 +192,7 @@ def _document(
     fields: list[FieldProblem] | None = None,
     *,
     problem_type: str | None = None,
+    local_time_issue: LocalTimeProblem | None = None,
 ) -> JSONResponse:
     request_id: UUID = request.state.request_id
     document = ProblemDetails(
@@ -164,6 +204,7 @@ def _document(
         code=code,
         request_id=request_id,
         errors=fields or None,
+        local_time_issue=local_time_issue,
     )
     return JSONResponse(
         document.model_dump(mode="json", exclude_none=True),
@@ -179,11 +220,19 @@ def problem_response(
     fields: list[FieldProblem] | None = None,
     *,
     headers: Mapping[str, str] | None = None,
+    local_time_issue: LocalTimeProblem | None = None,
 ) -> JSONResponse:
     result_headers = dict(headers or {})
     if problem.retry_after is not None:
         result_headers["Retry-After"] = str(problem.retry_after)
-    return _document(request, problem.code.value, PROBLEMS[problem.code], result_headers, fields)
+    return _document(
+        request,
+        problem.code.value,
+        PROBLEMS[problem.code],
+        result_headers,
+        fields,
+        local_time_issue=local_time_issue,
+    )
 
 
 def validation_problem(request: Request, error: RequestValidationError) -> JSONResponse:

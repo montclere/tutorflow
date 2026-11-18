@@ -5,13 +5,24 @@ from datetime import timedelta
 from uuid import UUID, uuid4
 
 from app.shared.application.contracts.accounts import AccountDirectory, AccountSummary
-from app.shared.application.contracts.student_cards import StudentCardOperation
+from app.shared.application.contracts.student_cards import (
+    LessonCard,
+    LessonRole,
+    OpenLessons,
+    StudentCardOperation,
+)
 from app.shared.application.ports.clock import now_utc
 from app.shared.application.security import digest, keyed_digest, new_token
 from app.shared.domain.errors import Problem, ProblemCode
 
 from ..domain.errors import not_found, unavailable
-from ..domain.student import Invitation, InvitationPurpose, ParentAccess, StudentCard
+from ..domain.student import (
+    Invitation,
+    InvitationPurpose,
+    ParentAccess,
+    ParentApplication,
+    StudentCard,
+)
 from .ports import Position, StudentsRepository
 
 
@@ -30,12 +41,18 @@ class CabinetCard:
 
 class Students:
     def __init__(
-        self, store: StudentsRepository, accounts: AccountDirectory, key: str, invitation_hours: int
+        self,
+        store: StudentsRepository,
+        accounts: AccountDirectory,
+        key: str,
+        invitation_hours: int,
+        open_lessons: OpenLessons | None = None,
     ):
         self.store = store
         self.accounts = accounts
         self.key = key
         self.invitation_hours = invitation_hours
+        self.open_lessons = open_lessons
 
     @staticmethod
     def require_teacher(actor: AccountSummary) -> None:
@@ -267,6 +284,8 @@ class Students:
             return card
         now = now_utc()
         if status == "archived":
+            if self.open_lessons and await self.open_lessons.has_open_lessons(card_id):
+                raise Problem(ProblemCode.STUDENT_CARD_HAS_OPEN_LESSONS)
             for access in await self.store.revoke_all_parent_access(card_id, now):
                 await self.store.audit(
                     actor.account_id, "parent_access_revoked", "parent_access", access
@@ -294,8 +313,10 @@ class Students:
             )
         ]
 
-    async def cabinet_card(self, actor: AccountSummary, card_id: UUID, role: str) -> CabinetCard:
-        card = await self.store.get_card(card_id)
+    async def cabinet_card(
+        self, actor: AccountSummary, card_id: UUID, role: str, *, lock: bool = False
+    ) -> CabinetCard:
+        card = await self.store.get_card(card_id, lock=lock)
         if card is None or card.status != "active":
             raise not_found()
         access_id = None
@@ -329,6 +350,62 @@ class Students:
             last = rows[-1][0]
             after = last.updated_at, last.student_card_id
         return visible
+
+    async def lesson_card(
+        self, actor: AccountSummary, card_id: UUID, role: LessonRole, *, lock: bool = False
+    ) -> LessonCard:
+        card = (
+            await self.teacher_card(actor, card_id, lock=lock)
+            if role == "teacher"
+            else (await self.cabinet_card(actor, card_id, role, lock=lock)).card
+        )
+        return await self._lesson_card_view(card)
+
+    async def lesson_cards(self, actor: AccountSummary, role: LessonRole) -> list[LessonCard]:
+        if role == "teacher":
+            self.require_teacher(actor)
+        result = []
+        for status in ("active", "archived") if role == "teacher" else ("active",):
+            after = None
+            while rows := await self.store.list_cards(actor.account_id, role, status, 100, after):
+                for card, _ in rows:
+                    if role == "teacher" or await self._active_teacher(card.teacher_account_id):
+                        result.append(await self._lesson_card_view(card))
+                if len(rows) < 100:
+                    break
+                last = rows[-1][0]
+                after = last.updated_at, last.student_card_id
+        return result
+
+    async def _lesson_card_view(self, card: StudentCard) -> LessonCard:
+        parents = []
+        grants = []
+        after = None
+        while rows := await self.store.list_parent_access(card.student_card_id, 100, after):
+            for access in rows:
+                if access.revoked_at is not None:
+                    continue
+                parent = await self.accounts.lookup_account(access.parent_account_id)
+                if parent and parent.can_access:
+                    parents.append(access.parent_account_id)
+                    grants.append((access.parent_account_id, access.parent_access_id))
+            if len(rows) < 100:
+                break
+            last = rows[-1]
+            after = last.created_at, last.parent_access_id
+        student = (
+            await self.accounts.lookup_account(card.student_account_id)
+            if card.student_account_id
+            else None
+        )
+        return LessonCard(
+            card.student_card_id,
+            card.teacher_account_id,
+            student.account_id if student and student.can_access else None,
+            tuple(parents),
+            card.status == "active",
+            tuple(grants),
+        )
 
     async def access_list(
         self, actor: AccountSummary, card_id: UUID, limit: int, after: Position | None
@@ -365,3 +442,138 @@ class Students:
             await self.store.audit(
                 actor.account_id, "parent_access_revoked", "parent_access", access_id
             )
+
+    async def issue_parent_link(self, actor: AccountSummary, card_id: UUID):
+        card = await self.teacher_card(actor, card_id, lock=True)
+        if card.status != "active" or card.student_account_id is None:
+            raise not_found()
+        now = now_utc()
+        application = ParentApplication(
+            uuid4(), card_id, now, now + timedelta(hours=self.invitation_hours)
+        )
+        token = new_token()
+        await self.store.add_parent_application(application, digest(token))
+        await self.store.audit(
+            actor.account_id, "parent_link_issued", "parent_application", application.application_id
+        )
+        return self._parent_application_view(application), token
+
+    async def apply_for_parent_access(self, actor: AccountSummary, token: str):
+        key = digest(token)
+        original = await self.store.parent_application(key)
+        if original is None:
+            raise unavailable()
+        card = await self.store.get_card(original.student_card_id, lock=True)
+        row = await self.store.parent_application(key, lock=True)
+        if (
+            row is None
+            or card is None
+            or card.status != "active"
+            or card.student_account_id is None
+            or actor.account_id in {card.teacher_account_id, card.student_account_id}
+            or await self._active_teacher(card.teacher_account_id) is None
+        ):
+            raise unavailable()
+        status = row.status(now_utc())
+        if status == "awaiting_review" and row.requester_account_id == actor.account_id:
+            return {"application_id": row.application_id, "status": status}
+        if status != "pending":
+            raise unavailable()
+        row = await self.store.update_parent_application(
+            row.application_id, {"requester_account_id": actor.account_id}
+        )
+        await self.store.audit(
+            actor.account_id, "parent_access_requested", "parent_application", row.application_id
+        )
+        return {"application_id": row.application_id, "status": row.status(now_utc())}
+
+    @staticmethod
+    def _parent_application_view(row: ParentApplication, display_name: str | None = None):
+        return {
+            "application_id": row.application_id,
+            "student_card_id": row.student_card_id,
+            "status": row.status(now_utc()),
+            "created_at": row.created_at,
+            "expires_at": row.expires_at,
+            "requester_display_name": display_name,
+        }
+
+    async def parent_requests(
+        self, actor: AccountSummary, card_id: UUID, limit: int, after: Position | None
+    ):
+        await self.teacher_card(actor, card_id)
+        results = []
+        for row in await self.store.parent_applications(card_id, limit, after):
+            requester = (
+                await self.accounts.lookup_account(row.requester_account_id)
+                if row.requester_account_id
+                else None
+            )
+            results.append(
+                (
+                    row,
+                    self._parent_application_view(
+                        row, requester.display_name if requester else None
+                    ),
+                )
+            )
+        return results
+
+    async def parent_request_detail(self, actor: AccountSummary, application_id: UUID):
+        self.require_teacher(actor)
+        row = await self.store.parent_application(application_id)
+        if row is None:
+            raise not_found()
+        await self.teacher_card(actor, row.student_card_id)
+        candidate = (
+            await self.accounts.lookup_account(row.requester_account_id)
+            if row.requester_account_id
+            else None
+        )
+        return self._parent_application_view(row, candidate.display_name if candidate else None)
+
+    async def decide_parent(self, actor: AccountSummary, application_id: UUID, decision: str):
+        self.require_teacher(actor)
+        original = await self.store.parent_application(application_id)
+        if original is None:
+            raise not_found()
+        card = await self.teacher_card(actor, original.student_card_id, lock=True)
+        row = await self.store.parent_application(application_id, lock=True)
+        if row is None:
+            raise not_found()
+        now = now_utc()
+        if row.decision == decision:
+            return self._parent_application_view(row)
+        acceptable = (
+            {"pending", "awaiting_review"} if decision == "revoked" else {"awaiting_review"}
+        )
+        if (
+            card.status != "active"
+            or card.student_account_id is None
+            or row.status(now) not in acceptable
+        ):
+            raise Problem(ProblemCode.PARENT_APPLICATION_CONFLICT)
+        if decision == "approved":
+            assert row.requester_account_id is not None
+            candidate = await self.accounts.lookup_account(row.requester_account_id)
+            if (
+                not candidate
+                or not candidate.can_access
+                or candidate.account_id in {card.teacher_account_id, card.student_account_id}
+            ):
+                raise Problem(ProblemCode.PARENT_APPLICATION_CONFLICT)
+            await self.store.grant_parent_access(
+                ParentAccess(uuid4(), card.student_card_id, candidate.account_id, now, None)
+            )
+        row = await self.store.update_parent_application(
+            application_id,
+            {
+                "decision": decision,
+                "decided_at": now,
+                "token_digest": None,
+            },
+        )
+        await self.store.audit(
+            actor.account_id, "parent_application_" + decision, "parent_application", application_id
+        )
+        return self._parent_application_view(row)

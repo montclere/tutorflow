@@ -7,12 +7,19 @@ from datetime import UTC, datetime, timedelta
 from pathlib import Path
 from time import sleep
 
-from sqlalchemy import Connection, create_engine, delete, func, or_, update
+from sqlalchemy import Connection, Engine, create_engine, delete, func, or_, select, update
 from sqlalchemy.pool import NullPool
 
 from app.config import CHALLENGE_MINUTES, SESSION_IDLE_HOURS
 from app.modules.identity.infrastructure.models import challenges, sessions
-from app.modules.students.infrastructure.persistence.models import audit_events, invitations
+from app.modules.lessons.domain.calendar import Calendar, instant
+from app.modules.lessons.infrastructure.repository import lesson_calendars
+from app.modules.students.infrastructure.persistence.models import (
+    audit_events,
+    invitations,
+    parent_applications,
+    student_cards,
+)
 from app.shared.infrastructure.rate_limit import rate_limits
 
 logger = logging.getLogger("maintenance")
@@ -49,7 +56,61 @@ def prune(db: Connection, now: datetime, session_idle_hours: int) -> None:
         )
         .values(token_digest=None, acceptance_payload_digest=None)
     )
+    db.execute(
+        delete(parent_applications).where(
+            func.coalesce(parent_applications.c.decided_at, parent_applications.c.expires_at)
+            <= now - timedelta(days=30)
+        )
+    )
+    db.execute(
+        update(parent_applications)
+        .where(
+            parent_applications.c.expires_at <= now,
+            parent_applications.c.token_digest.is_not(None),
+        )
+        .values(token_digest=None)
+    )
     db.execute(delete(audit_events).where(audit_events.c.occurred_at <= now - timedelta(days=90)))
+
+
+def prepare_calendars(engine: Engine, now: datetime) -> None:
+    with engine.connect() as db:
+        candidates = list(
+            db.execute(
+                select(lesson_calendars.c.card_id, lesson_calendars.c.teacher_id)
+                .join(student_cards, student_cards.c.student_card_id == lesson_calendars.c.card_id)
+                .where(student_cards.c.status == "active")
+            )
+        )
+    for card_id, teacher_id in candidates:
+        with engine.begin() as db:
+            active = db.scalar(
+                select(student_cards.c.status)
+                .where(student_cards.c.student_card_id == card_id)
+                .with_for_update(skip_locked=True)
+            )
+            if active != "active":
+                continue
+            key = int.from_bytes(teacher_id.bytes[:8], signed=True)
+            if not db.scalar(select(func.pg_try_advisory_xact_lock(key))):
+                continue
+            payload = db.scalar(
+                select(lesson_calendars.c.payload).where(lesson_calendars.c.card_id == card_id)
+            )
+            if payload is None:
+                continue
+            calendar = Calendar(str(card_id), **payload)
+            changed = calendar.prepare(now)
+            for replay_key, entry in list(calendar.keys.items()):
+                if entry.get("until") and instant(entry["until"]) <= now:
+                    del calendar.keys[replay_key]
+                    changed = True
+            if changed:
+                db.execute(
+                    update(lesson_calendars)
+                    .where(lesson_calendars.c.card_id == card_id)
+                    .values(payload=calendar.data())
+                )
 
 
 def prune_pickup(directory: Path, cutoff: datetime) -> None:
@@ -79,6 +140,7 @@ def main() -> int:
             now = datetime.now(UTC)
             with engine.begin() as db:
                 prune(db, now, SESSION_IDLE_HOURS)
+            prepare_calendars(engine, now)
             if inbox_path:
                 prune_pickup(Path(inbox_path), now - timedelta(minutes=CHALLENGE_MINUTES))
             if args.loop:

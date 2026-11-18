@@ -80,3 +80,21 @@ class ParentAccess:
     parent_account_id: UUID
     created_at: datetime
     revoked_at: datetime | None
+
+
+@dataclass(frozen=True)
+class ParentApplication:
+    application_id: UUID
+    student_card_id: UUID
+    created_at: datetime
+    expires_at: datetime
+    requester_account_id: UUID | None = None
+    decision: str | None = None
+    decided_at: datetime | None = None
+
+    def status(self, now: datetime) -> str:
+        if self.decision:
+            return self.decision
+        if self.expires_at <= now:
+            return "expired"
+        return "awaiting_review" if self.requester_account_id else "pending"

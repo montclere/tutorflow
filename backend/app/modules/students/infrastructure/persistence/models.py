@@ -98,3 +98,18 @@ audit_events = Table(
     Column("request_id", Uuid, nullable=False),
     Column("occurred_at", DateTime(timezone=True), nullable=False, index=True),
 )
+
+parent_applications = Table(
+    "parent_applications",
+    metadata,
+    Column("application_id", Uuid, primary_key=True),
+    Column("student_card_id", Uuid, ForeignKey("student_cards.student_card_id"), nullable=False),
+    Column("token_digest", String(64), unique=True),
+    Column("created_at", DateTime(timezone=True), nullable=False),
+    Column("expires_at", DateTime(timezone=True), nullable=False, index=True),
+    Column("requester_account_id", Uuid),
+    Column("decision", String(16)),
+    Column("decided_at", DateTime(timezone=True)),
+    CheckConstraint("decision IN ('approved', 'rejected', 'revoked')", name="decision"),
+    Index("ix_parent_applications_card_sort", "student_card_id", "created_at", "application_id"),
+)

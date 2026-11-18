@@ -1,4 +1,5 @@
 import { api, ApiError, clearContext, describeError } from "./api.js"
+import { schedulePage, ScheduleInput, submitSchedule, updateScheduleForm } from "./schedule.js"
 
 type Role = "teacher" | "student" | "parent"
 type ContactType = "email" | "phone"
@@ -9,9 +10,10 @@ type Profile = { display_name: string; timezone: string; version: number }
 type Cabinets = { teacher_enabled: boolean; student_available: boolean; parent_available: boolean }
 type Card = {
   student_card_id: string; student_card_name: string; subject: string | null
-  learning_goal: string | null; teacher_display_name?: string; private_note?: string | null
+  student_account_id?: string | null; learning_goal: string | null; teacher_display_name?: string; private_note?: string | null
 }
 type Access = { parent_access_id: string; parent_display_name: string | null; status: "active" | "revoked" }
+type ParentApplication = { application_id: string; status: string; expires_at: string; requester_display_name: string | null }
 type Invitation = { invitation_id: string; purpose: Purpose; status: string; expires_at: string }
 type Page<T> = { items: T[]; next_cursor: string | null }
 type AuthMode = "login" | "register" | "reset"
@@ -29,6 +31,8 @@ let profile: Profile | undefined
 let authMode: AuthMode = "login"
 let challenge: { id: string; contact: Contact } | undefined
 let latestLink = ""
+let existingCardLink: { card: string; url: string } | undefined
+let parentApplicationSent = false
 let renderVersion = 0
 
 function escape(value: string | null | undefined) {
@@ -66,6 +70,7 @@ function frame(body: string, cabinets?: Cabinets) {
         ? link("/cabinet/student", "Ученик") : ""}
       ${cabinets.parent_available || location.pathname.startsWith("/cabinet/parent")
         ? link("/cabinet/parent", "Родитель") : ""}
+      ${cabinets.teacher_enabled ? link("/schedule/teacher", "Расписание") : ""}
       ${link("/profile", "Профиль")}
     </nav>
     <div class="session">
@@ -225,6 +230,20 @@ async function invitePage() {
     ${panel(action, account ? "" : "auth-panel")}</div>`
 }
 
+function existingCardToken() {
+  return location.pathname === "/parent-invite" ? new URLSearchParams(location.hash.slice(1)).get("token") : null
+}
+
+function existingCardInvitePage() {
+  if (!existingCardToken()) return pageHeading("Приглашение родителя", "Откройте ссылку, которую прислал репетитор.")
+  let form = authForm()
+  if (account) form = parentApplicationSent
+    ? '<p>Заявка отправлена. Расписание появится в кабинете после одобрения репетитором.</p>'
+    : '<form data-form="apply-parent"><button class="primary">Запросить доступ</button></form>'
+  return `<div class="narrow">${pageHeading("Доступ к карточке ученика")}
+    ${panel(form, account ? "" : "auth-panel")}</div>`
+}
+
 function cardList(cards: Card[], role: Role) {
   return cards.length ? `<ul class="card-list">${cards.map((card) => `<li>
     ${link(`/cabinet/${role}/${encodeURIComponent(card.student_card_id)}`, card.student_card_name)}
@@ -266,20 +285,35 @@ async function cabinet(role: Role, cardId?: string) {
   if (!cardId) {
     const cards = await list<Card>(`/${role}/student-cards`)
     return pageHeading(role === "student" ? "Кабинет ученика" : "Кабинет родителя")
-      + panel(`<h2>Доступные карточки</h2>${cardList(cards, role)}`)
+      + panel(`<h2>Доступные карточки</h2>${link(`/schedule/${role}`, "Расписание")}${cardList(cards, role)}`)
   }
   const endpoint = `/${role}/student-cards/${encodeURIComponent(cardId)}`
   const card = await api<Card>(endpoint)
   const allowed = role === "teacher" ? await list<Access>(endpoint + "/parent-access") : []
+  const applications = role === "teacher" ? await list<ParentApplication>(endpoint + "/parent-applications") : []
+  const schedule = link(`/schedule/${role}?card=${encodeURIComponent(cardId)}`, "Расписание ученика")
   return `<div class="narrow">
     ${link(role === "teacher" ? "/cabinet" : `/cabinet/${role}`, "← К списку карточек", "back")}
     ${pageHeading(card.student_card_name)}
+    ${schedule}
     ${panel(`<h2>Сведения об ученике</h2>
       ${card.teacher_display_name ? `<dl><dt>Репетитор</dt><dd>${escape(card.teacher_display_name)}</dd></dl>` : ""}
       <dl><dt>Предмет</dt><dd>${escape(card.subject) || "Не указан"}</dd>
       <dt>Учебная цель</dt><dd>${escape(card.learning_goal) || "Не указана"}</dd>
       ${role === "teacher" && card.private_note ? `<dt>Закрытая заметка</dt><dd>${escape(card.private_note)}</dd>` : ""}</dl>`)}
     ${role === "teacher" ? panel(`<h2>Родительский доступ</h2>
+      ${card.student_account_id ? `<p>После одобрения родитель увидит назначенные и прошлые уроки.</p>
+        <button class="secondary" data-action="issue-card-link" data-id="${escape(cardId)}">Пригласить к этой карточке</button>` : ""}
+      ${existingCardLink?.card === cardId ? `<label>Ссылка для родителя<input readonly value="${escape(existingCardLink.url)}"></label>` : ""}
+      ${applications.length ? `<ul class="card-list">${applications.map(application => `<li><div>
+        <strong>${escape(application.requester_display_name) || "Приглашение родителя"}</strong>
+        <span>${escape(({ pending: "Ожидает заявки", awaiting_review: "Ожидает одобрения", approved: "Одобрено",
+          rejected: "Отклонено", revoked: "Отозвано", expired: "Срок истёк" } as Record<string, string>)[application.status])}</span>
+        </div><div class="actions">
+        ${application.status === "awaiting_review" ? `<button class="primary" data-action="decide-parent" data-decision="approve" data-id="${escape(application.application_id)}">Одобрить</button>
+          <button class="secondary" data-action="decide-parent" data-decision="reject" data-id="${escape(application.application_id)}">Отклонить</button>` : ""}
+        ${["pending", "awaiting_review"].includes(application.status) ? `<button class="quiet" data-action="decide-parent" data-decision="revoke" data-id="${escape(application.application_id)}">Отозвать ссылку</button>` : ""}
+        </div></li>`).join("")}</ul>` : ""}
       ${allowed.length ? `<ul class="card-list">${allowed.map((access) => `<li>
         <strong>${escape(access.parent_display_name) || "Родитель"}</strong>
         ${access.status === "active" ? `<button class="danger quiet" data-action="revoke-access"
@@ -307,11 +341,14 @@ async function render(focus = false) {
   let cabinets: Cabinets | undefined
   let failed: unknown
   try {
-    if (account && path !== "/invite") cabinets = await api<Cabinets>("/cabinets")
+    if (account && path !== "/invite" && path !== "/parent-invite") cabinets = await api<Cabinets>("/cabinets")
     const match = path.match(/^\/cabinet\/(teacher|student|parent)(?:\/([a-f0-9-]+))?$/)
-    if (path === "/invite") body = await invitePage()
+    const schedule = path.match(/^\/schedule\/(teacher|student|parent)(?:\/([a-f0-9-]+))?$/)
+    if (path === "/parent-invite") body = existingCardInvitePage()
+    else if (path === "/invite") body = await invitePage()
     else if (!account && path === "/") body = landing()
     else if (!account) body = `<div class="narrow">${pageHeading("Ваш аккаунт", "Войдите или подтвердите один контакт для регистрации.")}${panel(authForm(), "auth-panel")}</div>`
+    else if (schedule) body = await schedulePage(schedule[1] as Role, profile?.timezone ?? "UTC", schedule[2])
     else if (path === "/profile") body = profilePage()
     else if (match && (match[1] !== "teacher" || match[2])) body = await cabinet(match[1] as Role, match[2])
     else body = await teacherPage(cabinets!)
@@ -337,10 +374,24 @@ async function submit(form: HTMLFormElement) {
   const token = inviteToken()
   const invitation = token ? { invitation_token: token } : {}
   switch (form.dataset.form) {
+    case "schedule": {
+      const target = await submitSchedule(form)
+      if (target === null) await render()
+      else if (target) route(target)
+      break
+    }
+    case "apply-parent": {
+      const parentToken = existingCardToken()
+      if (!parentToken) return
+      await api("/parent-applications/apply", "POST", { invitation_token: parentToken })
+      parentApplicationSent = true
+      await render(true)
+      break
+    }
     case "login":
       await api("/auth/login", "POST", { login_contact: contactOf(values), password: values.get("password") })
       await loadAccount()
-      if (token) await render(true)
+      if (token || existingCardToken()) await render(true)
       else route("/cabinet")
       break
     case "challenge": {
@@ -373,7 +424,7 @@ async function submit(form: HTMLFormElement) {
         })
         challenge = undefined
         await loadAccount()
-        if (token) await render(true)
+        if (token || existingCardToken()) await render(true)
         else route("/cabinet")
       }
       break
@@ -410,8 +461,10 @@ async function action(button: HTMLButtonElement) {
       account = undefined
       profile = undefined
       latestLink = ""
+      existingCardLink = undefined
+      parentApplicationSent = false
       clearContext()
-      if (inviteToken()) {
+      if (inviteToken() || existingCardToken()) {
         authMode = "login"
         challenge = undefined
         await render(true)
@@ -449,6 +502,21 @@ async function action(button: HTMLButtonElement) {
       await render(true)
       notify("Приглашение отозвано.")
       break
+    case "issue-card-link": {
+      const card = button.dataset.id!
+      const result = await api<{ invitation_token: string }>(`/teacher/student-cards/${card}/parent-applications`, "POST")
+      const url = new URL("/parent-invite", location.origin)
+      url.hash = new URLSearchParams({ token: result.invitation_token }).toString()
+      existingCardLink = { card, url: url.toString() }
+      await render()
+      notify("Ссылка для родителя готова.")
+      break
+    }
+    case "decide-parent":
+      await api(`/teacher/parent-applications/${button.dataset.id}/${button.dataset.decision}`, "POST")
+      await render()
+      notify("Заявка обновлена.")
+      break
     case "revoke-access":
       await api(`/parent-access/${encodeURIComponent(button.dataset.id!)}`, "DELETE")
       await render(true)
@@ -467,7 +535,7 @@ async function perform(button: HTMLButtonElement | null, work: () => Promise<voi
   notify("")
   if (button) button.disabled = true
   try { await work() }
-  catch (error) { notify(describeError(error), true) }
+  catch (error) { notify(error instanceof ScheduleInput ? error.message : describeError(error), true) }
   finally { if (button) button.disabled = false }
 }
 
@@ -476,13 +544,19 @@ root.addEventListener("click", (event) => {
   const anchor = event.target.closest<HTMLAnchorElement>("a[data-route]")
   if (anchor && !event.ctrlKey && !event.metaKey && !event.shiftKey && !event.altKey) {
     event.preventDefault()
-    route(anchor.pathname)
+    route(anchor.pathname + anchor.search + anchor.hash)
     return
   }
   const button = event.target.closest<HTMLButtonElement>("button[data-mode],button[data-action]")
   if (!button) return
   event.preventDefault()
   void perform(button, () => action(button))
+})
+
+root.addEventListener("change", (event) => {
+  if (event.target instanceof HTMLInputElement || event.target instanceof HTMLSelectElement) {
+    if (event.target.form?.dataset.form === "schedule") updateScheduleForm(event.target)
+  }
 })
 
 root.addEventListener("submit", (event) => {

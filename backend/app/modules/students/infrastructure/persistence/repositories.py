@@ -10,8 +10,8 @@ from app.shared.application.ports.clock import now_utc
 from app.shared.infrastructure.db.unit_of_work import PostgresRepository
 
 from ...application.ports import Position
-from ...domain.student import Invitation, ParentAccess, StudentCard
-from .models import audit_events, invitations, parent_access, student_cards
+from ...domain.student import Invitation, ParentAccess, ParentApplication, StudentCard
+from .models import audit_events, invitations, parent_access, parent_applications, student_cards
 
 
 def fields(table, record) -> list[Column]:
@@ -182,3 +182,58 @@ class PostgresStudents(PostgresRepository):
                 occurred_at=now_utc(),
             )
         )
+
+    async def add_parent_application(self, application: ParentApplication, token_digest: str):
+        await self.db.execute(
+            insert(parent_applications).values(**asdict(application), token_digest=token_digest)
+        )
+
+    async def parent_application(self, key: UUID | str, *, lock=False):
+        table = parent_applications
+        column = table.c.application_id if isinstance(key, UUID) else table.c.token_digest
+        query = select(*fields(table, ParentApplication)).where(column == key)
+        row = await self.row(query.with_for_update() if lock else query)
+        return ParentApplication(**row) if row else None
+
+    async def parent_applications(self, card_id: UUID, limit: int, after: Position | None):
+        table = parent_applications
+        c = table.c
+        query = select(*fields(table, ParentApplication)).where(c.student_card_id == card_id)
+        return [
+            ParentApplication(**row)
+            for row in await self.rows(page(query, c.created_at, c.application_id, limit, after))
+        ]
+
+    async def update_parent_application(self, application_id: UUID, changes: dict):
+        table = parent_applications
+        row = (
+            (
+                await self.db.execute(
+                    update(table)
+                    .where(table.c.application_id == application_id)
+                    .values(**changes)
+                    .returning(*fields(table, ParentApplication))
+                )
+            )
+            .mappings()
+            .one()
+        )
+        return ParentApplication(**row)
+
+    async def grant_parent_access(self, access: ParentAccess):
+        existing = await self.parent_access_for(access.student_card_id, access.parent_account_id)
+        if existing is None:
+            await self.add_parent_access(access)
+            return access
+        if existing.revoked_at is None:
+            return existing
+        await self.db.execute(
+            update(parent_access)
+            .where(parent_access.c.parent_access_id == existing.parent_access_id)
+            .values(
+                parent_access_id=access.parent_access_id,
+                created_at=access.created_at,
+                revoked_at=None,
+            )
+        )
+        return access

@@ -21,11 +21,12 @@ async function responseError(response: Response): Promise<ApiError> {
   return new ApiError(response.status, "request_failed")
 }
 
-export async function api<T>(path: string, method = "GET", body?: object): Promise<T> {
+export async function api<T>(path: string, method = "GET", body?: object, additionalHeaders?: HeadersInit): Promise<T> {
   if (method !== "GET" && !csrf) {
     csrf = (await api<{ csrf_token: string }>("/auth/csrf")).csrf_token
   }
-  const headers = new Headers({ Accept: "application/json, application/problem+json" })
+  const headers = new Headers(additionalHeaders)
+  headers.set("Accept", "application/json, application/problem+json")
   if (method !== "GET" && csrf) headers.set("X-CSRF-Token", csrf)
   if (body) headers.set("Content-Type", "application/json")
   const response = await fetch("/api/v1" + path, {
