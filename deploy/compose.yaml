@@ -1,0 +1,86 @@
+x-logging: &logging
+  driver: local
+  options:
+    max-size: 10m
+    max-file: "3"
+
+x-api: &api
+  image: ${TUTORFLOW_BACKEND_IMAGE:?Укажите образ backend}
+  pull_policy: never
+  init: true
+  logging: *logging
+  environment: &api-env
+    TUTORFLOW_DATABASE_URL: ${TUTORFLOW_DATABASE_URL:?Укажите URL отдельной БД}
+  depends_on:
+    db:
+      condition: service_healthy
+  networks: [data]
+
+services:
+  db:
+    image: postgres:16.13-alpine
+    logging: *logging
+    command: ["postgres", "-c", "log_min_messages=FATAL", "-c", "log_min_error_statement=PANIC"]
+    pull_policy: never
+    environment:
+      POSTGRES_DB: ${TUTORFLOW_DB_NAME:?Укажите имя БД}
+      POSTGRES_USER: ${TUTORFLOW_DB_USER:?Укажите пользователя БД}
+      POSTGRES_PASSWORD: ${TUTORFLOW_DB_PASSWORD:?Укажите пароль БД}
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -h 127.0.0.1 -U \"$$POSTGRES_USER\" -d \"$$POSTGRES_DB\""]
+      interval: 2s
+      timeout: 3s
+      retries: 20
+    volumes:
+      - postgres:/var/lib/postgresql/data
+    networks: [data]
+
+  migrate:
+    <<: *api
+    command: ["alembic", "upgrade", "head"]
+
+  api:
+    <<: *api
+    command: ["uvicorn", "app.main:create_app", "--factory", "--host", "0.0.0.0", "--no-access-log", "--proxy-headers", "--forwarded-allow-ips", "*"]
+    environment:
+      <<: *api-env
+      TUTORFLOW_SECRET_KEY: ${TUTORFLOW_SECRET_KEY:?Укажите ключ приложения}
+      TUTORFLOW_BROWSER_ORIGIN: ${TUTORFLOW_BROWSER_ORIGIN:?Укажите origin браузера}
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/api/v1/health', timeout=2)"]
+      interval: 2s
+      timeout: 3s
+      retries: 20
+    networks: [data, edge]
+
+  maintenance:
+    <<: *api
+    command: ["python", "-m", "app.maintenance", "--loop"]
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+    healthcheck:
+      test: ["CMD", "python", "-c", "import os,time; assert time.time()-os.stat('/tmp/tutorflow-maintenance-alive').st_mtime < 180"]
+      interval: 5s
+      timeout: 3s
+      retries: 12
+
+  web:
+    logging: *logging
+    image: ${TUTORFLOW_WEB_IMAGE:?Укажите образ web}
+    pull_policy: never
+    depends_on:
+      api:
+        condition: service_healthy
+    networks: [edge]
+
+networks:
+  data:
+    internal: true
+  edge:
+
+volumes:
+  postgres:

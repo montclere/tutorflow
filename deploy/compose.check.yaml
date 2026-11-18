@@ -1,0 +1,8 @@
+services:
+  db:
+    networks: [data, test_client]
+    ports:
+      - "127.0.0.1:${TUTORFLOW_DB_PORT:?Укажите порт тестовой БД}:5432"
+
+networks:
+  test_client:
