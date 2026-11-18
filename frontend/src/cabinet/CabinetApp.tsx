@@ -10,6 +10,7 @@ import { ProgressPage } from "./pages/ProgressPage";
 import { ReviewPage } from "./pages/ReviewPage";
 import { SchedulePage } from "./pages/schedule/SchedulePage";
 import { StudentHomePage } from "./pages/StudentHomePage";
+import { LiveStudentsPage } from "./pages/students/live/LiveStudentsPage";
 import { StudentsPage } from "./pages/students/StudentsPage";
 import { TasksPage } from "./pages/TasksPage";
 import { TrainerPage } from "./pages/TrainerPage";
@@ -22,7 +23,7 @@ const demoOnly = (screen: ReactNode, section: "finance" | "tasks" | "review" | "
 const screens: Record<string, () => ReactNode> = {
   [teacherRoutes.overview]: () => <OverviewPage />,
   [teacherRoutes.schedule]: () => <SchedulePage />,
-  [teacherRoutes.students]: () => <StudentsPage />,
+  [teacherRoutes.students]: () => (env.demo ? <StudentsPage /> : <LiveStudentsPage />),
   [teacherRoutes.tasksCreate]: demoOnly(<TasksPage tab="create" />, "tasks"),
   [teacherRoutes.tasksBank]: demoOnly(<TasksPage tab="bank" />, "tasks"),
   [teacherRoutes.tasksMine]: demoOnly(<TasksPage tab="mine" />, "tasks"),

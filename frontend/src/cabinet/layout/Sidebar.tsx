@@ -50,10 +50,12 @@ export function Sidebar({ role, pathname, open, onClose }: Props) {
         ))}
       </nav>
 
-      <div className={styles.promo}>
-        <b>{promo.title}</b>
-        {promo.text}
-      </div>
+      {env.demo && (
+        <div className={styles.promo}>
+          <b>{promo.title}</b>
+          {promo.text}
+        </div>
+      )}
     </aside>
   );
 }

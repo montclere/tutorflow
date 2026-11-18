@@ -34,10 +34,13 @@ export function Topbar({ role, menuOpen, onToggleMenu }: Props) {
         />
       </div>
       <div className={styles.me}>
-        <span className={styles.bell}>
-          <IconButton icon={Bell} label={cabinet.shell.notificationsLabel} onClick={() => notifySoon(cabinet.shell.notificationsLabel)} />
-          <i className={styles.dot} aria-hidden="true" />
-        </span>
+        {/* Уведомлений на сервере пока нет — колокольчик только в демо. */}
+        {session.demo && (
+          <span className={styles.bell}>
+            <IconButton icon={Bell} label={cabinet.shell.notificationsLabel} onClick={() => notifySoon(cabinet.shell.notificationsLabel)} />
+            <i className={styles.dot} aria-hidden="true" />
+          </span>
+        )}
         <Avatar initials={person.initials} color={person.color} />
         <div className={styles.who}>
           <b>{person.name}</b>
