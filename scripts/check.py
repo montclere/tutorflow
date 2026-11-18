@@ -1,17 +1,27 @@
 """Проверка каркаса, локальных ссылок и синтаксиса shell без зависимостей."""
 
 import os
-from pathlib import Path
 import re
 import subprocess
 import sys
+from pathlib import Path
 from urllib.parse import unquote, urlsplit
-
 
 ROOT = Path(__file__).resolve().parents[1]
 EXCLUDED = {
-    ".git", ".venv", ".worktrees", "node_modules", "dist", "build",
-    "__pycache__", ".pytest_cache", ".mypy_cache", ".ruff_cache",
+    ".git",
+    ".local-stack",
+    "playwright-report",
+    "test-results",
+    ".venv",
+    ".worktrees",
+    "node_modules",
+    "dist",
+    "build",
+    "__pycache__",
+    ".pytest_cache",
+    ".mypy_cache",
+    ".ruff_cache",
 }
 
 
@@ -30,7 +40,8 @@ def main():
     for module in ("backend", "frontend", "deploy"):
         module_root = ROOT / module
         implementation = [
-            path for path in paths
+            path
+            for path in paths
             if module_root in path.parents
             and path.suffix != ".md"
             and path.name not in {".env.example", ".gitkeep"}
@@ -55,7 +66,9 @@ def main():
 
         if path.suffix == ".sh":
             result = subprocess.run(
-                ["bash", "-n", str(path)], capture_output=True, text=True,
+                ["bash", "-n", str(path)],
+                capture_output=True,
+                text=True,
             )
             if result.returncode:
                 errors.append(result.stderr.strip())

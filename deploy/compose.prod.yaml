@@ -1,0 +1,33 @@
+services:
+  db:
+    restart: unless-stopped
+
+  api:
+    restart: unless-stopped
+    environment:
+      TUTORFLOW_APP_ENV: production
+      TUTORFLOW_SMSC_API_KEY: ${TUTORFLOW_SMSC_API_KEY:?Укажите ключ SMSC}
+      TUTORFLOW_SMSC_SENDER: ${TUTORFLOW_SMSC_SENDER:?Укажите имя отправителя SMSC}
+      TUTORFLOW_SMTP_HOST: ${TUTORFLOW_SMTP_HOST:?Укажите SMTP}
+      TUTORFLOW_SMTP_PORT: ${TUTORFLOW_SMTP_PORT:-465}
+      TUTORFLOW_SMTP_SENDER: ${TUTORFLOW_SMTP_SENDER:?Укажите отправителя}
+      TUTORFLOW_SMTP_USERNAME: ${TUTORFLOW_SMTP_USERNAME:-}
+      TUTORFLOW_SMTP_PASSWORD: ${TUTORFLOW_SMTP_PASSWORD:-}
+
+  maintenance:
+    restart: unless-stopped
+
+  web:
+    restart: unless-stopped
+    environment:
+      TUTORFLOW_SITE_ADDRESS: "https://${TUTORFLOW_DOMAIN:?Укажите DNS-имя}"
+    ports:
+      - "${TUTORFLOW_BIND_IP:-0.0.0.0}:${TUTORFLOW_HTTP_PORT:-80}:80"
+      - "${TUTORFLOW_BIND_IP:-0.0.0.0}:${TUTORFLOW_HTTPS_PORT:-443}:443"
+    volumes:
+      - tls_data:/data
+      - tls_config:/config
+
+volumes:
+  tls_data:
+  tls_config:

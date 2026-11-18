@@ -1,6 +1,18 @@
 ---
 name: design
-description: "Use before building a new module or a feature in a risky area (authentication, permissions, identity disclosure, data deletion). Interview, approaches, analysis lenses, rules into docs/behavior.md and docs/decisions.md."
+description: "Use before building a new module or a feature in a risky area (authentication, permissions, identity disclosure, data deletion). Interview, approaches, analysis lenses, rules into the relevant module ADR."
 ---
 
-Следуй [процедуре](../../../docs/skills/design.md). Пути внутри процедуры указаны от корня репозитория.
+# design
+
+Пути к файлам указаны от корня репозитория.
+
+Когда: новая фича, модуль или изменение прав, входа, персональных данных и удаления.
+
+1. Прочитай spec, ADR модулей и локальный AGENTS.md.
+2. Выдели неизвестное, влияющее на результат; не спрашивай повторно о решённом и не блокируй рутинные действия.
+3. Выбери минимальный подход; существенные альтернативы и причины запиши в ADR.
+4. Зафиксируй правила с ID: актор, вход, результат, ошибки, права, границы и повтор операции.
+5. Проверь безопасность, совместимость API и данных, стоимость, эксплуатацию и способ отката.
+6. Раздели работу двух участников по контракту; обнови задачу и критерии приёмки.
+7. Если результат требует нового продуктового решения, получи его у владельца до зависимой реализации; используй уже данное поручение.

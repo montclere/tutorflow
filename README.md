@@ -1,6 +1,6 @@
 # TutorFlow
 
-Каркас для совместной разработки двумя людьми с агентами. Приложение и стек пока не реализованы.
+CRM и учебная платформа для репетиторов. Сейчас — каркас для совместной разработки: backend разложен по модулям и shared, продуктовые функции не реализованы. Описание: [spec](docs/spec.md).
 
 - `backend/` — API и бизнес-логика.
 - `frontend/` — интерфейс.
@@ -11,4 +11,6 @@
 
 Начать: [workflow](docs/workflow.md). Текущее состояние: [stages](docs/stages.md). Правила агента: [AGENTS.md](AGENTS.md).
 
-Проверка каркаса: `./scripts/dev.sh check` (Python 3 и Bash). Проверки приложения подключаются при выборе стека.
+Подготовка: `./scripts/dev.sh setup`. Проверки: `./scripts/dev.sh check`. Нужны uv, Bash и Python; команды и состав проверок — в [scripts](scripts/README.md).
+
+Локальный запуск полного стека и проверка перед push или PR описаны в [scripts](scripts/README.md). Конфигурация production находится в [deploy](deploy/README.md).

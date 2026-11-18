@@ -1,0 +1,53 @@
+services:
+  migrate:
+    volumes:
+      - ../backend/alembic.ini:/app/alembic.ini:ro
+      - ../backend/migrations:/app/migrations:ro
+      - ../backend/app:/app/app:ro
+
+  api:
+    user: "${TUTORFLOW_UID:?Укажите UID}:${TUTORFLOW_GID:?Укажите GID}"
+    environment:
+      TUTORFLOW_APP_ENV: development
+      TUTORFLOW_INSECURE_LOCAL_HTTP: "1"
+      TUTORFLOW_LOCAL_INBOX: /inbox
+      TUTORFLOW_SMTP_HOST: mailpit
+      TUTORFLOW_SMTP_PORT: "1025"
+      TUTORFLOW_SMTP_SENDER: dev@tutorflow.invalid
+      TUTORFLOW_LOCAL_SMTP: "1"
+    depends_on:
+      mailpit:
+        condition: service_started
+    volumes:
+      - "${TUTORFLOW_INBOX:?Укажите локальный приёмник}:/inbox"
+      - ../backend/app:/app/app:ro
+
+  maintenance:
+    user: "${TUTORFLOW_UID:?Укажите UID}:${TUTORFLOW_GID:?Укажите GID}"
+    environment:
+      TUTORFLOW_APP_ENV: development
+      TUTORFLOW_LOCAL_INBOX: /inbox
+    volumes:
+      - "${TUTORFLOW_INBOX:?Укажите локальный приёмник}:/inbox"
+      - ../backend/app:/app/app:ro
+
+  web:
+    environment:
+      TUTORFLOW_SITE_ADDRESS: ":80"
+    ports:
+      - "127.0.0.1:${TUTORFLOW_WEB_PORT:?Укажите порт}:80"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - ../frontend/dist:/srv:ro
+
+
+  mailpit:
+    image: axllent/mailpit:v1.33.1
+    pull_policy: never
+    environment:
+      MP_MAX_AGE: 1h
+      MP_MAX_MESSAGES: "50"
+      MP_DISABLE_VERSION_CHECK: "true"
+    ports:
+      - "127.0.0.1:${TUTORFLOW_MAILPIT_PORT:?Укажите порт Mailpit}:8025"
+    networks: [edge]
