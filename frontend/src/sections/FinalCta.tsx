@@ -1,5 +1,6 @@
 import { landing } from "../content/landing.ru";
 import { SignupCta } from "../features/signup/ui/SignupCta";
+import { FINAL_CTA_ID } from "../features/signup/ui/signupStart";
 import { Object3D } from "../shared/decor/Object3D";
 import { Scribble } from "../shared/decor/Scribble";
 import { Lines } from "../shared/ui/Lines";
@@ -19,7 +20,7 @@ export function FinalCta() {
         </span>
         <Lines lines={text.titleLines} />
       </h2>
-      <SignupCta place="final" label={text.cta} className={styles.cta} />
+      <SignupCta id={FINAL_CTA_ID} place="final" label={text.cta} className={styles.cta} />
     </section>
   );
 }

@@ -1,22 +1,52 @@
+/* Слева закреплённая колонка с заголовком и вкладками, справа один столбец крупных вопросов. */
 .section {
   --focus-ring: var(--color-blue);
+  display: grid;
+  grid-template-columns: minmax(0, 0.78fr) minmax(0, 2fr);
+  gap: 34px;
   margin-top: 46px;
+}
+
+.sticky {
+  position: sticky;
+  top: 24px;
+}
+
+.title {
+  margin-bottom: 22px;
+  font-family: var(--font-display);
+  font-weight: 900;
+  font-size: var(--fs-signup);
+  line-height: 0.95;
+  letter-spacing: -0.035em;
+  text-transform: uppercase;
 }
 
 .tabs {
   display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-  margin-bottom: 14px;
+  flex-direction: column;
+  gap: 8px;
 }
 
 .tab {
-  padding: 9px 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px 16px;
   border: 2px solid var(--color-ink);
-  border-radius: var(--radius-pill);
+  border-radius: var(--radius-control);
   background: var(--color-paper);
   font-weight: 800;
-  font-size: var(--fs-md);
+  font-size: var(--fs-base);
+  text-align: left;
+  transition:
+    background-color var(--duration-reveal) ease,
+    color var(--duration-reveal) ease;
+}
+
+.tab:hover {
+  background: var(--color-mist);
 }
 
 .tab[aria-selected="true"] {
@@ -24,11 +54,27 @@
   color: var(--color-paper);
 }
 
-.list {
+.count {
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  align-items: start;
-  gap: 10px;
+  flex: none;
+  place-items: center;
+  min-width: 28px;
+  height: 28px;
+  padding: 0 8px;
+  border-radius: var(--radius-pill);
+  background: var(--color-mist);
+  color: var(--color-ink);
+  font-family: var(--font-display);
+  font-weight: 900;
+  font-size: var(--fs-xs);
+}
+
+.tab[aria-selected="true"] .count {
+  background: var(--color-lime);
+}
+
+.list {
+  border-top: 2px solid var(--color-line);
 }
 
 .list[hidden] {
@@ -36,16 +82,18 @@
 }
 
 .item {
-  padding: 0 18px;
-  border-radius: var(--radius-card-sm);
-  background: var(--color-mist);
+  border-bottom: 2px solid var(--color-line);
 }
 
 .question {
-  position: relative;
-  padding: 16px 34px 16px 0;
+  display: grid;
+  grid-template-columns: 44px minmax(0, 1fr) 44px;
+  align-items: center;
+  gap: 16px;
+  padding: 24px 0;
   font-weight: 800;
-  font-size: var(--fs-base);
+  font-size: var(--fs-xl);
+  line-height: 1.3;
   list-style: none;
   cursor: pointer;
 }
@@ -54,34 +102,112 @@
   display: none;
 }
 
-.question::after {
-  content: "+";
-  position: absolute;
-  top: 12px;
-  right: 0;
-  display: grid;
-  place-items: center;
-  width: 26px;
-  height: 26px;
-  border-radius: var(--radius-round);
-  background: var(--color-paper);
+.question:hover .questionText {
+  color: var(--color-blue);
+}
+
+.number {
+  color: var(--color-blue);
+  font-family: var(--font-display);
   font-weight: 900;
-}
-
-.item[open] .question::after {
-  content: "–";
-  background: var(--color-lime);
-}
-
-.answer {
-  margin-bottom: 16px;
-  color: var(--color-muted);
-  font-weight: 600;
   font-size: var(--fs-md);
 }
 
+/* Плюс из двух линий; в открытом вопросе поворачивается в крестик. */
+.icon {
+  position: relative;
+  width: 44px;
+  height: 44px;
+  border-radius: var(--radius-round);
+  background: var(--color-mist);
+  transition:
+    background-color var(--duration-reveal) ease,
+    transform var(--duration-reveal) ease;
+}
+
+.icon::before,
+.icon::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 16px;
+  height: 3px;
+  border-radius: var(--radius-notch);
+  background: var(--color-ink);
+  transform: translate(-50%, -50%);
+}
+
+.icon::after {
+  transform: translate(-50%, -50%) rotate(90deg);
+}
+
+.item[open] .icon {
+  background: var(--color-lime);
+  transform: rotate(45deg);
+}
+
+.answer {
+  max-width: 62ch;
+  padding: 0 60px 26px;
+  color: var(--color-muted);
+  font-weight: 600;
+  font-size: var(--fs-lg);
+  line-height: 1.5;
+}
+
+@media (max-width: 1100px) {
+  .section {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 2.2fr);
+    gap: 22px;
+  }
+}
+
+/* На узком экране вкладки идут строкой над списком. */
 @media (max-width: 860px) {
-  .list {
+  .section {
     grid-template-columns: 1fr;
+    gap: 18px;
+  }
+
+  .sticky {
+    position: static;
+  }
+
+  .tabs {
+    flex-flow: row wrap;
+  }
+
+  .tab {
+    padding: 10px 14px;
+    border-radius: var(--radius-pill);
+    font-size: var(--fs-md);
+  }
+}
+
+@media (max-width: 560px) {
+  .title {
+    font-size: var(--fs-section);
+  }
+
+  .question {
+    grid-template-columns: 28px minmax(0, 1fr) 36px;
+    gap: 10px;
+    padding: 18px 0;
+    font-size: var(--fs-lg);
+  }
+
+  .number {
+    font-size: var(--fs-xs);
+  }
+
+  .icon {
+    width: 36px;
+    height: 36px;
+  }
+
+  .answer {
+    padding: 0 0 20px 38px;
+    font-size: var(--fs-base);
   }
 }

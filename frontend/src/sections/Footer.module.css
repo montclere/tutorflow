@@ -1,8 +1,9 @@
 .footer {
   display: flex;
   flex-wrap: wrap;
+  align-items: center;
   justify-content: space-between;
-  gap: 12px;
+  gap: 0 12px;
   padding: 20px 8px 0;
   color: var(--color-on-dark-muted);
   font-weight: 600;
@@ -12,10 +13,11 @@
 .nav {
   display: flex;
   flex-wrap: wrap;
-  gap: 16px;
+  gap: 0 16px;
 }
 
 .link {
+  padding: 12px 0;
   text-decoration: none;
 }
 

@@ -7,9 +7,10 @@ type SignupCtaProps = {
   label: string;
   variant?: "lime" | "plain";
   className?: string;
+  id?: string;
 };
 
-export function SignupCta({ place, label, variant = "lime", className }: SignupCtaProps) {
+export function SignupCta({ place, label, variant = "lime", className, id }: SignupCtaProps) {
   const onClick = () => {
     track("cta_click", { place });
     // Переход по якорю сбрасывает фокус, поэтому кнопку фокусируем уже после него.
@@ -17,13 +18,13 @@ export function SignupCta({ place, label, variant = "lime", className }: SignupC
   };
   if (variant === "plain") {
     return (
-      <a className={className} href={`#${SIGNUP_SECTION_ID}`} onClick={onClick}>
+      <a id={id} className={className} href={`#${SIGNUP_SECTION_ID}`} onClick={onClick}>
         {label}
       </a>
     );
   }
   return (
-    <Button variant="lime" className={className} href={`#${SIGNUP_SECTION_ID}`} onClick={onClick}>
+    <Button id={id} variant="lime" className={className} href={`#${SIGNUP_SECTION_ID}`} onClick={onClick}>
       {label}
     </Button>
   );

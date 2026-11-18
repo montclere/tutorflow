@@ -1,5 +1,7 @@
 import { focusSignupStart, scrollToSignup } from "../features/signup/ui/signupStart";
 import { useSignupWizard } from "../features/signup/ui/useSignupWizard";
+import { AiAssistant } from "../sections/AiAssistant";
+import { Demo } from "../sections/Demo";
 import { Features } from "../sections/Features";
 import { Faq } from "../sections/Faq";
 import { FinalCta } from "../sections/FinalCta";
@@ -11,6 +13,7 @@ import { MobileCta } from "../sections/MobileCta";
 import { Pricing } from "../sections/Pricing";
 import { SignupSection } from "../sections/SignupSection";
 import { Telegram } from "../sections/Telegram";
+import { Testimonials } from "../sections/Testimonials";
 import { Ticker } from "../sections/Ticker";
 import styles from "./App.module.css";
 
@@ -37,11 +40,14 @@ export function App() {
             <Ticker />
             <div className={styles.sheet}>
               <div className={`${styles.inner} ${styles.sheetInner}`}>
-                <SignupSection {...signup} />
                 <HowItWorks />
+                <AiAssistant />
                 <Features />
+                <Demo />
                 <Telegram />
+                <Testimonials />
                 <Pricing />
+                <SignupSection {...signup} />
                 <Faq />
                 <FinalCta />
               </div>

@@ -1,3 +1,4 @@
+import { env } from "../config/env";
 import { landing } from "../content/landing.ru";
 import styles from "./Footer.module.css";
 
@@ -13,6 +14,15 @@ export function Footer() {
             {link.label}
           </a>
         ))}
+        {env.supportUrl ? (
+          <a className={styles.link} href={env.supportUrl} target="_blank" rel="noreferrer">
+            {text.support}
+          </a>
+        ) : (
+          <a className={styles.link} href={text.faq.href}>
+            {text.faq.label}
+          </a>
+        )}
       </nav>
     </footer>
   );

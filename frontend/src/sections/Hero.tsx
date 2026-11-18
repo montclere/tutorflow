@@ -2,6 +2,7 @@ import { env } from "../config/env";
 import { routes } from "../config/routes";
 import { landing } from "../content/landing.ru";
 import { SignupCta } from "../features/signup/ui/SignupCta";
+import { HERO_CTA_ID } from "../features/signup/ui/signupStart";
 import { Object3D } from "../shared/decor/Object3D";
 import { RotatingBadge } from "../shared/decor/RotatingBadge";
 import { Scribble } from "../shared/decor/Scribble";
@@ -35,7 +36,7 @@ export function Hero() {
       <div className={styles.sub}>
         <p className={styles.subtitle}>{text.subtitle}</p>
         <div className={styles.actions}>
-          <SignupCta place="hero" label={text.cta} />
+          <SignupCta id={HERO_CTA_ID} place="hero" label={text.cta} />
           <Button variant="ghost" href={env.demoUrl ?? routes.teacherCabinet}>
             {text.demo}
           </Button>

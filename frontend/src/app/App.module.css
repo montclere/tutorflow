@@ -15,6 +15,8 @@
 .frame {
   position: relative;
   overflow: hidden;
+  /* clip, а не hidden: обрезает декор так же, но не ломает position: sticky у колонок внутри. */
+  overflow: clip;
   background-color: var(--color-blue);
   background-image: var(--grid-pattern);
   background-position: -1px -1px;
@@ -34,6 +36,11 @@
   padding: 0 26px;
 }
 
+/* Отступ сверху даёт сам лист; первой секции свой не нужен, какой бы она ни была. */
+.sheetInner > :first-child {
+  margin-top: 0;
+}
+
 @media (max-width: 560px) {
   .page {
     padding-bottom: 28px;
@@ -45,6 +52,11 @@
 
   .sheetInner {
     padding: 0 14px;
+  }
+
+  /* Наклонная лента заходит на верх листа: первая секция отступает, чтобы заголовок не прятался под ней. */
+  .sheetInner > :first-child {
+    margin-top: 30px;
   }
 
   .sheet {

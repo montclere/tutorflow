@@ -2,25 +2,186 @@
   margin-top: 46px;
 }
 
-.bento {
+/* Витрина: слева список возможностей, справа живой экран выбранной. */
+.showcase {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  grid-auto-rows: minmax(170px, auto);
+  grid-template-columns: minmax(0, 0.85fr) minmax(0, 1.6fr);
   gap: 12px;
+  align-items: stretch;
+}
+
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.item {
+  border-radius: var(--radius-card-sm);
+  background: var(--color-mist);
+  transition: background-color var(--duration-reveal) ease;
+}
+
+.item:not([data-open="true"]):hover {
+  background: var(--color-blue-soft);
+}
+
+.item[data-open="true"] {
+  background: var(--color-lime);
+}
+
+.itemHeading {
+  display: contents;
+}
+
+.toggle {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  width: 100%;
+  padding: 16px 18px;
+  border: 0;
+  background: none;
+  color: var(--color-ink);
+  font-family: var(--font-display);
+  font-weight: 900;
+  font-size: var(--fs-base);
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+  text-align: left;
+  text-transform: uppercase;
+}
+
+.item[data-open="true"] .toggle {
+  padding-bottom: 6px;
+  font-size: var(--fs-xl);
+  cursor: default;
+}
+
+.index {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  border-radius: var(--radius-sm);
+  background: var(--color-paper);
+  color: var(--color-blue);
+  font-size: var(--fs-xs);
+}
+
+.item[data-open="true"] .index {
+  background: var(--color-ink);
+  color: var(--color-lime);
+}
+
+.panel {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 4px 18px 18px 66px;
+  animation: panel-in var(--duration-expand) ease both;
+}
+
+.panel[hidden] {
+  display: none;
+}
+
+.text {
+  font-weight: 600;
+  font-size: var(--fs-md);
+}
+
+.points {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.points li {
+  padding: 6px 11px;
+  border-radius: var(--radius-pill);
+  background: var(--color-paper);
+  font-weight: 800;
+  font-size: var(--fs-xs);
+}
+
+.demoLink {
+  align-self: flex-start;
+  padding: 6px 0;
+  color: var(--color-ink);
+  font-weight: 800;
+  font-size: var(--fs-md);
+  text-decoration: underline;
+  text-decoration-thickness: 2px;
+  text-underline-offset: 4px;
+}
+
+.demoLink:hover {
+  text-decoration-color: var(--color-blue);
+}
+
+.inlineShot {
+  display: none;
+}
+
+.stage {
+  --focus-ring: var(--color-lime);
+  display: grid;
+  place-items: center;
+  padding: 34px;
+  overflow: hidden;
+  border-radius: var(--radius-section);
+  background-color: var(--color-blue);
+  background-image: var(--grid-pattern);
+  background-position: -1px -1px;
+  background-size: var(--grid-size) var(--grid-size);
+}
+
+.frame {
+  display: grid;
+  width: 100%;
+  padding: 8px;
+  border-radius: var(--radius-lg);
+  background: var(--color-paper);
+  box-shadow: var(--shadow-float);
+  transform: rotate(-1.5deg);
+}
+
+/* Все экраны лежат в одной ячейке: переключение — плавная смена прозрачности без скачка высоты. */
+.stageShot {
+  grid-area: 1 / 1;
+  display: block;
+  width: 100%;
+  height: auto;
+  border-radius: var(--radius-input);
+  opacity: 0;
+  transition: opacity var(--duration-reveal) ease;
+}
+
+.stageShot[data-active="true"] {
+  opacity: 1;
+}
+
+/* Возможности без экрана в кабинете — компактные плитки под витриной. */
+.extras {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+  margin-top: 12px;
 }
 
 .tile {
   position: relative;
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 14px;
   padding: 22px;
   overflow: hidden;
   border-radius: var(--radius-tile);
 }
 
-.title,
-.aiTitle {
+.title {
   font-family: var(--font-display);
   font-weight: 900;
   font-size: var(--fs-xl);
@@ -30,198 +191,13 @@
   text-wrap: balance;
 }
 
-.aiTitle {
-  font-size: var(--fs-tile-hero);
-}
-
-.text {
-  font-weight: 600;
-  font-size: var(--fs-md);
-  opacity: 0.85;
-}
-
-.ai {
-  grid-row: span 2;
-  grid-column: span 2;
-  background: var(--color-lime);
-}
-
-.balance {
-  --focus-ring: var(--color-lime);
-  grid-column: span 2;
-  background: var(--color-blue);
-  color: var(--color-paper);
-}
-
-.mist {
-  background: var(--color-mist);
-}
-
 .outlined {
-  grid-column: span 2;
   border: 2px solid var(--color-line-soft);
 }
 
 .dark {
-  grid-column: span 2;
   background: var(--color-ink);
   color: var(--color-paper);
-}
-
-.aiTag {
-  position: absolute;
-  top: 18px;
-  right: 18px;
-  padding: 7px 11px;
-  border-radius: var(--radius-input);
-  background: var(--color-ink);
-  color: var(--color-lime);
-  font-family: var(--font-display);
-  font-weight: 900;
-  font-size: var(--fs-sm);
-  transform: rotate(6deg);
-}
-
-.outlineChips {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-}
-
-.outlineChips li {
-  padding: 5px 11px;
-  border: 1.5px solid var(--color-ink);
-  border-radius: var(--radius-pill);
-  font-weight: 800;
-  font-size: var(--fs-xs);
-}
-
-.prompt {
-  margin-top: auto;
-  padding: 12px;
-  border-radius: var(--radius-card-sm);
-  background: var(--color-paper);
-  box-shadow: var(--shadow-card);
-}
-
-.promptInput {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.promptText {
-  flex: 1;
-  padding: 11px 12px;
-  border-radius: var(--radius-input);
-  background: var(--color-mist);
-  font-weight: 700;
-  font-size: var(--fs-md);
-}
-
-.promptAction {
-  padding: 11px 14px;
-  border-radius: var(--radius-input);
-  background: var(--color-blue);
-  color: var(--color-paper);
-  font-weight: 800;
-}
-
-.promptResults {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-  margin-top: 10px;
-}
-
-.promptResults span {
-  padding: 6px 11px;
-  border-radius: var(--radius-pill);
-  background: var(--color-ink);
-  color: var(--color-paper);
-  font-weight: 800;
-  font-size: var(--fs-xs);
-}
-
-.promptResults .accent {
-  background: var(--color-lime);
-  color: var(--color-ink);
-}
-
-.balanceRows {
-  display: grid;
-  gap: 7px;
-  margin-top: auto;
-}
-
-.balanceRows li {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 9px 12px;
-  border-radius: var(--radius-input);
-  background: var(--color-on-blue-hover);
-  font-weight: 700;
-  font-size: var(--fs-md);
-}
-
-.balanceRows b {
-  font-family: var(--font-display);
-  font-size: var(--fs-md);
-  font-variant-numeric: tabular-nums;
-}
-
-.balanceRows .plus {
-  color: var(--color-lime);
-}
-
-.balanceRows .minus {
-  color: var(--color-negative-on-dark);
-}
-
-.chain {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 5px;
-  margin-top: auto;
-  color: var(--color-muted);
-  font-weight: 900;
-}
-
-.chainItem {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-}
-
-.chainStatus,
-.chainDone {
-  padding: 6px 10px;
-  border-radius: var(--radius-pill);
-  background: var(--color-paper);
-  color: var(--color-ink);
-  font-weight: 800;
-  font-size: var(--fs-xs);
-}
-
-.chainDone {
-  background: var(--color-lime);
-}
-
-.score {
-  margin-top: auto;
-  color: var(--color-blue);
-  font-family: var(--font-display);
-  font-weight: 900;
-  font-size: var(--fs-score);
-  line-height: 1;
-  letter-spacing: -0.04em;
-}
-
-.score small {
-  color: var(--color-muted);
-  font-size: var(--fs-base);
 }
 
 .report,
@@ -259,25 +235,58 @@
   color: var(--color-ink);
 }
 
+@keyframes panel-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+}
+
 @media (max-width: 1100px) {
-  .bento {
-    grid-template-columns: repeat(2, 1fr);
+  .showcase {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.3fr);
   }
 
-  .ai {
-    grid-row: auto;
+  .stage {
+    padding: 22px;
+  }
+}
+
+/* На узком экране витрина справа скрыта: экран выбранной возможности открывается прямо в списке. */
+@media (max-width: 860px) {
+  .showcase {
+    grid-template-columns: 1fr;
+  }
+
+  .stage {
+    display: none;
+  }
+
+  .panel {
+    padding-left: 18px;
+  }
+
+  .inlineShot {
+    display: block;
+    width: 100%;
+    height: auto;
+    margin-top: 4px;
+    padding: 5px;
+    border-radius: var(--radius-card-sm);
+    background: var(--color-paper);
   }
 }
 
 @media (max-width: 560px) {
-  .bento {
+  .extras {
     grid-template-columns: 1fr;
   }
 
-  .ai,
-  .balance,
-  .outlined,
-  .dark {
-    grid-column: auto;
+  .toggle {
+    padding: 14px;
+  }
+
+  .panel {
+    padding: 2px 14px 14px;
   }
 }

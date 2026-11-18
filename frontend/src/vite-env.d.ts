@@ -1,6 +1,7 @@
 interface ImportMetaEnv {
   readonly VITE_AUTH_MOCK?: string;
   readonly VITE_DEMO_URL?: string;
+  readonly VITE_SUPPORT_URL?: string;
 }
 
 interface ImportMeta {

@@ -5,6 +5,7 @@
   grid-template-columns: 1fr 440px;
   align-items: center;
   gap: 30px;
+  margin-top: 46px;
   padding: 30px;
   overflow: hidden;
   border-radius: var(--radius-section);

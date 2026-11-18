@@ -1,15 +1,29 @@
-/* Удвоенный класс перебивает display базовой кнопки независимо от порядка подключения CSS-модулей. */
-.cta.cta {
+.bar {
   display: none;
 }
 
 @media (max-width: 560px) {
-  .cta.cta {
+  .bar {
     position: fixed;
     right: 10px;
     bottom: 10px;
     left: 10px;
     z-index: 55;
-    display: flex;
+    display: block;
+    transition:
+      transform var(--duration-reveal) ease,
+      opacity var(--duration-reveal) ease;
   }
+
+  .bar[data-visible="false"] {
+    opacity: 0;
+    pointer-events: none;
+    transform: translateY(calc(100% + 20px));
+  }
+}
+
+/* Удвоенный класс перебивает ширину базовой кнопки независимо от порядка подключения CSS-модулей. */
+.cta.cta {
+  display: flex;
+  width: 100%;
 }

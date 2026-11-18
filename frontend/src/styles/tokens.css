@@ -55,6 +55,8 @@
   --fs-telegram: clamp(28px, 3.8vw, 50px);
   --fs-tile-hero: clamp(26px, 3vw, 38px);
   --fs-price: clamp(40px, 5vw, 58px);
+  --fs-plan: clamp(30px, 3vw, 40px);
+  --fs-plan-price: clamp(34px, 3.8vw, 48px);
   --fs-score: 46px;
 
   --radius-phone: 42px;
@@ -99,6 +101,8 @@
   --duration-badge: 16s;
   --duration-ticker: 26s;
   --duration-press: 0.12s;
+  --duration-reveal: 0.25s;
+  --duration-expand: 0.45s;
 }
 
 :root {

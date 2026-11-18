@@ -5,6 +5,7 @@
 .plans {
   display: grid;
   grid-template-columns: 1fr 1fr;
+  align-items: stretch;
   gap: 14px;
 }
 
@@ -12,28 +13,77 @@
   position: relative;
   display: flex;
   flex-direction: column;
-  padding: 26px;
+  padding: 30px;
   border: 2px solid var(--color-line-soft);
   border-radius: var(--radius-plan);
+  background: var(--color-paper);
 }
 
+/* Про — на фирменной сетке, как первый экран: сразу видно, что это основной тариф. */
 .pro {
   --focus-ring: var(--color-lime);
   border-color: var(--color-blue);
-  background: var(--color-blue);
+  background-color: var(--color-blue);
+  background-image: var(--grid-pattern);
+  background-position: -1px -1px;
+  background-size: var(--grid-size) var(--grid-size);
   color: var(--color-paper);
 }
 
+.head {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding-right: 90px;
+}
+
+.icon {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 56px;
+  height: 56px;
+  border-radius: var(--radius-md);
+  background: var(--color-mist);
+  color: var(--color-blue);
+  box-shadow: 0 5px 0 var(--color-line);
+  transform: rotate(-6deg);
+}
+
+.pro .icon {
+  background: var(--color-lime);
+  color: var(--color-ink);
+  box-shadow: 0 5px 0 var(--color-lime-shadow);
+}
+
 .name {
-  font-weight: 800;
-  font-size: var(--fs-md);
+  font-family: var(--font-display);
+  font-weight: 900;
+  font-size: var(--fs-plan);
+  line-height: 1;
+  letter-spacing: -0.035em;
+  text-transform: uppercase;
+}
+
+.pro .name {
+  color: var(--color-lime);
+}
+
+.priceBox {
+  margin-top: 22px;
+  padding: 18px 20px;
+  border-radius: var(--radius-card-sm);
+  background: var(--color-mist);
+}
+
+.pro .priceBox {
+  background: var(--color-blue-deep);
 }
 
 .price {
-  margin: 10px 0 2px;
   font-family: var(--font-display);
   font-weight: 900;
-  font-size: var(--fs-price);
+  font-size: var(--fs-plan-price);
   line-height: 1;
   letter-spacing: -0.045em;
   font-variant-numeric: tabular-nums;
@@ -47,52 +97,99 @@
   opacity: 0.85;
 }
 
+.priceNote {
+  margin-top: 8px;
+  color: var(--color-muted);
+  font-weight: 700;
+  font-size: var(--fs-sm);
+}
+
+.pro .priceNote {
+  color: var(--color-lime);
+}
+
+.featuresTitle {
+  margin: 24px 0 12px;
+  color: var(--color-muted);
+  font-weight: 800;
+  font-size: var(--fs-xs);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.pro .featuresTitle {
+  color: var(--color-paper);
+}
+
 .features {
   display: grid;
-  gap: 9px;
-  margin: 18px 0 22px;
-  font-weight: 700;
-  font-size: var(--fs-md);
+  gap: 14px;
+  margin-bottom: 26px;
 }
 
 .features li {
   display: flex;
-  align-items: center;
-  gap: 9px;
+  align-items: flex-start;
+  gap: 12px;
 }
 
 .mark {
   display: grid;
   flex: none;
   place-items: center;
-  width: 22px;
-  height: 22px;
+  width: 24px;
+  height: 24px;
+  margin-top: 1px;
   border-radius: var(--radius-round);
   background: var(--color-mist);
-  color: var(--color-ink);
-  font-weight: 900;
-  font-size: var(--fs-xs);
+  color: var(--color-blue);
 }
 
 .pro .mark {
   background: var(--color-lime);
+  color: var(--color-ink);
+}
+
+.featureTitle {
+  display: block;
+  font-weight: 800;
+  font-size: var(--fs-base);
+}
+
+.featureText {
+  display: block;
+  margin-top: 2px;
+  color: var(--color-muted);
+  font-weight: 600;
+  font-size: var(--fs-sm);
+}
+
+.pro .featureText {
+  color: var(--color-on-dark-muted);
 }
 
 .cta {
   display: block;
   margin-top: auto;
-  padding: 14px;
+  padding: 16px;
   border: 2px solid var(--color-ink);
   border-radius: var(--radius-control);
   font-weight: 800;
+  font-size: var(--fs-base);
   text-align: center;
   text-decoration: none;
+  transition: background-color var(--duration-reveal) ease;
+}
+
+.start .cta:hover {
+  background: var(--color-mist);
 }
 
 .pro .cta {
   border-color: var(--color-lime);
   background: var(--color-lime);
   color: var(--color-ink);
+  box-shadow: var(--shadow-lime-button);
 }
 
 .seal {
@@ -119,5 +216,20 @@
 @media (max-width: 860px) {
   .plans {
     grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 560px) {
+  .plan {
+    padding: 22px 18px;
+  }
+
+  .head {
+    padding-right: 70px;
+  }
+
+  .icon {
+    width: 48px;
+    height: 48px;
   }
 }

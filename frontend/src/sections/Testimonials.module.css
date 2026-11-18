@@ -1,0 +1,199 @@
+.section {
+  margin-top: 46px;
+}
+
+.head {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.controls {
+  display: flex;
+  flex: none;
+  gap: 8px;
+  margin-bottom: 18px;
+}
+
+.arrow {
+  display: grid;
+  place-items: center;
+  width: 52px;
+  height: 52px;
+  border: 0;
+  border-radius: var(--radius-round);
+  background: var(--color-ink);
+  color: var(--color-lime);
+  transition:
+    transform var(--duration-press),
+    opacity var(--duration-reveal) ease;
+}
+
+.arrow:hover:not(:disabled) {
+  transform: translateY(-2px);
+}
+
+.arrow:disabled {
+  opacity: 0.25;
+  cursor: default;
+}
+
+/* Лента карточек: листается свайпом, колесом и кнопками, карточки прилипают к левому краю. */
+.track {
+  display: grid;
+  grid-auto-columns: calc((100% - 24px) / 2.6);
+  grid-auto-flow: column;
+  gap: 12px;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  scroll-snap-type: x mandatory;
+  scrollbar-width: none;
+}
+
+.track::-webkit-scrollbar {
+  display: none;
+}
+
+.card {
+  position: relative;
+  overflow: hidden;
+  border-radius: var(--radius-tile);
+  scroll-snap-align: start;
+}
+
+/* Крупная кавычка — декор в фирменном шрифте, как «#» в заголовках. */
+.card::before {
+  content: "\201C";
+  position: absolute;
+  top: -6px;
+  right: 18px;
+  font-family: var(--font-display);
+  font-weight: 900;
+  font-size: var(--fs-final);
+  line-height: 1;
+  opacity: 0.16;
+  pointer-events: none;
+}
+
+.figure {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  height: 100%;
+  min-height: 300px;
+  margin: 0;
+  padding: 26px;
+}
+
+.lime {
+  background: var(--color-lime);
+  color: var(--color-ink);
+}
+
+.blue {
+  background: var(--color-blue);
+  color: var(--color-paper);
+}
+
+.mist {
+  background: var(--color-mist);
+  color: var(--color-ink);
+}
+
+.highlight {
+  align-self: flex-start;
+  padding: 6px 11px;
+  border-radius: var(--radius-pill);
+  background: var(--color-ink);
+  color: var(--color-lime);
+  font-weight: 800;
+  font-size: var(--fs-xs);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.blue .highlight {
+  background: var(--color-lime);
+  color: var(--color-ink);
+}
+
+.quote {
+  margin: 0;
+  font-weight: 700;
+  font-size: var(--fs-xl);
+  line-height: 1.4;
+}
+
+.author {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: auto;
+}
+
+.avatar {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 48px;
+  height: 48px;
+  border-radius: var(--radius-control);
+  background: var(--color-avatar);
+  color: var(--color-ink);
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: var(--fs-sm);
+}
+
+.name {
+  display: block;
+  font-weight: 800;
+  font-size: var(--fs-base);
+}
+
+.role {
+  display: block;
+  font-weight: 600;
+  font-size: var(--fs-sm);
+  opacity: 0.8;
+}
+
+.blue .role {
+  opacity: 1;
+}
+
+@media (max-width: 1100px) {
+  .track {
+    grid-auto-columns: calc((100% - 12px) / 1.6);
+  }
+
+  .quote {
+    font-size: var(--fs-lg);
+  }
+}
+
+@media (max-width: 560px) {
+  .track {
+    grid-auto-columns: 86%;
+    gap: 10px;
+  }
+
+  .controls {
+    margin-bottom: 18px;
+  }
+
+  .arrow {
+    width: 44px;
+    height: 44px;
+  }
+
+  .figure {
+    min-height: 280px;
+    padding: 20px;
+  }
+
+  .quote {
+    font-size: var(--fs-base);
+  }
+}
