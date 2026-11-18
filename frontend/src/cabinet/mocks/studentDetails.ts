@@ -1,6 +1,6 @@
-import type { StudentDetails } from "./types";
+import type { AssignedTask, StudentDetails, StudentMaterial } from "./types";
 
-export const studentDetails: Record<string, StudentDetails> = {
+const baseDetails: Record<string, Omit<StudentDetails, "materials">> = {
   ivanov: {
     payments: [
       { date: "2026-11-14", title: "Урок проведён", amount: -150000 },
@@ -80,3 +80,36 @@ export const studentDetails: Record<string, StudentDetails> = {
   },
   gromova: { payments: [], tasks: [], trainer: null, notes: [] },
 };
+
+// Более ранние проверенные домашки — чтобы в мониторинге была динамика результатов.
+const olderTasks: Record<string, AssignedTask[]> = {
+  ivanov: [
+    { title: "Показательные уравнения", status: "done", assignedAt: "2026-10-31", due: "2026-11-03", submittedAt: "2026-11-02", timeMin: 41, score: { correct: 8, total: 10 }, mistakes: [{ number: "6", topic: "ОДЗ логарифма", answer: "x = 0", correct: "нет корней" }, { number: "9", topic: "Замена переменной", answer: "2", correct: "4" }] },
+    { title: "Производная, задачи 1–8", status: "done", assignedAt: "2026-10-24", due: "2026-10-27", submittedAt: "2026-10-28", timeMin: 47, score: { correct: 5, total: 8 }, mistakes: [{ number: "2", topic: "Производная сложной функции", answer: "2cos x", correct: "2cos 2x" }, { number: "5", topic: "Наибольшее значение", answer: "7", correct: "9" }, { number: "8", topic: "ОДЗ логарифма", answer: "1", correct: "e" }] },
+    { title: "Вариант ЕГЭ, часть 1", status: "done", assignedAt: "2026-10-17", due: "2026-10-21", submittedAt: "2026-10-20", timeMin: 88, score: { correct: 9, total: 12 }, mistakes: [{ number: "4", topic: "Теория вероятностей", answer: "0,3", correct: "0,35" }, { number: "9", topic: "Графики функций", answer: "−2", correct: "2" }, { number: "11", topic: "Производная сложной функции", answer: "3", correct: "−3" }] },
+    { title: "Тригонометрия, задачи 1–6", status: "done", assignedAt: "2026-10-10", due: "2026-10-13", submittedAt: "2026-10-13", timeMin: 36, score: { correct: 4, total: 6 }, mistakes: [{ number: "3", topic: "Формулы приведения", answer: "sin x", correct: "−sin x" }, { number: "6", topic: "Отбор корней", answer: "2 корня", correct: "3 корня" }] },
+  ],
+  smirnova: [
+    { title: "Неравенства, задачи 1–10", status: "done", assignedAt: "2026-10-27", due: "2026-10-30", submittedAt: "2026-10-29", timeMin: 33, score: { correct: 8, total: 10 }, mistakes: [{ number: "4", topic: "Знак неравенства", answer: "x > 2", correct: "x < 2" }, { number: "8", topic: "Прикладные задачи", answer: "15", correct: "18" }] },
+    { title: "Вариант ОГЭ №1", status: "done", assignedAt: "2026-10-20", due: "2026-10-24", submittedAt: "2026-10-23", timeMin: 70, score: { correct: 11, total: 14 }, mistakes: [{ number: "5", topic: "Графики функций", answer: "1", correct: "3" }, { number: "9", topic: "Прикладные задачи", answer: "120", correct: "150" }, { number: "12", topic: "Площадь фигуры", answer: "24", correct: "12" }] },
+  ],
+  orlova: [
+    { title: "Дроби, задачи 1–8", status: "done", assignedAt: "2026-10-29", due: "2026-11-01", submittedAt: "2026-11-03", timeMin: 39, score: { correct: 5, total: 8 }, mistakes: [{ number: "2", topic: "Знак при переносе", answer: "−5", correct: "5" }, { number: "6", topic: "Дробное уравнение", answer: "x = 1", correct: "x = −1" }, { number: "7", topic: "Общий знаменатель", answer: "12", correct: "24" }] },
+  ],
+};
+
+const materials: Record<string, StudentMaterial[]> = {
+  ivanov: [
+    { id: "m-ivanov-1", title: "Логарифмы: свойства и ОДЗ", kind: "pdf", fileName: "logarifmy-teoriya.pdf", sizeBytes: 1_240_000, note: "Перед уроком прочитай страницы 2–4.", sentAt: "2026-11-14", openedAt: "2026-11-15" },
+    { id: "m-ivanov-2", title: "Шпаргалка по производным", kind: "image", fileName: "proizvodnye.png", sizeBytes: 420_000, sentAt: "2026-11-07", openedAt: "2026-11-07" },
+    { id: "m-ivanov-3", title: "Разбор №13 — видео", kind: "link", url: "https://www.youtube.com/", sentAt: "2026-11-03", openedAt: null },
+  ],
+  smirnova: [{ id: "m-smirnova-1", title: "Формулы ОГЭ по геометрии", kind: "pdf", fileName: "ogje-geometriya.pdf", sizeBytes: 860_000, sentAt: "2026-11-10", openedAt: "2026-11-11" }],
+  petrov: [{ id: "m-petrov-1", title: "Тригонометрический круг", kind: "slides", fileName: "trig-krug.pptx", sizeBytes: 2_300_000, sentAt: "2026-11-06", openedAt: null }],
+  orlova: [],
+  volkova: [{ id: "m-volkova-1", title: "Задачи на проценты", kind: "doc", fileName: "procenty.docx", sizeBytes: 96_000, sentAt: "2026-11-01", openedAt: "2026-11-02" }],
+};
+
+export const studentDetails: Record<string, StudentDetails> = Object.fromEntries(
+  Object.entries(baseDetails).map(([id, details]) => [id, { ...details, tasks: [...details.tasks, ...(olderTasks[id] ?? [])], materials: materials[id] ?? [] }]),
+);

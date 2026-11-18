@@ -59,11 +59,28 @@ export type AssignedTask = {
 };
 export type StudentNote = { date: string; text: string };
 
+export type MaterialKind = "pdf" | "doc" | "slides" | "image" | "link" | "other";
+
+/** Материал для ученика: файл теории, конспект или ссылка. Появляется у ученика в кабинете. */
+export type StudentMaterial = {
+  id: string;
+  title: string;
+  kind: MaterialKind;
+  fileName?: string;
+  sizeBytes?: number;
+  /** Адрес файла или ссылки; у тестовых материалов без файла — нет. */
+  url?: string;
+  note?: string;
+  sentAt: string;
+  openedAt: string | null;
+};
+
 export type StudentDetails = {
   payments: PaymentMove[];
   tasks: AssignedTask[];
   trainer: { solvedWeek: number; accuracy: number; weak: string } | null;
   notes: StudentNote[];
+  materials: StudentMaterial[];
 };
 
 export type Person = { name: string; initials: string; color: StudentColor; roleLabel: string };

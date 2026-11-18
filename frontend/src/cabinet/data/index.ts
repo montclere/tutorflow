@@ -23,6 +23,7 @@ import type {
   PaymentMove,
   ScheduleLesson,
   StudentNote,
+  StudentMaterial,
   StudentRecord,
   StudentStatus,
   ExamPrep,
@@ -67,7 +68,11 @@ export function getSchedule(): ScheduleData {
 // Ученики — тоже хранилище в памяти вместо сервера (STUDENTS-6). Удалённые остаются в записях с пометкой removed:
 // на них ссылаются прошлые уроки и операции, а из списков они исчезают.
 let studentRecords: (StudentRecord & { removed?: boolean })[] = [...students];
-const addedDetails: Record<string, { payments: PaymentMove[]; notes: StudentNote[] }> = {};
+type AddedDetails = { payments: PaymentMove[]; notes: StudentNote[]; materials: StudentMaterial[] };
+const addedDetails: Record<string, AddedDetails> = {};
+const removedMaterials = new Set<string>();
+const openedMaterials = new Map<string, string>();
+const addedOf = (id: string): AddedDetails => (addedDetails[id] ??= { payments: [], notes: [], materials: [] });
 let studentsVersion = 0;
 const studentListeners = new Set<() => void>();
 let studentsCache: { version: number; schedule: ScheduleData; all: Student[]; visible: Student[] } | null = null;
@@ -120,24 +125,46 @@ export function removeStudent(id: string): void {
 
 export function addPayment(id: string, move: PaymentMove): void {
   studentRecords = studentRecords.map((record) => (record.id === id ? { ...record, balance: record.balance + move.amount } : record));
-  const added = (addedDetails[id] ??= { payments: [], notes: [] });
+  const added = addedOf(id);
   added.payments = [move, ...added.payments];
   emitStudents();
 }
 
 export function addNote(id: string, note: StudentNote): void {
-  const added = (addedDetails[id] ??= { payments: [], notes: [] });
+  const added = addedOf(id);
   added.notes = [note, ...added.notes];
   emitStudents();
 }
 
-const emptyDetails: StudentDetails = { payments: [], tasks: [], trainer: null, notes: [] };
+/** Материал ученику: в демо — в памяти до перезагрузки, файл — по локальной ссылке браузера. */
+export function addMaterials(id: string, materials: StudentMaterial[]): void {
+  const added = addedOf(id);
+  added.materials = [...materials, ...added.materials];
+  emitStudents();
+}
+
+export function removeMaterial(materialId: string): void {
+  removedMaterials.add(materialId);
+  emitStudents();
+}
+
+/** Ученик открыл материал — репетитор увидит «Открыт» с датой. */
+export function markMaterialOpened(materialId: string, date: string): void {
+  if (openedMaterials.has(materialId)) return;
+  openedMaterials.set(materialId, date);
+  emitStudents();
+}
+
+const emptyDetails: StudentDetails = { payments: [], tasks: [], trainer: null, notes: [], materials: [] };
 
 export function getStudentDetails(id: string): StudentDetails {
   const base = studentDetails[id] ?? emptyDetails;
   const added = addedDetails[id];
-  if (!added) return base;
-  return { ...base, payments: [...added.payments, ...base.payments], notes: [...added.notes, ...base.notes] };
+  const materials = [...(added?.materials ?? []), ...base.materials]
+    .filter((material) => !removedMaterials.has(material.id))
+    .map((material) => (material.openedAt || !openedMaterials.has(material.id) ? material : { ...material, openedAt: openedMaterials.get(material.id) ?? null }));
+  if (!added) return removedMaterials.size === 0 && openedMaterials.size === 0 ? base : { ...base, materials };
+  return { ...base, payments: [...added.payments, ...base.payments], notes: [...added.notes, ...base.notes], materials };
 }
 
 export function getStudent(id: string): Student {

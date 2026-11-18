@@ -1,6 +1,9 @@
 import { examNumbers } from "./tasks";
 import type { ExamData, Homework, Progress, StudentHome, TrainerData } from "./types";
 
+/** Демо-кабинет ученика — это Александр Иванов из списка учеников репетитора. */
+export const demoStudentId = "ivanov";
+
 export const studentHome: StudentHome = {
   greeting: "Привет, Александр",
   subtitle: "До ЕГЭ 191 день · серия 4 дня",

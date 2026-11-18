@@ -13,7 +13,7 @@ import { Toggle } from "@/shared/ui/kit/toggle";
 import { StudentCards, StudentsTable } from "./StudentsTable";
 import { NewLessonSheet, type NewLessonSeed } from "../schedule/NewLessonSheet";
 import { NewStudentDialog } from "./NewStudentDialog";
-import { StudentSheet } from "./StudentSheet";
+import { StudentProfile } from "./profile/StudentProfile";
 import { studentsHref, useStudentsUrl } from "./useStudentsUrl";
 
 const text = cabinet.teacher.students;
@@ -105,7 +105,7 @@ export function StudentsPage() {
         </>
       )}
 
-      <StudentSheet student={selected} today={today} onClose={() => go({ studentId: null })} onCloseAutoFocus={restoreFocus} />
+      <StudentProfile student={selected} onClose={() => go({ studentId: null })} onCloseAutoFocus={restoreFocus} />
       <NewStudentDialog
         open={adding}
         onOpenChange={setAdding}

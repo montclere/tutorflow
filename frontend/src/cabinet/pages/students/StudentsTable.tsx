@@ -39,7 +39,7 @@ function isSoon(next: string): boolean {
 }
 
 /** Подпись под суммой объясняет её в уроках: за сколько уроков долг или на сколько хватит предоплаты. */
-function balanceNote(student: Student): { text: string; warn: boolean } | null {
+export function balanceNote(student: Student): { text: string; warn: boolean } | null {
   const left = student.payment.package?.left;
   if (paymentStatus(student) === "low" && left !== undefined) return { text: text.packageLow(left), warn: true };
   if (student.balance < 0) return { text: text.balanceNote.debt(debtLessons(student)), warn: false };

@@ -13,6 +13,7 @@ import { ProgressBar } from "../ui/ProgressBar";
 import { RowList } from "../ui/RowList";
 import { StatGrid } from "../ui/Stat";
 import ui from "../ui/ui.module.css";
+import { StudentMaterials } from "./StudentMaterials";
 
 const text = cabinet.student.home;
 
@@ -63,6 +64,10 @@ export function StudentHomePage() {
             ))}
           </RowList>
         </Card>
+      </div>
+
+      <div className={ui.gap}>
+        <StudentMaterials />
       </div>
 
       <div className={ui.gap}>

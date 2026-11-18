@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { studentDetails } from "../mocks/studentDetails";
 import type { AssignedTask } from "../mocks/types";
-import { taskPercent, taskStats } from "./studentTasks";
+import { homeworkSummary, homeworkTimeline, taskPercent, taskStats, weakTopics } from "./studentTasks";
 
 function task(partial: Partial<AssignedTask>): AssignedTask {
   return { title: "Задание", status: "done", assignedAt: "2026-11-01", score: null, mistakes: [], ...partial };
@@ -47,5 +47,35 @@ describe("моки заданий учеников", () => {
         else expect(item.mistakes).toHaveLength(0);
       }
     }
+  });
+});
+
+describe("мониторинг домашек", () => {
+  const task = (title: string, extra: Partial<AssignedTask>): AssignedTask => ({ title, status: "done", assignedAt: "2026-11-01", score: null, mistakes: [], ...extra });
+  const tasks: AssignedTask[] = [
+    task("a", { submittedAt: "2026-11-05", due: "2026-11-04", score: { correct: 6, total: 10 }, mistakes: [{ number: "1", topic: "ОДЗ", answer: "1", correct: "2" }] }),
+    task("b", { submittedAt: "2026-11-02", due: "2026-11-03", score: { correct: 5, total: 10 }, mistakes: [{ number: "1", topic: "ОДЗ", answer: "1", correct: "2" }, { number: "2", topic: "Графики", answer: "1", correct: "2" }] }),
+    task("c", { submittedAt: "2026-11-08", score: { correct: 9, total: 10 } }),
+    task("d", { submittedAt: "2026-11-09", score: { correct: 8, total: 10 } }),
+    task("e", { submittedAt: "2026-11-10", score: { correct: 10, total: 10 } }),
+    task("f", { submittedAt: "2026-11-01", score: { correct: 7, total: 10 } }),
+    task("todo", { status: "todo", due: "2026-11-15" }),
+    task("late", { status: "todo", due: "2026-11-10" }),
+    task("wait", { status: "wait", submittedAt: "2026-11-11" }),
+  ];
+
+  it("график — по дате сдачи", () => {
+    expect(homeworkTimeline(tasks).map((point) => `${point.title}:${point.percent}`)).toEqual(["f:70", "b:50", "a:60", "c:90", "d:80", "e:100"]);
+  });
+
+  it("слабые темы по частоте", () => {
+    expect(weakTopics(tasks)).toEqual([
+      { topic: "ОДЗ", count: 2 },
+      { topic: "Графики", count: 1 },
+    ]);
+  });
+
+  it("сводка: просрочено, на проверке, в срок и тренд", () => {
+    expect(homeworkSummary(tasks, "2026-11-12")).toEqual({ todo: 2, overdue: 1, wait: 1, done: 6, onTime: 50, trend: 30 });
   });
 });
