@@ -5,7 +5,6 @@ from urllib.parse import parse_qs
 import pytest
 
 from app.modules.identity.infrastructure import delivery
-from app.shared.domain.errors import Problem
 
 
 def test_smsc_posts_key_and_destination_only_in_body(monkeypatch):
@@ -46,6 +45,5 @@ def test_smsc_rejects_bad_response_without_echo(monkeypatch, status, payload):
     connection.getresponse.return_value.status = status
     connection.getresponse.return_value.read.return_value = payload
     sms = delivery.ConfiguredDelivery(None, None, delivery.SmscSettings("test-key", "TutorFlow"))
-    with pytest.raises(Problem, match="^delivery_unavailable$") as error:
+    with pytest.raises(delivery.DeliveryUnavailable, match="^delivery_unavailable$"):
         asyncio.run(sms.send("phone", "+79990000042", "11223344"))
-    assert error.value.status == 503

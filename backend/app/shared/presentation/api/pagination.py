@@ -6,7 +6,7 @@ from datetime import datetime
 from uuid import UUID
 
 from app.shared.application.security import keyed_digest
-from app.shared.domain.errors import Problem
+from app.shared.domain.errors import Problem, ProblemCode
 
 Position = tuple[datetime, UUID]
 
@@ -30,7 +30,7 @@ class Pagination:
             timestamp, record_id = json.loads(base64.urlsafe_b64decode(payload))
             return datetime.fromisoformat(timestamp), UUID(record_id)
         except (ValueError, TypeError, OverflowError):
-            raise Problem("cursor_invalid", 422) from None
+            raise Problem(ProblemCode.CURSOR_INVALID) from None
 
     def result(self, rows: list, position, serialize) -> dict:
         shown = rows[: self.limit]

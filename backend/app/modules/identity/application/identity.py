@@ -8,7 +8,7 @@ from uuid import UUID, uuid4
 from app.shared.application.contracts.accounts import AccountSummary, InvitationAvailability
 from app.shared.application.ports.clock import now_utc
 from app.shared.application.security import digest, keyed_digest, new_token
-from app.shared.domain.errors import Problem
+from app.shared.domain.errors import Problem, ProblemCode
 
 from ..domain.accounts import Account, Challenge, Contact, Session
 from .ports import CodeDelivery, IdentityRepository, Passwords
@@ -75,7 +75,7 @@ class Identity:
             else None
         )
         if account is None or not account.can_access:
-            raise Problem("authentication_required", 401)
+            raise Problem(ProblemCode.AUTHENTICATION_REQUIRED)
         return account
 
     async def new_session(
@@ -218,7 +218,7 @@ class Identity:
         account = await self.store.find_account(contact, lock=True)
         verified = await self.passwords.verify(password, account.password_hash if account else None)
         if not verified or account is None or account.status != "active":
-            raise Problem("invalid_credentials", 401)
+            raise Problem(ProblemCode.INVALID_CREDENTIALS)
         return account, await self.new_session(account, session)
 
     async def reset_password(self, challenge_id: UUID, code: str, password: str) -> bool:
