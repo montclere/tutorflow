@@ -12,6 +12,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSepara
 import { ScrollArea } from "@/shared/ui/kit/scroll-area";
 import { Sheet, SheetContent, SheetDescription, SheetTitle } from "@/shared/ui/kit/sheet";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/shared/ui/kit/tabs";
+import { NewLessonSheet } from "../schedule/NewLessonSheet";
 import { StudentOverview } from "./StudentOverview";
 import { TasksTab } from "./StudentTasks";
 import { LessonsTab, NotesTab, PaymentsTab } from "./StudentTabs";
@@ -48,81 +49,86 @@ function tariff(student: Student): { value: string; note?: string } {
 export function StudentSheet({ student, today, onClose, onCloseAutoFocus }: Props) {
   const { notifySoon } = useNotifier();
   const [tab, setTab] = useState("overview");
+  const [newLessonFor, setNewLessonFor] = useState<string | null>(null);
 
   return (
-    <Sheet open={student !== null} onOpenChange={(open) => !open && onClose()}>
-      <SheetContent className="w-full gap-0 p-0 sm:max-w-[640px]" onCloseAutoFocus={onCloseAutoFocus}>
-        {student && (
-          <ScrollArea className="min-h-0 flex-1">
-            <div className="grid grid-cols-[minmax(0,1fr)] gap-5 p-5 sm:p-6">
-              <div className="flex items-center gap-4 pr-10">
-                <Avatar initials={student.initials} color={student.color} large />
-                <div className="min-w-0">
-                  <SheetTitle className="m-0 font-[family-name:var(--font-display)] text-2xl leading-tight font-black tracking-tight">{student.name}</SheetTitle>
-                  <SheetDescription className="m-0 text-base font-semibold">{text.since(student.goal, formatDayMonth(student.startedAt))}</SheetDescription>
+    <>
+      <Sheet open={student !== null} onOpenChange={(open) => !open && onClose()}>
+        <SheetContent className="w-full gap-0 p-0 sm:max-w-[640px]" onCloseAutoFocus={onCloseAutoFocus}>
+          {student && (
+            <ScrollArea className="min-h-0 flex-1">
+              <div className="grid grid-cols-[minmax(0,1fr)] gap-5 p-5 sm:p-6">
+                <div className="flex items-center gap-4 pr-10">
+                  <Avatar initials={student.initials} color={student.color} large />
+                  <div className="min-w-0">
+                    <SheetTitle className="m-0 font-[family-name:var(--font-display)] text-2xl leading-tight font-black tracking-tight">{student.name}</SheetTitle>
+                    <SheetDescription className="m-0 text-base font-semibold">{text.since(student.goal, formatDayMonth(student.startedAt))}</SheetDescription>
+                  </div>
                 </div>
-              </div>
 
-              <div className="flex flex-wrap gap-2">
-                <Button variant="primary" icon={Plus} onClick={() => notifySoon(text.actions.lesson)}>
-                  {text.actions.lesson}
-                </Button>
-                <Button icon={Plus} onClick={() => notifySoon(text.actions.payment)}>
-                  {text.actions.payment}
-                </Button>
-                <Button icon={Plus} onClick={() => notifySoon(text.actions.task)}>
-                  {text.actions.task}
-                </Button>
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button icon={Ellipsis}>{text.actions.more}</Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end">
-                    <DropdownMenuItem onSelect={() => notifySoon(text.moreItems.pause)}>{text.moreItems.pause}</DropdownMenuItem>
-                    <DropdownMenuItem onSelect={() => notifySoon(text.moreItems.archive)}>{text.moreItems.archive}</DropdownMenuItem>
-                    <DropdownMenuSeparator />
-                    <DropdownMenuItem variant="destructive" onSelect={() => notifySoon(text.moreItems.remove)}>
-                      {text.moreItems.remove}
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              </div>
+                <div className="flex flex-wrap gap-2">
+                  <Button variant="primary" icon={Plus} onClick={() => setNewLessonFor(student.id)}>
+                    {text.actions.lesson}
+                  </Button>
+                  <Button icon={Plus} onClick={() => notifySoon(text.actions.payment)}>
+                    {text.actions.payment}
+                  </Button>
+                  <Button icon={Plus} onClick={() => notifySoon(text.actions.task)}>
+                    {text.actions.task}
+                  </Button>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button icon={Ellipsis}>{text.actions.more}</Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      <DropdownMenuItem onSelect={() => notifySoon(text.moreItems.pause)}>{text.moreItems.pause}</DropdownMenuItem>
+                      <DropdownMenuItem onSelect={() => notifySoon(text.moreItems.archive)}>{text.moreItems.archive}</DropdownMenuItem>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem variant="destructive" onSelect={() => notifySoon(text.moreItems.remove)}>
+                        {text.moreItems.remove}
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </div>
 
-              <div className="grid grid-cols-2 gap-3">
-                <Tile label={text.tiles.balance} value={formatBalance(student.balance)} valueClass={balanceClass(student.balance)} />
-                <Tile label={text.tiles.next} value={nextLessonText(student, today)} />
-                <Tile label={text.tiles.tariff} {...tariff(student)} />
-                <Tile label={text.tiles.done} value={String(student.lessonsCount)} />
-              </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <Tile label={text.tiles.balance} value={formatBalance(student.balance)} valueClass={balanceClass(student.balance)} />
+                  <Tile label={text.tiles.next} value={nextLessonText(student, today)} />
+                  <Tile label={text.tiles.tariff} {...tariff(student)} />
+                  <Tile label={text.tiles.done} value={String(student.lessonsCount)} />
+                </div>
 
-              <Tabs key={student.id} value={tab} onValueChange={setTab} className="gap-4">
-                <TabsList aria-label={text.tabsLabel}>
-                  {text.tabs.map((item) => (
-                    <TabsTrigger key={item.id} value={item.id}>
-                      {item.label}
-                    </TabsTrigger>
-                  ))}
-                </TabsList>
-                <TabsContent value="overview">
-                  <StudentOverview student={student} />
-                </TabsContent>
-                <TabsContent value="lessons">
-                  <LessonsTab student={student} />
-                </TabsContent>
-                <TabsContent value="payments">
-                  <PaymentsTab student={student} />
-                </TabsContent>
-                <TabsContent value="tasks">
-                  <TasksTab student={student} />
-                </TabsContent>
-                <TabsContent value="notes">
-                  <NotesTab student={student} />
-                </TabsContent>
-              </Tabs>
-            </div>
-          </ScrollArea>
-        )}
-      </SheetContent>
-    </Sheet>
+                <Tabs key={student.id} value={tab} onValueChange={setTab} className="gap-4">
+                  <TabsList aria-label={text.tabsLabel}>
+                    {text.tabs.map((item) => (
+                      <TabsTrigger key={item.id} value={item.id}>
+                        {item.label}
+                      </TabsTrigger>
+                    ))}
+                  </TabsList>
+                  <TabsContent value="overview">
+                    <StudentOverview student={student} />
+                  </TabsContent>
+                  <TabsContent value="lessons">
+                    <LessonsTab student={student} />
+                  </TabsContent>
+                  <TabsContent value="payments">
+                    <PaymentsTab student={student} />
+                  </TabsContent>
+                  <TabsContent value="tasks">
+                    <TasksTab student={student} />
+                  </TabsContent>
+                  <TabsContent value="notes">
+                    <NotesTab student={student} />
+                  </TabsContent>
+                </Tabs>
+              </div>
+            </ScrollArea>
+          )}
+        </SheetContent>
+      </Sheet>
+      {/* «+ Урок» открывает ту же панель, что в расписании, с этим учеником (SCHEDULE-1). */}
+      <NewLessonSheet seed={newLessonFor ? { studentId: newLessonFor } : null} onClose={() => setNewLessonFor(null)} />
+    </>
   );
 }

@@ -5,7 +5,6 @@ import { cabinet } from "../../content/cabinet.ru";
 import { parseDate, toDateString } from "../../model/dates";
 import { periodTitle, stepDate, type ScheduleView } from "../../model/scheduleRange";
 import { Button, IconButton } from "../../ui/Button";
-import { useNotifier } from "../../ui/Notifications";
 import { Calendar } from "@/shared/ui/kit/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/shared/ui/kit/popover";
 import { ToggleGroup, ToggleGroupItem } from "@/shared/ui/kit/toggle-group";
@@ -17,10 +16,10 @@ type Props = {
   date: string;
   today: string;
   onChange: (next: { view?: ScheduleView; date?: string }) => void;
+  onAdd: () => void;
 };
 
-export function ScheduleHeader({ view, date, today, onChange }: Props) {
-  const { notifySoon } = useNotifier();
+export function ScheduleHeader({ view, date, today, onChange, onAdd }: Props) {
   const [pickerOpen, setPickerOpen] = useState(false);
 
   return (
@@ -73,7 +72,7 @@ export function ScheduleHeader({ view, date, today, onChange }: Props) {
             </ToggleGroupItem>
           ))}
         </ToggleGroup>
-        <Button variant="primary" icon={Plus} onClick={() => notifySoon(text.addLesson)}>
+        <Button variant="primary" icon={Plus} onClick={onAdd}>
           {text.addLesson}
         </Button>
       </div>

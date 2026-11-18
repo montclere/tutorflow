@@ -20,6 +20,7 @@ import type {
   Progress,
   Review,
   ScheduleData,
+  ScheduleLesson,
   ExamPrep,
   Student,
   StudentDetails,
@@ -29,12 +30,25 @@ import type {
   TrainerData,
 } from "../mocks/types";
 
-const schedule: ScheduleData = {
+// Тестовые данные расписания. Это хранилище в памяти вместо сервера: созданные уроки живут до перезагрузки (SCHEDULE-3).
+let schedule: ScheduleData = {
   today: scheduleToday,
   now: scheduleNow,
   work: workHours,
   lessons: [...expandTemplates(lessonTemplates, scheduleRange.from, scheduleRange.to), ...singleLessons],
 };
+const scheduleListeners = new Set<() => void>();
+
+export function subscribeSchedule(listener: () => void): () => void {
+  scheduleListeners.add(listener);
+  return () => scheduleListeners.delete(listener);
+}
+
+export function addLessons(lessons: ScheduleLesson[]): void {
+  if (lessons.length === 0) return;
+  schedule = { ...schedule, lessons: [...schedule.lessons, ...lessons] };
+  for (const listener of scheduleListeners) listener();
+}
 
 export function getSchedule(): ScheduleData {
   return schedule;

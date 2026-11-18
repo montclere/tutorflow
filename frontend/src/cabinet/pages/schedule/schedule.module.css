@@ -116,10 +116,11 @@
   align-items: center;
   justify-content: center;
   gap: var(--space-1);
-  border: 1.5px dashed transparent;
+  /* Окно видно всегда, бледной пунктирной зоной (SCHEDULE-4). */
+  border: 1.5px dashed var(--color-line-dashed);
   border-radius: var(--radius-sm);
   background: transparent;
-  color: transparent;
+  color: var(--color-muted);
   font-weight: 700;
   font-size: var(--fs-sm);
   transition: border-color 0.15s, background-color 0.15s, color 0.15s;
@@ -128,6 +129,19 @@
 .free:hover,
 .free:focus-visible { border-color: var(--color-line-dashed); background: var(--cab-blue-soft); color: var(--color-blue); }
 .free:active { transform: translateY(1px); }
+
+/* Невидимая подложка дня: клик по пустому месту открывает новый урок на это время (SCHEDULE-1). */
+.columnHit {
+  position: absolute;
+  top: 0;
+  right: 0;
+  left: 0;
+  z-index: 0;
+  height: calc(var(--schedule-hour-height) * var(--hours));
+  cursor: pointer;
+}
+
+.columnHit:hover { background: color-mix(in srgb, var(--cab-blue-soft) 45%, transparent); }
 
 .now {
   position: absolute;

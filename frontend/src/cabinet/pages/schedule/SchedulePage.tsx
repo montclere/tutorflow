@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
 import { cabinet } from "../../content/cabinet.ru";
-import { getSchedule, getStudents } from "../../data";
+import { getStudents } from "../../data";
+import { useSchedule } from "../../data/useSchedule";
 import type { ScheduleLesson } from "../../mocks/types";
 import { upcomingFreeWindows } from "../../model/freeSlots";
 import { filterLessons, lessonsBetween, type LessonFilters } from "../../model/lessons";
@@ -10,6 +11,7 @@ import { DayView } from "./DayView";
 import { LessonSheet } from "./LessonSheet";
 import { ListView } from "./ListView";
 import { MonthView } from "./MonthView";
+import { NewLessonSheet, type NewLessonSeed } from "./NewLessonSheet";
 import { ScheduleFilters } from "./ScheduleFilters";
 import { ScheduleHeader } from "./ScheduleHeader";
 import { useScheduleUrl } from "./useScheduleUrl";
@@ -25,11 +27,12 @@ function eachDate(from: string, to: string): string[] {
 }
 
 export function SchedulePage() {
-  const data = getSchedule();
+  const data = useSchedule();
   const students = getStudents();
   const { view, date, go } = useScheduleUrl(data.today);
   const [filters, setFilters] = useState<LessonFilters>(noFilters);
   const [selected, setSelected] = useState<ScheduleLesson | null>(null);
+  const [newLesson, setNewLesson] = useState<NewLessonSeed | null>(null);
 
   const lessons = useMemo(() => filterLessons(data.lessons, filters), [data.lessons, filters]);
   const range = viewRange(view, date);
@@ -39,18 +42,29 @@ export function SchedulePage() {
 
   return (
     <>
-      <ScheduleHeader view={view} date={date} today={data.today} onChange={go} />
+      <ScheduleHeader view={view} date={date} today={data.today} onChange={go} onAdd={() => setNewLesson({ date, studentId: filters.studentId ?? undefined })} />
       <ScheduleFilters
         students={students}
         filters={filters}
         summary={text.summary(lessonCount, windowCount)}
         onFilters={setFilters}
       />
-      {view === "week" && <WeekView data={data} lessons={lessons} date={date} onOpen={setSelected} />}
+      {view === "week" && (
+        <WeekView data={data} lessons={lessons} date={date} onOpen={setSelected} onCreate={(day, start) => setNewLesson({ date: day, start, studentId: filters.studentId ?? undefined })} />
+      )}
       {view === "day" && <DayView data={data} lessons={lessons} date={date} onDate={(next) => go({ date: next })} onOpen={setSelected} />}
       {view === "month" && <MonthView lessons={lessons} date={date} today={data.today} onPick={(next) => go({ view: "day", date: next })} />}
       {view === "list" && <ListView data={data} lessons={lessonsBetween(lessons, range.from, range.to)} filtered={isFiltered} onOpen={setSelected} />}
       <LessonSheet lesson={selected} onClose={() => setSelected(null)} />
+      <NewLessonSheet
+        seed={newLesson}
+        onClose={() => setNewLesson(null)}
+        onCreated={(created) => {
+          // Показываем день, на который поставили первый урок.
+          const first = created[0];
+          if (first) go({ date: first.date });
+        }}
+      />
     </>
   );
 }

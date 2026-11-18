@@ -236,6 +236,7 @@ export type ScheduleLesson = {
   type: LessonType;
   recurring: boolean;
   groupTitle?: string;
+  link?: string;
 };
 
 export type WorkHours = { start: string; end: string; minFreeWindowMin: number };

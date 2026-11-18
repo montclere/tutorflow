@@ -1,8 +1,10 @@
+import type { MouseEvent } from "react";
 import { cabinet } from "../../content/cabinet.ru";
 import type { ScheduleData, ScheduleLesson } from "../../mocks/types";
 import { parseDate, weekDates, weekdayIndex } from "../../model/dates";
 import { upcomingFreeWindows } from "../../model/freeSlots";
 import { isPast, lessonsOn } from "../../model/lessons";
+import { timeAtOffset, timeInWindow } from "../../model/newLesson";
 import { toMinutes } from "../../model/time";
 import { assignColumns, blockPosition, gridHours, nowOffsetHours } from "../../model/scheduleLayout";
 import { cx } from "../../ui/cx";
@@ -17,14 +19,25 @@ type Props = {
   lessons: ScheduleLesson[];
   date: string;
   onOpen: (lesson: ScheduleLesson) => void;
+  onCreate: (date: string, start: string) => void;
 };
 
-export function WeekView({ data, lessons, date, onOpen }: Props) {
+export function WeekView({ data, lessons, date, onOpen, onCreate }: Props) {
   const { today, now, work } = data;
   const dates = weekDates(date);
   const hours = gridHours(work);
   const nowOffset = nowOffsetHours(now, work);
   const freeByDate = upcomingFreeWindows(data.lessons, dates, work, today, now);
+
+  const createAt = (day: string, event: MouseEvent<HTMLDivElement>) => {
+    const rect = event.currentTarget.getBoundingClientRect();
+    const hourHeight = rect.height / hours.length;
+    const offset = event.clientY - rect.top;
+    const hourIndex = Math.floor(offset / hourHeight);
+    const start = timeAtOffset(work.start, hourIndex, (offset - hourIndex * hourHeight) / hourHeight);
+    if (day === today && toMinutes(start) < toMinutes(now)) return;
+    onCreate(day, start);
+  };
 
   return (
     <div className={styles.scroller} role="group" aria-label={text.weekGridLabel}>
@@ -47,6 +60,11 @@ export function WeekView({ data, lessons, date, onOpen }: Props) {
 
         {dates.map((day) => (
           <div key={day} className={cx(styles.dayColumn, day === today && styles.todayColumn)}>
+            {day >= today && (
+              // Мышью — клик по пустому месту; с клавиатуры то же делают свободные окна и «+ Урок» в шапке.
+              // eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions
+              <div className={styles.columnHit} onClick={(event) => createAt(day, event)} />
+            )}
             {freeByDate
               .filter((item) => item.date === day)
               .map(({ window }) => {
@@ -54,6 +72,7 @@ export function WeekView({ data, lessons, date, onOpen }: Props) {
                 return (
                   <FreeSlot
                     key={`${day}-${window.start}`}
+                    onCreate={(fraction) => onCreate(day, timeInWindow(window.start, window.end, fraction))}
                     label={text.freeLabel(cabinet.weekdays[weekdayIndex(day)] ?? "", window.start, window.end)}
                     style={{
                       top: `calc(var(--schedule-hour-height) * ${position.topHours} + 2px)`,
