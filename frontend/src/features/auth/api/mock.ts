@@ -1,14 +1,10 @@
-import { AuthError, type AuthApi, type AuthResult } from "./types";
+import { AuthError, type AuthApi, type Cabinets } from "./types";
 
-const MOCK_WRONG_CODE = "000000";
-const MOCK_REGISTERED_EMAIL_PREFIX = "registered@";
-
-const RESEND_INTERVAL_MS = 60_000;
-const CODE_TTL_MS = 10 * 60_000;
-const MAX_ATTEMPTS = 5;
+// Демо-сборка (VITE_DEMO=1): поведение повторяет договор API, но без сервера.
+const MOCK_WRONG_CODE = "00000000";
+const MOCK_WRONG_PASSWORD = "неверный пароль";
+const MIN_PASSWORD = 15;
 const LATENCY_MS = 400;
-
-type PendingCode = { email: string; sentAt: number; attempts: number };
 
 const respond = <T>(produce: () => T) =>
   new Promise<T>((resolve, reject) => {
@@ -21,42 +17,42 @@ const respond = <T>(produce: () => T) =>
     }, LATENCY_MS);
   });
 
-const signedIn = (name: string, isNew = true): AuthResult => ({ user: { id: "mock-user", name }, isNew });
+export function createMockAuthApi(): AuthApi {
+  let challenge = 0;
+  let cabinets: Cabinets = { teacherEnabled: false, studentAvailable: false, parentAvailable: false };
 
-export function createMockAuthApi(now: () => number = Date.now): AuthApi {
-  let pending: PendingCode | null = null;
+  const checkCode = (code: string) => {
+    if (code === MOCK_WRONG_CODE) throw new AuthError("invalidCode");
+  };
+  const checkPassword = (password: string) => {
+    if (password.length < MIN_PASSWORD) throw new AuthError("weakPassword");
+  };
 
   return {
-    startTelegramAuth: () => respond(() => signedIn("Анна")),
-    startGoogleAuth: () => respond(() => signedIn("Анна Кузнецова")),
-
-    requestEmailCode: (email) =>
+    startRegistration: () => respond(() => `mock-${++challenge}`),
+    completeRegistration: ({ code, password }) =>
       respond(() => {
-        if (!email.includes("@")) throw new AuthError("invalidEmail");
-        if (pending?.email === email && now() - pending.sentAt < RESEND_INTERVAL_MS) {
-          throw new AuthError("tooManyRequests");
-        }
-        pending = { email, sentAt: now(), attempts: 0 };
+        checkCode(code);
+        checkPassword(password);
       }),
-
-    verifyEmailCode: (email, code) =>
+    login: (_contact, password) =>
       respond(() => {
-        if (!pending || pending.email !== email || now() - pending.sentAt > CODE_TTL_MS) {
-          throw new AuthError("codeExpired");
-        }
-        if (pending.attempts >= MAX_ATTEMPTS) throw new AuthError("attemptsExceeded");
-        if (code === MOCK_WRONG_CODE) {
-          pending.attempts += 1;
-          throw new AuthError("invalidCode");
-        }
-        pending = null;
-        return signedIn("", !email.startsWith(MOCK_REGISTERED_EMAIL_PREFIX));
+        if (password === MOCK_WRONG_PASSWORD) throw new AuthError("invalidCredentials");
+        // Демо: вошедший пользователь уже включал кабинет репетитора.
+        cabinets = { ...cabinets, teacherEnabled: true };
       }),
-
-    acceptConsent: () => respond(() => undefined),
-    completeProfile: (profile) =>
+    startPasswordReset: () => respond(() => `mock-${++challenge}`),
+    completePasswordReset: ({ code, password }) =>
       respond(() => {
-        if (!profile.name.trim() || profile.subjects.length === 0) throw new AuthError("validation");
+        checkCode(code);
+        checkPassword(password);
       }),
+    cabinets: () => respond(() => cabinets),
+    enableTeacherCabinet: () =>
+      respond(() => {
+        cabinets = { ...cabinets, teacherEnabled: true };
+      }),
+    profile: () => respond(() => ({ displayName: "Анна Кузнецова", timezone: "Asia/Novosibirsk", version: 1 })),
+    logout: () => respond(() => undefined),
   };
 }

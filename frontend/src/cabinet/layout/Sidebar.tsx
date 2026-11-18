@@ -1,3 +1,4 @@
+import { env } from "../../config/env";
 import { siteConfig } from "../../config/site";
 import { cabinet, type Role } from "../content/cabinet.ru";
 import { CabinetLink } from "../ui/CabinetLink";
@@ -23,13 +24,16 @@ export function Sidebar({ role, pathname, open, onClose }: Props) {
         <span className={styles.logoRight}>{siteConfig.logo.right}</span>
       </CabinetLink>
 
-      <div className={styles.roles} role="group" aria-label={cabinet.shell.roleGroupLabel}>
-        {cabinet.roles.map((item) => (
-          <button key={item.id} type="button" aria-pressed={item.id === role} onClick={() => navigate(item.path)}>
-            {item.label}
-          </button>
-        ))}
-      </div>
+      {/* Переключатель «Репетитор / Ученик» — только в демо: в рабочей сборке кабинет ученика открывается из приглашения. */}
+      {env.demo && (
+        <div className={styles.roles} role="group" aria-label={cabinet.shell.roleGroupLabel}>
+          {cabinet.roles.map((item) => (
+            <button key={item.id} type="button" aria-pressed={item.id === role} onClick={() => navigate(item.path)}>
+              {item.label}
+            </button>
+          ))}
+        </div>
+      )}
 
       <nav className={styles.nav} aria-label={cabinet.shell.menuLabel}>
         {cabinet.nav[role].map((item) => (
@@ -41,7 +45,7 @@ export function Sidebar({ role, pathname, open, onClose }: Props) {
           >
             <NavIcon name={item.icon} />
             {item.label}
-            {item.badge && <span className={styles.count}>{item.badge}</span>}
+            {env.demo && item.badge && <span className={styles.count}>{item.badge}</span>}
           </CabinetLink>
         ))}
       </nav>

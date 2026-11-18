@@ -8,6 +8,7 @@ import styles from "./wizard.module.css";
 
 const text = landing.wizard.code;
 
+/** Код из 8 цифр (SIGNUP-4) с повторной отправкой через минуту (SIGNUP-5). Проверяет его сервер при создании аккаунта. */
 export function CodeStep({ wizard, state }: SignupWizardModel) {
   const titleId = useId();
   const errorId = useId();
@@ -15,14 +16,14 @@ export function CodeStep({ wizard, state }: SignupWizardModel) {
 
   return (
     <>
-      <button type="button" className={styles.back} onClick={wizard.backToEmail}>
+      <button type="button" className={styles.back} onClick={wizard.backToContact}>
         {text.back}
       </button>
       <h3 id={titleId} className={styles.title}>
         {text.title}
       </h3>
       <p className={styles.hint}>
-        {text.hint(state.email.trim())} {state.codeResent && text.resent}
+        {text.hint(state.contact.trim())} {state.codeResent && text.resent}
       </p>
       <CodeInput
         digits={state.code}
@@ -33,13 +34,7 @@ export function CodeStep({ wizard, state }: SignupWizardModel) {
         digitLabel={text.digitLabel}
       />
       <FieldError id={errorId} message={state.error && landing.wizard.errors[state.error]} />
-      <button
-        type="button"
-        className={styles.textButton}
-        disabled={secondsLeft > 0}
-        aria-live="off"
-        onClick={() => void wizard.resendCode()}
-      >
+      <button type="button" className={styles.textButton} disabled={secondsLeft > 0 || state.busy} aria-live="off" onClick={() => void wizard.resendCode()}>
         {secondsLeft > 0 ? text.resendIn(secondsLeft) : text.resend}
       </button>
     </>

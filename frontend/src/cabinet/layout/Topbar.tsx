@@ -1,6 +1,8 @@
-import { Bell, Menu } from "lucide-react";
+import { Bell, LogOut, Menu } from "lucide-react";
 import { studentPerson, teacherPerson } from "../mocks/people";
 import { cabinet, type Role } from "../content/cabinet.ru";
+import { initialsOf } from "../model/newStudent";
+import { useSession } from "../session/SessionContext";
 import { Avatar } from "../ui/Avatar";
 import { IconButton } from "../ui/Button";
 import { useNotifier } from "../ui/Notifications";
@@ -10,7 +12,14 @@ type Props = { role: Role; menuOpen: boolean; onToggleMenu: () => void };
 
 export function Topbar({ role, menuOpen, onToggleMenu }: Props) {
   const { notifySoon } = useNotifier();
-  const person = role === "teacher" ? teacherPerson : studentPerson;
+  const session = useSession();
+  // В рабочей сборке репетитор — вошедший пользователь; ученик в шапке бывает только в демо.
+  const person =
+    role === "teacher" && !session.demo
+      ? { name: session.displayName, initials: initialsOf(session.displayName), color: teacherPerson.color, roleLabel: cabinet.shell.teacherRole }
+      : role === "teacher"
+        ? teacherPerson
+        : studentPerson;
 
   return (
     <header className={styles.top}>
@@ -34,6 +43,7 @@ export function Topbar({ role, menuOpen, onToggleMenu }: Props) {
           <b>{person.name}</b>
           <small>{person.roleLabel}</small>
         </div>
+        <IconButton icon={LogOut} label={cabinet.shell.logout} onClick={session.logout} />
       </div>
     </header>
   );

@@ -1,4 +1,5 @@
-const CODE_LENGTH = 6;
+// Код подтверждения — 8 цифр (docs/api/identity.md).
+export const CODE_LENGTH = 8;
 
 export type CodeDigits = readonly string[];
 export type CodeChange = { digits: CodeDigits; focus: number };

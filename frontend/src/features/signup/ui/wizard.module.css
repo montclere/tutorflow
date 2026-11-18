@@ -48,65 +48,46 @@
   font-size: var(--fs-md);
 }
 
-.auth {
+/* Переключатель «Регистрация / Вход» над первым шагом. */
+.tabs {
   display: grid;
-  gap: 10px;
+  grid-template-columns: 1fr 1fr;
+  gap: 4px;
+  margin-bottom: 18px;
+  padding: 4px;
+  border-radius: var(--radius-control);
+  background: var(--color-mist);
 }
 
-.authButton {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 10px;
-  width: 100%;
-  padding: 14px;
-  border: 1.5px solid var(--color-line);
-  border-radius: var(--radius-control);
-  background: var(--color-paper);
-  color: var(--color-ink);
+.tab {
+  padding: 10px;
+  border: 0;
+  border-radius: var(--radius-input);
+  background: transparent;
+  color: var(--color-muted);
   font-weight: 800;
   font-size: var(--fs-md);
 }
 
-.authButton:hover {
-  border-color: var(--color-blue);
-}
-
-.telegram {
-  border-color: var(--color-blue);
-  background: var(--color-blue);
-  color: var(--color-paper);
-}
-
-.telegram:hover {
-  background: var(--color-blue-hover);
-}
-
-.recommended {
-  padding: 3px 7px;
-  border-radius: var(--radius-2xs);
-  background: var(--color-lime);
+.tab[aria-pressed="true"] {
+  background: var(--color-paper);
   color: var(--color-ink);
-  font-weight: 800;
-  font-size: var(--fs-2xs);
+  box-shadow: var(--shadow-message);
 }
 
-.divider {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  margin: 4px 0;
-  color: var(--color-muted);
+/* Сообщение об успехе (например, после смены пароля). */
+.notice {
+  padding: 10px 12px;
+  border-radius: var(--radius-control);
+  background: var(--color-art-lime-light);
   font-weight: 700;
-  font-size: var(--fs-xs);
+  font-size: var(--fs-sm);
 }
 
-.divider::before,
-.divider::after {
-  content: "";
-  flex: 1;
-  height: 1px;
-  background: var(--color-line-soft);
+.fieldHint {
+  color: var(--color-muted);
+  font-weight: 600;
+  font-size: var(--fs-xs);
 }
 
 .field {
@@ -318,5 +299,12 @@
 @media (max-width: 560px) {
   .card {
     padding: 18px;
+  }
+}
+
+/* Код из 8 цифр на узком экране: зазор меньше, чтобы клетки оставались крупными. */
+@media (max-width: 560px) {
+  .code {
+    gap: 5px;
   }
 }

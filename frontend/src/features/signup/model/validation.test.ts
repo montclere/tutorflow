@@ -1,25 +1,30 @@
 import { describe, expect, it } from "vitest";
-import { isValidEmail, validateProfile } from "./validation";
+import { hasErrors, isValidContact, isValidEmail, isValidPhone, normalizePhone, toContact, validateProfile } from "./validation";
 
-describe("почта", () => {
-  it.each(["anna@mail.ru", "  anna.k@school.example.com  "])("принимает %s", (email) => {
-    expect(isValidEmail(email)).toBe(true);
+describe("контакт", () => {
+  it("почта проверяется синтаксически", () => {
+    expect(isValidEmail("anna@mail.ru")).toBe(true);
+    expect(isValidEmail(" anna@mail.ru ")).toBe(true);
+    expect(isValidEmail("anna@mail")).toBe(false);
   });
 
-  it.each(["", "anna", "anna@", "anna@mail", "an na@mail.ru", "@mail.ru"])("отклоняет «%s»", (email) => {
-    expect(isValidEmail(email)).toBe(false);
+  it("телефон — международный формат с «+», пробелы и скобки не мешают", () => {
+    expect(normalizePhone("+7 (999) 123-45-67")).toBe("+79991234567");
+    expect(isValidPhone("+7 999 123 45 67")).toBe(true);
+    expect(isValidPhone("89991234567")).toBe(false);
+  });
+
+  it("без явного типа определяет почту по «@»", () => {
+    expect(toContact(" anna@mail.ru ")).toEqual({ type: "email", value: "anna@mail.ru" });
+    expect(toContact("+7 999 123-45-67")).toEqual({ type: "phone", value: "+79991234567" });
+    expect(isValidContact(toContact("+7 999 123-45-67"))).toBe(true);
   });
 });
 
-describe("шаг «О себе»", () => {
-  it("требует имя и хотя бы один предмет", () => {
-    expect(validateProfile({ name: "   ", subjects: [] })).toEqual({
-      name: "nameRequired",
-      subjects: "subjectsRequired",
-    });
-  });
-
-  it("принимает имя с одним предметом", () => {
-    expect(validateProfile({ name: "Анна", subjects: ["math"] })).toEqual({});
+describe("профиль", () => {
+  it("требует имя и пароль от 15 символов", () => {
+    expect(validateProfile({ name: " ", password: "короткий" })).toEqual({ name: "nameRequired", password: "passwordLength" });
+    expect(validateProfile({ name: "Анна", password: "длинная фраза для входа" })).toEqual({});
+    expect(hasErrors(validateProfile({ name: "Анна", password: "длинная фраза для входа" }))).toBe(false);
   });
 });

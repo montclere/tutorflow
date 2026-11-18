@@ -1,31 +1,21 @@
-export type User = {
-  id: string;
-  name: string;
-};
+export type ContactType = "email" | "phone";
+export type Contact = { type: ContactType; value: string };
 
-export type AuthResult = {
-  user: User;
-  isNew: boolean;
-};
+export type Profile = { displayName: string; timezone: string; version: number };
 
-export type StudentsRange = "upTo5" | "from6To15" | "from16To30" | "over30";
+export type Cabinets = { teacherEnabled: boolean; studentAvailable: boolean; parentAvailable: boolean };
 
-export type ProfileInput = {
-  name: string;
-  subjects: string[];
-  studentsRange: StudentsRange | null;
-  timezone: string;
-};
+export type RegistrationInput = { challengeId: string; code: string; password: string; displayName: string; timezone: string };
+export type PasswordResetInput = { challengeId: string; code: string; password: string };
 
 export type AuthErrorCode =
-  | "cancelled"
-  | "signatureInvalid"
-  | "invalidEmail"
-  | "tooManyRequests"
+  | "invalidContact"
   | "invalidCode"
-  | "codeExpired"
-  | "attemptsExceeded"
+  | "invalidCredentials"
+  | "weakPassword"
+  | "tooManyRequests"
   | "validation"
+  | "unauthenticated"
   | "unavailable"
   | "unknown";
 
@@ -39,11 +29,16 @@ export class AuthError extends Error {
   }
 }
 
+/** Вход и регистрация по договору docs/api/identity.md. Методы возвращают challenge_id там, где сервер его выдаёт. */
 export interface AuthApi {
-  startTelegramAuth(): Promise<AuthResult>;
-  startGoogleAuth(): Promise<AuthResult>;
-  requestEmailCode(email: string): Promise<void>;
-  verifyEmailCode(email: string, code: string): Promise<AuthResult>;
-  acceptConsent(version: string): Promise<void>;
-  completeProfile(profile: ProfileInput): Promise<void>;
+  startRegistration(contact: Contact): Promise<string>;
+  completeRegistration(input: RegistrationInput): Promise<void>;
+  login(contact: Contact, password: string): Promise<void>;
+  startPasswordReset(contact: Contact): Promise<string>;
+  completePasswordReset(input: PasswordResetInput): Promise<void>;
+  cabinets(): Promise<Cabinets>;
+  enableTeacherCabinet(): Promise<void>;
+  /** Профиль вошедшего; без сессии — AuthError("unauthenticated"). */
+  profile(): Promise<Profile>;
+  logout(): Promise<void>;
 }

@@ -1,4 +1,5 @@
-import { focusSignupStart, scrollToSignup } from "../features/signup/ui/signupStart";
+import { useEffect } from "react";
+import { focusSignupStart, LOGIN_HASH, scrollToSignup } from "../features/signup/ui/signupStart";
 import { useSignupWizard } from "../features/signup/ui/useSignupWizard";
 import { AiAssistant } from "../sections/AiAssistant";
 import { Demo } from "../sections/Demo";
@@ -21,10 +22,22 @@ export function App() {
   const signup = useSignupWizard();
 
   const openLogin = () => {
-    signup.wizard.restart();
+    signup.wizard.restart("login");
     scrollToSignup();
     requestAnimationFrame(focusSignupStart);
   };
+
+  // Кабинет без сессии отправляет на /#login — сразу открываем форму входа; то же при смене якоря на странице.
+  useEffect(() => {
+    const openIfLogin = () => {
+      if (window.location.hash === LOGIN_HASH) openLogin();
+    };
+    openIfLogin();
+    window.addEventListener("hashchange", openIfLogin);
+    return () => window.removeEventListener("hashchange", openIfLogin);
+    // openLogin стабилен по смыслу: мастер создаётся один раз.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   return (
     <>

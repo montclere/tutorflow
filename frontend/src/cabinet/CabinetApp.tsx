@@ -1,4 +1,5 @@
 import { useEffect, type ReactNode } from "react";
+import { env } from "../config/env";
 import { teacherRoutes, studentRoutes } from "../config/routes";
 import { CabinetShell } from "./layout/CabinetShell";
 import { ExamPage } from "./pages/ExamPage";
@@ -12,21 +13,26 @@ import { StudentHomePage } from "./pages/StudentHomePage";
 import { StudentsPage } from "./pages/students/StudentsPage";
 import { TasksPage } from "./pages/TasksPage";
 import { TrainerPage } from "./pages/TrainerPage";
+import { SessionGate } from "./session/SessionGate";
+import { SoonPage } from "./session/SoonPage";
+
+// Разделы без маршрутов API: в демо-сборке — тестовые данные, в рабочей — «скоро» (INF-7.2, ADR интерфейса).
+const demoOnly = (screen: ReactNode, section: "finance" | "tasks" | "review" | "student") => () => (env.demo ? screen : <SoonPage section={section} />);
 
 const screens: Record<string, () => ReactNode> = {
   [teacherRoutes.overview]: () => <OverviewPage />,
   [teacherRoutes.schedule]: () => <SchedulePage />,
   [teacherRoutes.students]: () => <StudentsPage />,
-  [teacherRoutes.tasksCreate]: () => <TasksPage tab="create" />,
-  [teacherRoutes.tasksBank]: () => <TasksPage tab="bank" />,
-  [teacherRoutes.tasksMine]: () => <TasksPage tab="mine" />,
-  [teacherRoutes.review]: () => <ReviewPage />,
-  [teacherRoutes.finance]: () => <FinancePage />,
-  [studentRoutes.home]: () => <StudentHomePage />,
-  [studentRoutes.tasks]: () => <HomeworkPage />,
-  [studentRoutes.trainer]: () => <TrainerPage />,
-  [studentRoutes.exam]: () => <ExamPage />,
-  [studentRoutes.progress]: () => <ProgressPage />,
+  [teacherRoutes.tasksCreate]: demoOnly(<TasksPage tab="create" />, "tasks"),
+  [teacherRoutes.tasksBank]: demoOnly(<TasksPage tab="bank" />, "tasks"),
+  [teacherRoutes.tasksMine]: demoOnly(<TasksPage tab="mine" />, "tasks"),
+  [teacherRoutes.review]: demoOnly(<ReviewPage />, "review"),
+  [teacherRoutes.finance]: demoOnly(<FinancePage />, "finance"),
+  [studentRoutes.home]: demoOnly(<StudentHomePage />, "student"),
+  [studentRoutes.tasks]: demoOnly(<HomeworkPage />, "student"),
+  [studentRoutes.trainer]: demoOnly(<TrainerPage />, "student"),
+  [studentRoutes.exam]: demoOnly(<ExamPage />, "student"),
+  [studentRoutes.progress]: demoOnly(<ProgressPage />, "student"),
 };
 
 export function isCabinetPath(pathname: string) {
@@ -43,5 +49,9 @@ export function CabinetApp({ pathname }: { pathname: string }) {
   }, []);
 
   const screen = screens[pathname];
-  return <CabinetShell pathname={pathname}>{screen?.()}</CabinetShell>;
+  return (
+    <SessionGate>
+      <CabinetShell pathname={pathname}>{screen?.()}</CabinetShell>
+    </SessionGate>
+  );
 }

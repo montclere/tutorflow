@@ -1,256 +1,187 @@
 import { describe, expect, it, vi } from "vitest";
 import { AuthError, type AuthApi } from "../../auth/api";
-import { pasteCode } from "./codeInput";
 import { createSignupWizard, progressOf, RESEND_DELAY_MS } from "./wizard";
 
-const newTeacher = (name: string) => ({ user: { id: "u1", name }, isNew: true });
+const digits = (value: string) => value.split("");
+const PASSWORD = "тестовая фраза для входа";
 
 function setup(overrides: Partial<AuthApi> = {}) {
   const api: AuthApi = {
-    startTelegramAuth: vi.fn(async () => newTeacher("Анна")),
-    startGoogleAuth: vi.fn(async () => newTeacher("Анна Кузнецова")),
-    requestEmailCode: vi.fn(async () => undefined),
-    verifyEmailCode: vi.fn(async () => newTeacher("")),
-    acceptConsent: vi.fn(async () => undefined),
-    completeProfile: vi.fn(async () => undefined),
+    startRegistration: vi.fn(async () => "ch-1"),
+    completeRegistration: vi.fn(async () => undefined),
+    login: vi.fn(async () => undefined),
+    startPasswordReset: vi.fn(async () => "ch-r"),
+    completePasswordReset: vi.fn(async () => undefined),
+    cabinets: vi.fn(async () => ({ teacherEnabled: true, studentAvailable: false, parentAvailable: false })),
+    enableTeacherCabinet: vi.fn(async () => undefined),
+    profile: vi.fn(async () => ({ displayName: "Анна", timezone: "UTC", version: 1 })),
+    logout: vi.fn(async () => undefined),
     ...overrides,
   };
   const track = vi.fn();
   const openCabinet = vi.fn();
   let time = 1_000_000;
-  const wizard = createSignupWizard({
-    api,
-    track,
-    openCabinet,
-    consentVersion: "v1",
-    timezone: { id: "Asia/Novosibirsk", label: "Новосибирск (UTC+7)" },
-    now: () => time,
-  });
-  const advance = (ms: number) => {
-    time += ms;
-  };
-  return { api, track, openCabinet, wizard, advance };
+  const wizard = createSignupWizard({ api, track, timezone: { id: "Asia/Novosibirsk", label: "Новосибирск" }, openCabinet, now: () => time });
+  return { api, track, openCabinet, wizard, advance: (ms: number) => (time += ms) };
 }
 
-const enterCode = (wizard: ReturnType<typeof setup>["wizard"], code: string) => {
-  const change = pasteCode(wizard.getState().code, code);
-  if (change) wizard.changeCode(change.digits);
-};
+async function toProfile(wizard: ReturnType<typeof setup>["wizard"]) {
+  wizard.setConsent(true);
+  wizard.setContact("anna@mail.ru");
+  await wizard.submitContact();
+  wizard.changeCode(digits("12345678"));
+}
 
-describe("отказ без согласия", () => {
-  it.each(["telegram", "google", "email"] as const)("способ %s не запускает вход", (method) => {
+describe("регистрация", () => {
+  it("без согласия код не запрашивается (SIGNUP-1)", async () => {
     const { wizard, api, track } = setup();
-
-    expect(wizard.chooseMethod(method)).toBe(false);
-
-    const state = wizard.getState();
-    expect(state.step).toBe("method");
-    expect(state.consentMissing).toBe(true);
-    expect(api.startTelegramAuth).not.toHaveBeenCalled();
-    expect(api.startGoogleAuth).not.toHaveBeenCalled();
+    wizard.setContact("anna@mail.ru");
+    await wizard.submitContact();
+    expect(api.startRegistration).not.toHaveBeenCalled();
+    expect(wizard.getState().consentMissing).toBe(true);
     expect(track).toHaveBeenCalledWith("signup_consent_missing");
   });
 
-  it("ошибка исчезает, когда согласие отмечено", () => {
-    const { wizard } = setup();
-    wizard.chooseMethod("telegram");
-
-    wizard.setConsent(true);
-
-    expect(wizard.getState().consentMissing).toBe(false);
-  });
-});
-
-describe("вход через Telegram и Google", () => {
-  it("после входа сохраняет согласие и открывает шаг 2 с именем", async () => {
+  it("неверный контакт не отправляется", async () => {
     const { wizard, api } = setup();
     wizard.setConsent(true);
-
-    wizard.chooseMethod("google");
-    await settled(wizard);
-
-    expect(api.acceptConsent).toHaveBeenCalledWith("v1");
-    expect(wizard.getState()).toMatchObject({ step: "profile", name: "Анна Кузнецова" });
-    expect(progressOf(wizard.getState().step)).toBe(2);
+    wizard.setContactType("phone");
+    wizard.setContact("89991234567");
+    await wizard.submitContact();
+    expect(api.startRegistration).not.toHaveBeenCalled();
+    expect(wizard.getState().error).toBe("invalidContact");
   });
 
-  it("зарегистрированного пользователя сразу ведёт в кабинет", async () => {
-    const { wizard, openCabinet } = setup({
-      startTelegramAuth: vi.fn(async () => ({ user: { id: "u1", name: "Анна" }, isNew: false })),
-    });
-    wizard.setConsent(true);
-
-    wizard.chooseMethod("telegram");
-    await settled(wizard);
-
-    expect(openCabinet).toHaveBeenCalledOnce();
-    expect(wizard.getState().step).toBe("method");
-  });
-
-  it("при отмене остаётся на шаге 1 с ошибкой и не сохраняет согласие", async () => {
-    const { wizard, api } = setup({
-      startTelegramAuth: vi.fn(async () => {
-        throw new AuthError("cancelled");
-      }),
-    });
-    wizard.setConsent(true);
-
-    wizard.chooseMethod("telegram");
-    await settled(wizard);
-
-    expect(wizard.getState()).toMatchObject({ step: "method", error: "cancelled" });
-    expect(api.acceptConsent).not.toHaveBeenCalled();
-  });
-});
-
-describe("вход по почте", () => {
-  it("неверный адрес не отправляет код", async () => {
+  it("телефон приводится к международному виду", async () => {
     const { wizard, api } = setup();
     wizard.setConsent(true);
-    wizard.chooseMethod("email");
-    wizard.setEmail("anna@mail");
-
-    await wizard.submitEmail();
-
-    expect(wizard.getState()).toMatchObject({ step: "email", error: "invalidEmail" });
-    expect(api.requestEmailCode).not.toHaveBeenCalled();
-  });
-
-  it("почта → код → шаг 2; код уходит автоматически после шести цифр", async () => {
-    const { wizard, api, track } = setup();
-    wizard.setConsent(true);
-    wizard.chooseMethod("email");
-    wizard.setEmail(" anna@mail.ru ");
-
-    await wizard.submitEmail();
-    expect(api.requestEmailCode).toHaveBeenCalledWith("anna@mail.ru");
-    expect(track).toHaveBeenCalledWith("signup_code_sent");
+    wizard.setContactType("phone");
+    wizard.setContact("+7 (999) 123-45-67");
+    await wizard.submitContact();
+    expect(api.startRegistration).toHaveBeenCalledWith({ type: "phone", value: "+79991234567" });
     expect(wizard.getState().step).toBe("code");
+  });
 
-    enterCode(wizard, "12345");
-    expect(api.verifyEmailCode).not.toHaveBeenCalled();
-
-    enterCode(wizard, "123456");
-    await settled(wizard);
-
-    expect(api.verifyEmailCode).toHaveBeenCalledWith("anna@mail.ru", "123456");
-    expect(api.acceptConsent).toHaveBeenCalledWith("v1");
+  it("полный код ведёт к профилю, профиль отправляется одним запросом с кодом", async () => {
+    const { wizard, api, track } = setup();
+    await toProfile(wizard);
     expect(wizard.getState().step).toBe("profile");
+    expect(progressOf("profile")).toBe(2);
+    wizard.setName(" Анна ");
+    wizard.setPassword(PASSWORD);
+    await wizard.submitProfile();
+    expect(api.completeRegistration).toHaveBeenCalledWith({ challengeId: "ch-1", code: "12345678", password: PASSWORD, displayName: "Анна", timezone: "Asia/Novosibirsk" });
+    expect(wizard.getState().step).toBe("done");
+    expect(wizard.getState().password).toBe("");
+    expect(track).toHaveBeenCalledWith("signup_complete");
   });
 
-  it("неверный код показывает ошибку и очищает поля", async () => {
-    const { wizard, track } = setup({
-      verifyEmailCode: vi.fn(async () => {
-        throw new AuthError("invalidCode");
-      }),
-    });
-    wizard.setConsent(true);
-    wizard.chooseMethod("email");
-    wizard.setEmail("anna@mail.ru");
-    await wizard.submitEmail();
-
-    enterCode(wizard, "000000");
-    await settled(wizard);
-
-    expect(wizard.getState()).toMatchObject({ step: "code", error: "invalidCode", code: ["", "", "", "", "", ""] });
-    expect(track).toHaveBeenCalledWith("signup_code_error");
+  it("с профиля можно вернуться к вводу кода", async () => {
+    const { wizard } = setup();
+    await toProfile(wizard);
+    wizard.backToCode();
+    expect(wizard.getState().step).toBe("code");
+    expect(wizard.getState().code.join("")).toBe("");
   });
 
-  it("повторная отправка доступна только через 60 секунд", async () => {
+  it("профиль требует имя и пароль от 15 символов", async () => {
+    const { wizard, api } = setup();
+    await toProfile(wizard);
+    wizard.setPassword("коротко");
+    const errors = await wizard.submitProfile();
+    expect(errors).toEqual({ name: "nameRequired", password: "passwordLength" });
+    expect(api.completeRegistration).not.toHaveBeenCalled();
+  });
+
+  it("неверный код выясняется при отправке профиля и возвращает к вводу кода", async () => {
+    const { wizard } = setup({ completeRegistration: vi.fn(async () => Promise.reject(new AuthError("invalidCode"))) });
+    await toProfile(wizard);
+    wizard.setName("Анна");
+    wizard.setPassword(PASSWORD);
+    await wizard.submitProfile();
+    expect(wizard.getState()).toMatchObject({ step: "code", error: "invalidCode" });
+    expect(wizard.getState().code.join("")).toBe("");
+  });
+
+  it("код можно запросить повторно только через минуту (SIGNUP-5)", async () => {
     const { wizard, api, advance } = setup();
     wizard.setConsent(true);
-    wizard.chooseMethod("email");
-    wizard.setEmail("anna@mail.ru");
-    await wizard.submitEmail();
-
-    advance(RESEND_DELAY_MS - 1);
+    wizard.setContact("anna@mail.ru");
+    await wizard.submitContact();
     await wizard.resendCode();
-    expect(api.requestEmailCode).toHaveBeenCalledTimes(1);
-
-    advance(1);
+    expect(api.startRegistration).toHaveBeenCalledTimes(1);
+    advance(RESEND_DELAY_MS);
     await wizard.resendCode();
-    expect(api.requestEmailCode).toHaveBeenCalledTimes(2);
+    expect(api.startRegistration).toHaveBeenCalledTimes(2);
     expect(wizard.getState().codeResent).toBe(true);
   });
 
-  it("«Изменить почту» возвращает на ввод почты", async () => {
-    const { wizard } = setup();
-    wizard.setConsent(true);
-    wizard.chooseMethod("email");
-    wizard.setEmail("anna@mail.ru");
-    await wizard.submitEmail();
-
-    wizard.backToEmail();
-
-    expect(wizard.getState()).toMatchObject({ step: "email", email: "anna@mail.ru" });
+  it("кабинет включается явно и только потом открывается", async () => {
+    const { wizard, api, openCabinet } = setup();
+    await wizard.enterCabinet();
+    expect(api.enableTeacherCabinet).toHaveBeenCalled();
+    expect(openCabinet).toHaveBeenCalled();
   });
 });
 
-describe("шаг «О себе»", () => {
-  async function atProfile(overrides: Partial<AuthApi> = {}) {
-    const context = setup(overrides);
-    context.wizard.setConsent(true);
-    context.wizard.chooseMethod("telegram");
-    await settled(context.wizard);
-    return context;
-  }
-
-  it("без имени и предмета не отправляет профиль", async () => {
-    const { wizard, api } = await atProfile();
-    wizard.setName(" ");
-
-    const errors = await wizard.submitProfile();
-
-    expect(errors).toEqual({ name: "nameRequired", subjects: "subjectsRequired" });
-    expect(wizard.getState().step).toBe("profile");
-    expect(api.completeProfile).not.toHaveBeenCalled();
+describe("вход", () => {
+  it("с включённым кабинетом сразу открывает кабинет", async () => {
+    const { wizard, api, openCabinet } = setup();
+    wizard.restart("login");
+    wizard.setContact(" anna@mail.ru ");
+    wizard.setPassword(PASSWORD);
+    await wizard.submitLogin();
+    expect(api.login).toHaveBeenCalledWith({ type: "email", value: "anna@mail.ru" }, PASSWORD);
+    expect(openCabinet).toHaveBeenCalled();
   });
 
-  it("предметы — множественный выбор, количество учеников — одиночный", async () => {
-    const { wizard } = await atProfile();
-
-    wizard.toggleSubject("physics");
-    wizard.toggleSubject("math");
-    wizard.toggleSubject("english");
-    wizard.toggleSubject("english");
-    wizard.selectStudentsRange("upTo5");
-    wizard.selectStudentsRange("from16To30");
-
-    expect(wizard.getState()).toMatchObject({ subjects: ["math", "physics"], studentsRange: "from16To30" });
-  });
-
-  it("сохраняет профиль и показывает шаг 3", async () => {
-    const { wizard, api, track } = await atProfile();
-    wizard.setName(" Анна Кузнецова ");
-    wizard.toggleSubject("english");
-
-    await wizard.submitProfile();
-
-    expect(api.completeProfile).toHaveBeenCalledWith({
-      name: "Анна Кузнецова",
-      subjects: ["english"],
-      studentsRange: null,
-      timezone: "Asia/Novosibirsk",
-    });
-    expect(track).toHaveBeenCalledWith("signup_profile_submit", { subjectsCount: 1, studentsRange: null });
-    expect(track).toHaveBeenCalledWith("signup_complete");
+  it("без кабинета репетитора предлагает его включить", async () => {
+    const { wizard, openCabinet } = setup({ cabinets: vi.fn(async () => ({ teacherEnabled: false, studentAvailable: true, parentAvailable: false })) });
+    wizard.restart("login");
+    wizard.setContact("+79991234567");
+    wizard.setPassword(PASSWORD);
+    await wizard.submitLogin();
+    expect(openCabinet).not.toHaveBeenCalled();
     expect(wizard.getState().step).toBe("done");
-    expect(progressOf("done")).toBe(3);
+  });
+
+  it("неверный пароль показывает ошибку и оставляет на шаге входа", async () => {
+    const { wizard } = setup({ login: vi.fn(async () => Promise.reject(new AuthError("invalidCredentials"))) });
+    wizard.restart("login");
+    wizard.setContact("anna@mail.ru");
+    wizard.setPassword("что-то");
+    await wizard.submitLogin();
+    expect(wizard.getState()).toMatchObject({ step: "login", error: "invalidCredentials" });
   });
 });
 
-describe("кнопка «Войти»", () => {
-  it("возвращает мастер на шаг 1", async () => {
-    const { wizard } = setup();
-    wizard.setConsent(true);
-    wizard.chooseMethod("email");
+describe("восстановление пароля", () => {
+  it("код и новый пароль возвращают на вход с сообщением", async () => {
+    const { wizard, api } = setup();
+    wizard.restart("login");
+    wizard.startReset();
+    wizard.setContact("anna@mail.ru");
+    await wizard.submitResetContact();
+    expect(wizard.getState().step).toBe("resetCode");
+    wizard.changeCode(digits("87654321"));
+    expect(wizard.getState().step).toBe("resetCode");
+    wizard.setPassword(PASSWORD);
+    await wizard.submitReset();
+    expect(api.completePasswordReset).toHaveBeenCalledWith({ challengeId: "ch-r", code: "87654321", password: PASSWORD });
+    expect(wizard.getState()).toMatchObject({ mode: "login", step: "login", notice: "passwordReset", password: "" });
+  });
 
-    wizard.restart();
-
-    expect(wizard.getState().step).toBe("method");
+  it("без полного кода и с коротким паролем не отправляется", async () => {
+    const { wizard, api } = setup();
+    wizard.startReset();
+    wizard.setContact("anna@mail.ru");
+    await wizard.submitResetContact();
+    await wizard.submitReset();
+    expect(wizard.getState().error).toBe("invalidCode");
+    wizard.changeCode(digits("87654321"));
+    wizard.setPassword("коротко");
+    await wizard.submitReset();
+    expect(wizard.getState().profileErrors.password).toBe("passwordLength");
+    expect(api.completePasswordReset).not.toHaveBeenCalled();
   });
 });
-
-function settled(wizard: ReturnType<typeof setup>["wizard"]) {
-  return vi.waitFor(() => expect(wizard.getState().busy).toBe(false));
-}

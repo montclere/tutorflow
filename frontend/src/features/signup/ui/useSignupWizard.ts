@@ -1,6 +1,5 @@
 import { useState, useSyncExternalStore } from "react";
 import { routes } from "../../../config/routes";
-import { siteConfig } from "../../../config/site";
 import { landing } from "../../../content/landing.ru";
 import { track } from "../../../shared/analytics/track";
 import { authApi } from "../../auth/api";
@@ -12,7 +11,6 @@ export function useSignupWizard() {
     createSignupWizard({
       api: authApi,
       track,
-      consentVersion: siteConfig.consentVersion,
       timezone: detectTimezone(landing.timezoneCities),
       openCabinet: () => window.location.assign(routes.teacherCabinet),
     }),
