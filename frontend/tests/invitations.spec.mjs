@@ -190,8 +190,8 @@ test("логин и восстановление по тому же email либ
       await page.getByLabel("Код подтверждения").fill(code)
       await page.getByRole("button", { name: "Сохранить новый пароль" }).click()
       await expect(page.getByRole("status")).toContainText("Пароль обновлён")
-      expect((await old.request.get("/api/v1/me")).status()).toBe(401)
-      expect((await page.request.get("/api/v1/me")).status()).toBe(401)
+      expect((await old.request.get("/api/v1/me")).status()).toBe(403)
+      expect((await page.request.get("/api/v1/me")).status()).toBe(403)
       await page.getByLabel("Логин — почта или телефон").fill(contact)
       await page.getByLabel("Пароль", { exact: true }).fill(password)
       await page.getByRole("button", { name: "Войти", exact: true }).click()
@@ -203,4 +203,15 @@ test("логин и восстановление по тому же email либ
       await Promise.all([context.close(), old.close()])
     }
   }
+})
+
+test("интерфейс безопасно обрабатывает ответ прокси вне API", async ({ page }) => {
+  await page.route("**/api/v1/me", route => route.fulfill({
+    status: 502,
+    contentType: "text/html",
+    body: "<h1>upstream-private-text</h1>",
+  }))
+  await page.goto("/")
+  await expect(page.getByRole("alert")).toContainText("Сервис временно недоступен")
+  await expect(page.getByText("upstream-private-text")).toHaveCount(0)
 })

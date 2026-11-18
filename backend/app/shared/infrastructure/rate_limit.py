@@ -1,4 +1,5 @@
 from datetime import timedelta
+from math import ceil
 
 from sqlalchemy import Column, DateTime, Integer, String
 from sqlalchemy.dialects.postgresql import insert
@@ -7,7 +8,7 @@ from sqlalchemy.schema import Table
 
 from app.shared.application.ports.clock import now_utc
 from app.shared.application.security import keyed_digest
-from app.shared.domain.errors import Problem
+from app.shared.domain.errors import Problem, ProblemCode
 
 from .db.base import metadata
 
@@ -47,5 +48,6 @@ class PostgresRateLimiter:
             allowed = result.scalar_one_or_none()
         if allowed is None:
             raise Problem(
-                "rate_limited", 429, retry_after=max(1, int((expires - now).total_seconds()))
+                ProblemCode.RATE_LIMITED,
+                retry_after=max(1, ceil((expires - now_utc()).total_seconds())),
             )

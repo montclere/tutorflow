@@ -98,7 +98,7 @@ async function loadAccount() {
     account = await api<Account>("/me")
     profile = await api<Profile>("/me/profile")
   } catch (error) {
-    if (!(error instanceof ApiError) || error.status !== 401) throw error
+    if (!(error instanceof ApiError) || error.code !== "authentication_required") throw error
     account = undefined
     profile = undefined
   }
@@ -205,7 +205,7 @@ function inviteToken() {
 
 async function invitePage() {
   const token = inviteToken()
-  if (!token) throw new ApiError(400, "invitation_unavailable")
+  if (!token) throw new ApiError(400, "invitation_unavailable", "Откройте ссылку, которую прислал репетитор.")
   const invitation = await api<{ purpose: Purpose; expires_at: string }>(
     "/invitations/preview", "POST", { invitation_token: token },
   )

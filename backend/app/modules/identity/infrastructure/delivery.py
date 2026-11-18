@@ -12,7 +12,9 @@ from pathlib import Path
 from urllib.parse import urlencode
 from uuid import uuid4
 
-from app.shared.domain.errors import Problem
+
+class DeliveryUnavailable(Exception):
+    """Доставка не подтверждена транспортом."""
 
 
 @dataclass(frozen=True)
@@ -48,9 +50,9 @@ class ConfiguredDelivery:
             elif contact_type == "phone" and self.smsc is not None:
                 await asyncio.to_thread(self._send_sms, self.smsc, contact, code)
             else:
-                raise Problem("delivery_unavailable", 503)
+                raise DeliveryUnavailable("delivery_unavailable")
         except (OSError, smtplib.SMTPException, HTTPException, ValueError):
-            raise Problem("delivery_unavailable", 503) from None
+            raise DeliveryUnavailable("delivery_unavailable") from None
 
     def _write_pickup(self, contact: str, code: str):
         assert self.local_inbox is not None
@@ -109,7 +111,7 @@ class ConfiguredDelivery:
             )
             response = connection.getresponse()
             if response.status != 200:
-                raise Problem("delivery_unavailable", 503)
+                raise DeliveryUnavailable("delivery_unavailable")
             data = json.loads(response.read(4096))
             if (
                 not isinstance(data, dict)
@@ -120,6 +122,6 @@ class ConfiguredDelivery:
                 or data["id"] <= 0
                 or data["cnt"] <= 0
             ):
-                raise Problem("delivery_unavailable", 503)
+                raise DeliveryUnavailable("delivery_unavailable")
         finally:
             connection.close()

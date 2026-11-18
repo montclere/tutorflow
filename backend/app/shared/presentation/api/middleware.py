@@ -5,7 +5,7 @@ from starlette.datastructures import MutableHeaders
 from starlette.requests import Request
 from starlette.types import ASGIApp, Message, Receive, Scope, Send
 
-from app.shared.domain.errors import Problem
+from app.shared.domain.errors import Problem, ProblemCode
 
 from .errors import problem_response
 
@@ -50,7 +50,7 @@ class RequestContextMiddleware:
                     type(error).__name__,
                 )
                 if not started:
-                    response = problem_response(request, Problem("internal_error", 500))
+                    response = problem_response(request, Problem(ProblemCode.INTERNAL_ERROR))
                     await response(scope, inner_receive, send_with_context)
                 elif not ended:
                     await send({"type": "http.response.body", "body": b"", "more_body": False})
@@ -66,7 +66,7 @@ class RequestContextMiddleware:
                 return
             chunk = message.get("body", b"")
             if len(body) + len(chunk) > self.max_body_bytes:
-                response = problem_response(request, Problem("request_too_large", 413))
+                response = problem_response(request, Problem(ProblemCode.REQUEST_TOO_LARGE))
                 await response(scope, receive, send_with_context)
                 return
             body.extend(chunk)

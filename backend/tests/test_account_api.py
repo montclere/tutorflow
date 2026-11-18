@@ -80,6 +80,7 @@ def register(client: TestClient, inbox: Inbox, *, phone: bool = False, token: st
         },
     )
     assert response.status_code == 201, response.text
+    assert response.headers["location"] == "/api/v1/me"
     client.headers["X-CSRF-Token"] = response.json()["csrf_token"]
     assert response.json()["account"]["login_contact"]["value"] == contact
     return login_contact
@@ -88,7 +89,9 @@ def register(client: TestClient, inbox: Inbox, *, phone: bool = False, token: st
 def issue(client: TestClient, purpose: str):
     response = client.post("/api/v1/teacher/invitations", json={"purpose": purpose})
     assert response.status_code == 201, response.text
-    return response.json()["invitation_token"], response.json()["invitation"]["invitation_id"]
+    invitation_id = response.json()["invitation"]["invitation_id"]
+    assert response.headers["location"] == f"/api/v1/teacher/invitations/{invitation_id}"
+    return response.json()["invitation_token"], invitation_id
 
 
 def test_parent_accepts_two_cards_and_loses_revoked_access(database):
@@ -98,7 +101,10 @@ def test_parent_accepts_two_cards_and_loses_revoked_access(database):
     ) as teacher:
         parent = peer(teacher)
         register(teacher, inbox)
-        assert teacher.put("/api/v1/me/teacher-cabinet").status_code == 201
+        enabled = teacher.put("/api/v1/me/teacher-cabinet")
+        assert enabled.status_code == 201
+        assert enabled.headers["location"] == "/api/v1/me/teacher-cabinet"
+        assert teacher.put("/api/v1/me/teacher-cabinet").status_code == 200
         token, _ = issue(teacher, PARENT)
         start(parent)
         assert (
@@ -109,7 +115,7 @@ def test_parent_accepts_two_cards_and_loses_revoked_access(database):
         )
         assert (
             parent.post("/api/v1/invitations/accept", json={"invitation_token": token}).status_code
-            == 401
+            == 403
         )
         register(parent, inbox, phone=True, token=token)
         assert parent.get("/api/v1/parent/student-cards").json()["items"] == []
@@ -117,7 +123,14 @@ def test_parent_accepts_two_cards_and_loses_revoked_access(database):
         response = parent.post("/api/v1/invitations/accept", json=payload)
         assert response.status_code == 201, response.text
         first = response.json()
-        assert parent.post("/api/v1/invitations/accept", json=payload).json() == first
+        assert (
+            response.headers["location"]
+            == f"/api/v1/parent/student-cards/{first['student_card_id']}"
+        )
+        replay = parent.post("/api/v1/invitations/accept", json=payload)
+        assert replay.status_code == 200
+        assert "location" not in replay.headers
+        assert replay.json() == first
         token2, _ = issue(teacher, PARENT)
         second = parent.post(
             "/api/v1/invitations/accept", json={**payload, "invitation_token": token2}
@@ -328,11 +341,14 @@ def test_login_reset_profile_and_csrf(database):
         path = "/api/v1/auth/password-resets/complete"
         assert reset.post(path, json=payload).json()["code"] == "challenge_invalid"
         payload["code"] = code
-        assert reset.post(path, json=payload).status_code == 204
+        reset_result = reset.post(path, json=payload)
+        assert reset_result.status_code == 204
+        assert reset_result.content == b""
+        assert "content-length" not in reset_result.headers
         start(reset)
         assert reset.post(path, json=payload).status_code == 400
-        assert user.get("/api/v1/me").status_code == 401
-        assert login.get("/api/v1/me").status_code == 401
+        assert user.get("/api/v1/me").status_code == 403
+        assert login.get("/api/v1/me").status_code == 403
         assert (
             reset.post(
                 "/api/v1/auth/login",
@@ -341,7 +357,7 @@ def test_login_reset_profile_and_csrf(database):
                     "password": old_password,
                 },
             ).status_code
-            == 401
+            == 403
         )
         assert (
             reset.post(
@@ -395,7 +411,7 @@ def test_invitation_preview_and_registration_expiry(database, monkeypatch):
 
 def test_acceptance_rolls_back_after_access_write(database, monkeypatch):
     from app.modules.students.infrastructure.persistence.repositories import PostgresStudents
-    from app.shared.domain.errors import Problem
+    from app.shared.domain.errors import Problem, ProblemCode
 
     inbox = Inbox()
     with TestClient(
@@ -413,7 +429,7 @@ def test_acceptance_rolls_back_after_access_write(database, monkeypatch):
 
         async def fail_after_write(self, access):
             await original(self, access)
-            raise Problem("dependency_unavailable", 503)
+            raise Problem(ProblemCode.DEPENDENCY_UNAVAILABLE)
 
         accept = "/api/v1/invitations/accept"
         payload = {"invitation_token": token, "student_card_name": "Ребёнок"}
@@ -475,7 +491,7 @@ def test_delivery_failure_does_not_leak_recipient_or_response(database, caplog):
         assert "code_delivery_failed" in caplog.text
         assert "+79991234567" not in caplog.text
         assert "delivery_unavailable" not in response.text
-        assert client.get("/api/v1/me").status_code == 401
+        assert client.get("/api/v1/me").status_code == 403
 
 
 def test_only_the_owner_can_revoke_a_session(database):
@@ -505,10 +521,10 @@ def test_only_the_owner_can_revoke_a_session(database):
         assert last_page["items"][0]["session_id"] == session_id
         assert other.get(sessions, params={"cursor": first_page["next_cursor"]}).status_code == 422
         assert second.delete("/api/v1/auth/session").status_code == 204
-        assert second.get("/api/v1/me").status_code == 401
+        assert second.get("/api/v1/me").status_code == 403
         assert owner.get("/api/v1/me").status_code == 200
         assert owner.post(f"{sessions}/revoke-all").status_code == 204
-        assert owner.get("/api/v1/me").status_code == 401
+        assert owner.get("/api/v1/me").status_code == 403
 
 
 def test_recovery_equal_response_and_superseded_expired_codes(database, monkeypatch):
@@ -735,3 +751,64 @@ def test_student_card_port_checks_operation_activity_and_revocation(database):
         asyncio.run(deactivate_teacher())
         assert not asyncio.run(allowed(teacher_id, study_card, read))
         assert not asyncio.run(allowed(parent_id, study_card, read))
+
+
+def test_login_failure_identical_for_wrong_password_and_unknown_contact(database):
+    inbox = Inbox()
+    with TestClient(
+        create_app(Settings(database, "t" * 48), delivery=inbox), base_url="https://testserver"
+    ) as account:
+        login_contact = register(account, inbox)
+        guest = peer(account)
+        start(guest)
+        details = []
+        for contact in (login_contact, {"type": "email", "value": f"{uuid4().hex}@example.org"}):
+            response = guest.post(
+                "/api/v1/auth/login",
+                json={
+                    "login_contact": contact,
+                    "password": "wrong-test-password",
+                },
+            )
+            assert response.status_code == 403
+            assert "www-authenticate" not in response.headers
+            assert "wrong-test-password" not in response.text
+            assert contact["value"] not in response.text
+            details.append(
+                {
+                    key: value
+                    for key, value in response.json().items()
+                    if key not in {"instance", "request_id"}
+                }
+            )
+        assert details[0] == details[1]
+        assert details[0]["code"] == "invalid_credentials"
+
+
+def test_rate_limit_retry_after_rounds_up_to_the_window(database, monkeypatch):
+    from datetime import UTC, datetime
+
+    from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
+    from sqlalchemy.pool import NullPool
+
+    from app.shared.infrastructure import rate_limit
+
+    now = datetime(2026, 11, 18, 12, 0, 1, 200_000, tzinfo=UTC)
+    monkeypatch.setattr(rate_limit, "now_utc", lambda: now)
+    engine = create_async_engine(database, poolclass=NullPool)
+    limiter = rate_limit.PostgresRateLimiter(async_sessionmaker(engine), "t" * 48)
+    subject = str(uuid4())
+    app = create_app(Settings(database, "t" * 48))
+
+    @app.get("/rate-fixture")
+    async def limited():
+        await limiter("test", subject, 1, 10)
+        return {"status": "ok"}
+
+    with TestClient(app) as client:
+        assert client.get("/rate-fixture").status_code == 200
+        response = client.get("/rate-fixture")
+        assert response.status_code == 429
+        assert response.json()["code"] == "rate_limited"
+        assert response.headers["retry-after"] == "9"
+        assert response.headers["cache-control"] == "no-store"

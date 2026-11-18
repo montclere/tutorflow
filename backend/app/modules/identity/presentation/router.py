@@ -8,9 +8,16 @@ from fastapi import APIRouter, BackgroundTasks, Depends, Query, Request, Respons
 
 from app.shared.application.contracts.accounts import AccountSummary
 from app.shared.application.ports.clock import now_utc
-from app.shared.domain.errors import Problem
+from app.shared.domain.errors import Problem, ProblemCode
 from app.shared.presentation.api.auth import RateLimiter
-from app.shared.presentation.api.errors import problem_response
+from app.shared.presentation.api.errors import (
+    CREATED_RESOURCE,
+    JSON_BODY_ERRORS,
+    MUTATION_ERRORS,
+    JsonRoute,
+    problem_response,
+    problem_responses,
+)
 from app.shared.presentation.api.pagination import Pagination
 from app.shared.presentation.api.schemas import AccountView, Page, ProfileView
 
@@ -41,7 +48,11 @@ def identity_router(
     cookie_name: str,
     secure_cookie: bool,
 ) -> APIRouter:
-    router = APIRouter(tags=["identity"])
+    router = APIRouter(
+        tags=["identity"],
+        route_class=JsonRoute,
+        responses=problem_responses(ProblemCode.DEPENDENCY_UNAVAILABLE),
+    )
 
     def set_cookie(response: Response, current: NewSession):
         lifetime = current.session.expires_at - current.session.created_at
@@ -60,7 +71,11 @@ def identity_router(
             cookie_name, httponly=True, secure=secure_cookie, samesite="lax", path="/"
         )
 
-    @router.get("/auth/csrf", response_model=CsrfResult)
+    @router.get(
+        "/auth/csrf",
+        response_model=CsrfResult,
+        responses=problem_responses(ProblemCode.RATE_LIMITED),
+    )
     async def csrf(
         request: Request,
         response: Response,
@@ -73,7 +88,7 @@ def identity_router(
             try:
                 await identity.actor(session)
             except Problem as problem:
-                if problem.status != 401:
+                if problem.code is not ProblemCode.AUTHENTICATION_REQUIRED:
                     raise
             else:
                 return {"csrf_token": session.csrf_token}
@@ -82,7 +97,17 @@ def identity_router(
         set_cookie(response, created)
         return {"csrf_token": created.session.csrf_token}
 
-    @router.post("/auth/registrations", status_code=202, response_model=ChallengeResult)
+    @router.post(
+        "/auth/registrations",
+        status_code=202,
+        response_model=ChallengeResult,
+        responses=problem_responses(
+            *JSON_BODY_ERRORS,
+            *MUTATION_ERRORS,
+            ProblemCode.RATE_LIMITED,
+            ProblemCode.INVITATION_UNAVAILABLE,
+        ),
+    )
     async def registration(
         data: RegistrationStart,
         request: Request,
@@ -97,7 +122,21 @@ def identity_router(
         background_tasks.add_task(identity.deliver_code, issued, request.state.request_id)
         return {"challenge_id": issued.challenge_id}
 
-    @router.post("/auth/registrations/complete", status_code=201, response_model=LoginResult)
+    @router.post(
+        "/auth/registrations/complete",
+        status_code=201,
+        response_model=LoginResult,
+        responses={
+            **CREATED_RESOURCE,
+            **problem_responses(
+                *JSON_BODY_ERRORS,
+                *MUTATION_ERRORS,
+                ProblemCode.RATE_LIMITED,
+                ProblemCode.CHALLENGE_INVALID,
+                ProblemCode.INVITATION_UNAVAILABLE,
+            ),
+        },
+    )
     async def complete_registration(
         data: RegistrationComplete,
         request: Request,
@@ -116,12 +155,22 @@ def identity_router(
             session,
         )
         if result is None:
-            return problem_response(request, Problem("challenge_invalid", 400))
+            return problem_response(request, Problem(ProblemCode.CHALLENGE_INVALID))
         account, created = result
+        response.headers["Location"] = "/api/v1/me"
         set_cookie(response, created)
         return {"account": account.self_view(), "csrf_token": created.session.csrf_token}
 
-    @router.post("/auth/login", response_model=LoginResult)
+    @router.post(
+        "/auth/login",
+        response_model=LoginResult,
+        responses=problem_responses(
+            *JSON_BODY_ERRORS,
+            *MUTATION_ERRORS,
+            ProblemCode.RATE_LIMITED,
+            ProblemCode.INVALID_CREDENTIALS,
+        ),
+    )
     async def login(
         data: Login,
         request: Request,
@@ -136,7 +185,12 @@ def identity_router(
         set_cookie(response, created)
         return {"account": account.self_view(), "csrf_token": created.session.csrf_token}
 
-    @router.post("/auth/password-resets", status_code=202, response_model=ChallengeResult)
+    @router.post(
+        "/auth/password-resets",
+        status_code=202,
+        response_model=ChallengeResult,
+        responses=problem_responses(*JSON_BODY_ERRORS, *MUTATION_ERRORS, ProblemCode.RATE_LIMITED),
+    )
     async def reset(
         data: ResetStart,
         request: Request,
@@ -151,7 +205,16 @@ def identity_router(
         background_tasks.add_task(identity.deliver_code, issued, request.state.request_id)
         return {"challenge_id": issued.challenge_id}
 
-    @router.post("/auth/password-resets/complete", status_code=204)
+    @router.post(
+        "/auth/password-resets/complete",
+        status_code=204,
+        responses=problem_responses(
+            *JSON_BODY_ERRORS,
+            *MUTATION_ERRORS,
+            ProblemCode.RATE_LIMITED,
+            ProblemCode.CHALLENGE_INVALID,
+        ),
+    )
     async def reset_complete(
         data: ResetComplete,
         request: Request,
@@ -161,12 +224,16 @@ def identity_router(
     ):
         await rate("credential_complete_ip", request.state.source, 100, 600)
         if not await identity.reset_password(data.challenge_id, data.code, data.password):
-            return problem_response(request, Problem("challenge_invalid", 400))
+            return problem_response(request, Problem(ProblemCode.CHALLENGE_INVALID))
         clear_cookie(response)
         response.status_code = 204
         return response
 
-    @router.delete("/auth/session", status_code=204)
+    @router.delete(
+        "/auth/session",
+        status_code=204,
+        responses=problem_responses(*MUTATION_ERRORS, ProblemCode.AUTHENTICATION_REQUIRED),
+    )
     async def logout(
         response: Response,
         identity: Annotated[Identity, Depends(get_identity, scope="function")],
@@ -178,7 +245,15 @@ def identity_router(
         response.status_code = 204
         return response
 
-    @router.get("/auth/sessions", response_model=Page[SessionView])
+    @router.get(
+        "/auth/sessions",
+        response_model=Page[SessionView],
+        responses=problem_responses(
+            ProblemCode.AUTHENTICATION_REQUIRED,
+            ProblemCode.VALIDATION_FAILED,
+            ProblemCode.CURSOR_INVALID,
+        ),
+    )
     async def sessions(
         identity: Annotated[Identity, Depends(get_identity, scope="function")],
         actor: Annotated[AccountSummary, Depends(get_actor, scope="function")],
@@ -208,7 +283,16 @@ def identity_router(
             },
         )
 
-    @router.delete("/auth/sessions/{session_id}", status_code=204)
+    @router.delete(
+        "/auth/sessions/{session_id}",
+        status_code=204,
+        responses=problem_responses(
+            *MUTATION_ERRORS,
+            ProblemCode.AUTHENTICATION_REQUIRED,
+            ProblemCode.RESOURCE_NOT_FOUND,
+            ProblemCode.VALIDATION_FAILED,
+        ),
+    )
     async def revoke_session(
         session_id: UUID,
         response: Response,
@@ -217,7 +301,7 @@ def identity_router(
         session: Annotated[Session, Depends(get_csrf, scope="function")],
     ):
         if not await identity.store.revoke_session(session_id, actor.account_id, now_utc()):
-            raise Problem("resource_not_found", 404)
+            raise Problem(ProblemCode.RESOURCE_NOT_FOUND)
         if session_id == session.session_id:
             clear_cookie(response)
         response.status_code = 204
@@ -226,6 +310,7 @@ def identity_router(
     @router.post(
         "/auth/sessions/revoke-all",
         status_code=204,
+        responses=problem_responses(*MUTATION_ERRORS, ProblemCode.AUTHENTICATION_REQUIRED),
         dependencies=[Depends(get_csrf, scope="function")],
     )
     async def revoke_all(
@@ -239,17 +324,25 @@ def identity_router(
         response.status_code = 204
         return response
 
-    @router.get("/me", response_model=AccountView)
+    @router.get(
+        "/me",
+        response_model=AccountView,
+        responses=problem_responses(ProblemCode.AUTHENTICATION_REQUIRED),
+    )
     async def me(
         identity: Annotated[Identity, Depends(get_identity, scope="function")],
         actor: Annotated[AccountSummary, Depends(get_actor, scope="function")],
     ):
         account = await identity.store.get_account(actor.account_id)
         if account is None:
-            raise Problem("authentication_required", 401)
+            raise Problem(ProblemCode.AUTHENTICATION_REQUIRED)
         return account.self_view()
 
-    @router.get("/me/profile", response_model=ProfileView)
+    @router.get(
+        "/me/profile",
+        response_model=ProfileView,
+        responses=problem_responses(ProblemCode.AUTHENTICATION_REQUIRED),
+    )
     async def profile(
         identity: Annotated[Identity, Depends(get_identity, scope="function")],
         actor: Annotated[AccountSummary, Depends(get_actor, scope="function")],
@@ -259,6 +352,12 @@ def identity_router(
     @router.patch(
         "/me/profile",
         response_model=ProfileView,
+        responses=problem_responses(
+            *JSON_BODY_ERRORS,
+            *MUTATION_ERRORS,
+            ProblemCode.AUTHENTICATION_REQUIRED,
+            ProblemCode.VERSION_CONFLICT,
+        ),
         dependencies=[Depends(get_csrf, scope="function")],
     )
     async def edit_profile(
@@ -273,7 +372,7 @@ def identity_router(
             now_utc(),
         )
         if result is None:
-            raise Problem("version_conflict", 409)
+            raise Problem(ProblemCode.VERSION_CONFLICT)
         return result
 
     @router.put(
@@ -281,7 +380,11 @@ def identity_router(
         status_code=201,
         response_model=TeacherCabinetView,
         dependencies=[Depends(get_csrf, scope="function")],
-        responses={200: {"model": TeacherCabinetView}},
+        responses={
+            **CREATED_RESOURCE,
+            200: {"model": TeacherCabinetView},
+            **problem_responses(*MUTATION_ERRORS, ProblemCode.AUTHENTICATION_REQUIRED),
+        },
     )
     async def teacher_cabinet(
         response: Response,
@@ -290,6 +393,8 @@ def identity_router(
     ):
         enabled, created = await identity.store.enable_teacher(actor.account_id, now_utc())
         response.status_code = 201 if created else 200
+        if created:
+            response.headers["Location"] = "/api/v1/me/teacher-cabinet"
         return {"enabled_at": enabled}
 
     return router
@@ -303,5 +408,5 @@ def check_csrf(request: Request, session: Session | None, origin: str | None) ->
         or (sent_origin is not None and sent_origin != origin)
         or not hmac.compare_digest(token.encode(), session.csrf_token.encode())
     ):
-        raise Problem("csrf_failed", 403)
+        raise Problem(ProblemCode.CSRF_FAILED)
     return session

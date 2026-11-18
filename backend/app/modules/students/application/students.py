@@ -8,7 +8,7 @@ from app.shared.application.contracts.accounts import AccountDirectory, AccountS
 from app.shared.application.contracts.student_cards import StudentCardOperation
 from app.shared.application.ports.clock import now_utc
 from app.shared.application.security import digest, keyed_digest, new_token
-from app.shared.domain.errors import Problem
+from app.shared.domain.errors import Problem, ProblemCode
 
 from ..domain.errors import not_found, unavailable
 from ..domain.student import Invitation, InvitationPurpose, ParentAccess, StudentCard
@@ -40,7 +40,7 @@ class Students:
     @staticmethod
     def require_teacher(actor: AccountSummary) -> None:
         if not actor.teacher_enabled:
-            raise Problem("teacher_cabinet_required", 403)
+            raise Problem(ProblemCode.TEACHER_CABINET_REQUIRED)
 
     async def _active_teacher(self, account_id: UUID) -> AccountSummary | None:
         teacher = await self.accounts.lookup_account(account_id)
@@ -97,7 +97,7 @@ class Students:
         if status == "revoked":
             return
         if status == "accepted":
-            raise Problem("invitation_already_accepted", 409)
+            raise Problem(ProblemCode.INVITATION_ALREADY_ACCEPTED)
         if status == "expired":
             raise unavailable()
         await self.store.revoke_invitation(invitation_id, now)
@@ -142,7 +142,7 @@ class Students:
             1,
         )
         if not await self.store.add_card(card):
-            raise Problem("student_card_already_linked", 409)
+            raise Problem(ProblemCode.STUDENT_CARD_ALREADY_LINKED)
         if now_utc() >= invitation.expires_at:
             raise unavailable()
         result = self._acceptance(invitation, card.student_card_id)
@@ -187,22 +187,22 @@ class Students:
             raise unavailable()
         _, intent = self._card_name(parent, fields, actor)
         if not hmac.compare_digest(intent, invitation.acceptance_payload_digest or ""):
-            raise Problem("invitation_acceptance_conflict", 409)
+            raise Problem(ProblemCode.INVITATION_ACCEPTANCE_CONFLICT)
         return result
 
     def _card_name(self, parent: bool, fields: dict, actor: AccountSummary) -> tuple[str, str]:
         if parent:
             raw_name = fields.get("student_card_name")
             if not isinstance(raw_name, str):
-                raise Problem("validation_failed", 422)
+                raise Problem(ProblemCode.VALIDATION_FAILED)
             normalized = raw_name.strip()
             if not 1 <= len(normalized) <= 80 or any(
                 unicodedata.category(c).startswith("C") for c in normalized
             ):
-                raise Problem("validation_failed", 422)
+                raise Problem(ProblemCode.VALIDATION_FAILED)
             return normalized, keyed_digest(self.key, "acceptance-parent", normalized)
         if "student_card_name" in fields:
-            raise Problem("validation_failed", 422)
+            raise Problem(ProblemCode.VALIDATION_FAILED)
         return actor.display_name, keyed_digest(self.key, "acceptance-student")
 
     @staticmethod
@@ -281,7 +281,7 @@ class Students:
     @staticmethod
     def _check_version(card: StudentCard, version: int) -> None:
         if card.version != version:
-            raise Problem("version_conflict", 409)
+            raise Problem(ProblemCode.VERSION_CONFLICT)
 
     async def teacher_cards(
         self, actor: AccountSummary, status: str, limit: int, after: Position | None
