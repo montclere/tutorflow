@@ -1,0 +1,32 @@
+.footer {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0 12px;
+  padding: 20px 8px 0;
+  color: var(--color-on-dark-muted);
+  font-weight: 600;
+  font-size: var(--fs-sm);
+}
+
+.nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0 16px;
+}
+
+.link {
+  padding: 12px 0;
+  text-decoration: none;
+}
+
+.link:hover {
+  color: var(--color-paper);
+}
+
+@media (max-width: 560px) {
+  .footer {
+    padding-bottom: 70px;
+  }
+}

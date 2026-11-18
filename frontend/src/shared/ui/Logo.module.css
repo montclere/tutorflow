@@ -1,0 +1,28 @@
+.logo {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  text-decoration: none;
+  border-radius: var(--radius-input);
+}
+
+.left,
+.right {
+  padding: 7px 11px;
+  color: var(--color-ink);
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: var(--fs-sm);
+}
+
+.left {
+  background: var(--color-paper);
+  border-radius: var(--radius-pill);
+  letter-spacing: 0.02em;
+}
+
+.right {
+  background: var(--color-lime);
+  border-radius: var(--radius-input) var(--radius-input) var(--radius-input) var(--radius-notch);
+  transform: rotate(-4deg);
+}

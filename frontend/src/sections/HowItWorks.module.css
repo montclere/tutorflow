@@ -1,0 +1,291 @@
+.section {
+  margin-top: 46px;
+}
+
+/* Раскрывающиеся карточки: открытая растягивается, остальные сжимаются до номера и названия. */
+.flow {
+  display: flex;
+  gap: 12px;
+  height: 290px;
+}
+
+.step {
+  position: relative;
+  display: flex;
+  flex: 1 1 0;
+  flex-direction: column;
+  min-width: 0;
+  overflow: hidden;
+  border-radius: var(--radius-card);
+  background: var(--color-mist);
+  transition:
+    flex-grow var(--duration-expand) ease,
+    background-color var(--duration-reveal) ease;
+}
+
+.step:not([data-open="true"]):hover {
+  background: var(--color-blue-soft);
+}
+
+/* Открытая карточка невысокая: слева номер, название и текст, справа мини-экран. */
+.step[data-open="true"] {
+  --focus-ring: var(--color-lime);
+  display: grid;
+  flex-grow: 3.6;
+  grid-template-rows: auto 1fr;
+  grid-template-columns: minmax(0, 1fr) 255px;
+  column-gap: 22px;
+  padding: 24px;
+  background: var(--color-blue);
+  color: var(--color-paper);
+}
+
+.heading {
+  display: contents;
+}
+
+.toggle {
+  position: relative;
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  width: 100%;
+  padding: 18px 14px;
+  border: 0;
+  background: none;
+  color: inherit;
+  text-align: left;
+}
+
+.step[data-open="true"] .toggle {
+  grid-row: 1;
+  grid-column: 1;
+  justify-content: flex-start;
+  gap: 14px;
+  padding: 0;
+  cursor: default;
+}
+
+.number {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 52px;
+  height: 52px;
+  border-radius: var(--radius-md);
+  background: var(--color-blue);
+  color: var(--color-paper);
+  font-family: var(--font-display);
+  font-weight: 900;
+  font-size: var(--fs-lg);
+  box-shadow: 0 6px 0 var(--color-blue-deep);
+  transform: rotate(-6deg);
+}
+
+.step:nth-child(even) .number,
+.step[data-open="true"] .number {
+  background: var(--color-lime);
+  color: var(--color-ink);
+  box-shadow: 0 6px 0 var(--color-lime-shadow);
+  transform: rotate(5deg);
+}
+
+.names {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+
+.title {
+  font-family: var(--font-display);
+  font-weight: 900;
+  font-size: var(--fs-sm);
+  line-height: 1.05;
+  letter-spacing: -0.02em;
+  text-transform: uppercase;
+  hyphens: auto;
+}
+
+.step[data-open="true"] .title {
+  font-size: var(--fs-xl);
+}
+
+.short {
+  color: var(--color-muted);
+  font-weight: 600;
+  font-size: var(--fs-sm);
+}
+
+.step[data-open="true"] .short {
+  display: none;
+}
+
+/* Плюс в углу закрытой карточки подсказывает, что её можно открыть. */
+.expandIcon {
+  position: absolute;
+  top: 18px;
+  right: 16px;
+  width: 30px;
+  height: 30px;
+  border-radius: var(--radius-round);
+  background: var(--color-paper);
+}
+
+.expandIcon::before,
+.expandIcon::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 12px;
+  height: 2px;
+  border-radius: var(--radius-notch);
+  background: var(--color-ink);
+  transform: translate(-50%, -50%);
+}
+
+.expandIcon::after {
+  transform: translate(-50%, -50%) rotate(90deg);
+}
+
+.step[data-open="true"] .expandIcon {
+  display: none;
+}
+
+/* Панель «растворяется» в сетке открытой карточки: текст идёт под названием, мини-экран — справа. */
+.panel {
+  display: contents;
+}
+
+.panel[hidden] {
+  display: none;
+}
+
+.text {
+  grid-row: 2;
+  grid-column: 1;
+  align-self: start;
+  margin-top: 12px;
+  font-weight: 600;
+  font-size: var(--fs-md);
+  animation: panel-in var(--duration-expand) ease both;
+}
+
+/* Мини-экран: как шаг выглядит в кабинете. */
+.scene {
+  display: grid;
+  grid-row: 1 / span 2;
+  grid-column: 2;
+  align-self: center;
+  gap: 7px;
+  padding: 9px;
+  border-radius: var(--radius-card-sm);
+  background: var(--color-on-blue-hover);
+  transform: rotate(-1.2deg);
+  animation: panel-in var(--duration-expand) ease both;
+}
+
+.scene li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: var(--radius-input);
+  background: var(--color-paper);
+  color: var(--color-ink);
+  font-weight: 700;
+  font-size: var(--fs-sm);
+}
+
+.scene b {
+  flex: none;
+  padding: 4px 9px;
+  border-radius: var(--radius-pill);
+  background: var(--color-mist);
+  font-weight: 800;
+  font-size: var(--fs-2xs);
+  font-variant-numeric: tabular-nums;
+}
+
+.scene .lime {
+  background: var(--color-lime);
+}
+
+.scene .plus {
+  color: var(--color-positive);
+}
+
+.scene .minus {
+  color: var(--color-error);
+}
+
+@keyframes panel-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+}
+
+/* До 1100px карточки идут столбцом: в узких колонках названия ломались бы на слоги. */
+@media (max-width: 1100px) {
+  .flow {
+    flex-direction: column;
+    gap: 10px;
+    height: auto;
+  }
+
+  .step,
+  .step[data-open="true"] {
+    flex: none;
+  }
+
+  .step[data-open="true"] {
+    grid-template-columns: minmax(0, 1fr) 280px;
+    padding: 20px 24px;
+  }
+
+  .toggle,
+  .step[data-open="true"] .toggle {
+    flex-direction: row;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 14px;
+  }
+
+  .toggle {
+    padding: 14px 56px 14px 14px;
+  }
+
+  .title {
+    font-size: var(--fs-md);
+  }
+
+  .expandIcon {
+    top: 50%;
+    transform: translateY(-50%);
+  }
+}
+
+/* Телефон: мини-экран уходит под текст. */
+@media (max-width: 640px) {
+  .step[data-open="true"] {
+    grid-template-rows: auto auto auto;
+    grid-template-columns: minmax(0, 1fr);
+    row-gap: 14px;
+    padding: 18px;
+  }
+
+  .text {
+    margin-top: 0;
+  }
+
+  .scene {
+    grid-row: 3;
+    grid-column: 1;
+  }
+}

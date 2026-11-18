@@ -1,0 +1,81 @@
+.signup {
+  --focus-ring: var(--color-lime);
+  position: relative;
+  display: grid;
+  grid-template-columns: 1fr 440px;
+  align-items: center;
+  gap: 30px;
+  margin-top: 46px;
+  padding: 30px;
+  overflow: hidden;
+  border-radius: var(--radius-section);
+  background: var(--color-blue-deep);
+}
+
+.pitch {
+  position: relative;
+  z-index: 1;
+  color: var(--color-paper);
+}
+
+.title {
+  margin: 14px 0 18px;
+  font-family: var(--font-display);
+  font-weight: 900;
+  font-size: var(--fs-signup);
+  line-height: 0.95;
+  letter-spacing: -0.035em;
+  text-transform: uppercase;
+  text-wrap: balance;
+}
+
+.perks {
+  display: grid;
+  gap: 11px;
+}
+
+.perks li {
+  display: flex;
+  align-items: flex-start;
+  gap: 11px;
+  font-weight: 600;
+  font-size: var(--fs-base);
+}
+
+.mark {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  margin-top: 1px;
+  border-radius: var(--radius-round);
+  background: var(--color-lime);
+  color: var(--color-ink);
+  font-weight: 900;
+  font-size: var(--fs-sm);
+}
+
+.coins {
+  right: 470px;
+  bottom: -26px;
+  width: 120px;
+  opacity: 0.95;
+}
+
+@media (max-width: 1100px) {
+  .signup {
+    grid-template-columns: 1fr;
+  }
+
+  .coins {
+    display: none;
+  }
+}
+
+@media (max-width: 560px) {
+  .signup {
+    padding: 18px;
+    border-radius: var(--radius-section-mobile);
+  }
+}

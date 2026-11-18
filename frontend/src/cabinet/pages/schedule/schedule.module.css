@@ -1,0 +1,294 @@
+.scroller {
+  overflow-x: auto;
+  border: 1px solid var(--cab-line);
+  border-radius: var(--radius-card-sm);
+  background: var(--color-paper);
+}
+
+.week {
+  display: grid;
+  grid-template-columns: var(--schedule-time-width) repeat(var(--days), minmax(var(--schedule-day-min-width), 1fr));
+  min-width: calc(var(--schedule-time-width) + var(--days) * var(--schedule-day-min-width));
+}
+
+.corner,
+.dayHead {
+  border-bottom: 1px solid var(--cab-line);
+  background: var(--color-paper);
+}
+
+.dayHead {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  padding: var(--space-4) 0;
+  border-left: 1px solid var(--cab-line);
+  color: var(--color-muted);
+  font-weight: 700;
+  font-size: var(--fs-md);
+}
+
+.todayHead { color: var(--color-blue); }
+
+.dayNumber {
+  display: grid;
+  place-items: center;
+  min-width: 32px;
+  height: 32px;
+  border-radius: var(--radius-pill);
+  color: var(--color-ink);
+  font-weight: 800;
+  font-size: var(--fs-base);
+  font-variant-numeric: tabular-nums;
+}
+
+.todayNumber { background: var(--color-blue); color: var(--color-paper); }
+
+.times {
+  position: relative;
+  height: calc(var(--schedule-hour-height) * var(--hours) + var(--space-2));
+}
+
+.timeLabel {
+  position: absolute;
+  right: var(--space-2);
+  margin-top: var(--space-2);
+  transform: translateY(-50%);
+  color: var(--color-muted);
+  font-weight: 600;
+  font-size: var(--fs-sm);
+  font-variant-numeric: tabular-nums;
+}
+
+.dayColumn {
+  position: relative;
+  height: calc(var(--schedule-hour-height) * var(--hours) + var(--space-2));
+  border-left: 1px solid var(--cab-line);
+  background-image: linear-gradient(var(--cab-line) 1px, transparent 1px);
+  background-position: 0 var(--space-2);
+  background-size: 100% var(--schedule-hour-height);
+  background-repeat: repeat-y;
+}
+
+.dayColumn > * { margin-top: var(--space-2); }
+.todayColumn { background-color: var(--schedule-today-bg); }
+
+.block {
+  position: absolute;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  padding: var(--space-2) var(--space-3);
+  overflow: hidden;
+  border: 0;
+  border-left: 4px solid var(--lesson-strong);
+  border-radius: var(--radius-sm);
+  background: var(--lesson-soft);
+  color: var(--color-ink);
+  text-align: left;
+  transition: box-shadow 0.15s, transform 0.15s;
+}
+
+.block:hover { box-shadow: var(--shadow-card); }
+.block:active { transform: translateY(1px); }
+.past { opacity: 0.6; }
+
+.blockName,
+.blockTime {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.blockName { font-weight: 800; font-size: var(--fs-md); line-height: 1.3; }
+.blockTime { color: var(--color-muted); font-weight: 600; font-size: var(--fs-sm); font-variant-numeric: tabular-nums; }
+.blockDebt { margin-top: auto; color: var(--color-error); font-weight: 800; font-size: var(--fs-xs); }
+
+.free {
+  position: absolute;
+  right: 2px;
+  left: 2px;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-1);
+  /* Окно видно всегда, бледной пунктирной зоной (SCHEDULE-4). */
+  border: 1.5px dashed var(--color-line-dashed);
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--color-muted);
+  font-weight: 700;
+  font-size: var(--fs-sm);
+  transition: border-color 0.15s, background-color 0.15s, color 0.15s;
+}
+
+.free:hover,
+.free:focus-visible { border-color: var(--color-line-dashed); background: var(--cab-blue-soft); color: var(--color-blue); }
+.free:active { transform: translateY(1px); }
+
+/* Невидимая подложка дня: клик по пустому месту открывает новый урок на это время (SCHEDULE-1). */
+.columnHit {
+  position: absolute;
+  top: 0;
+  right: 0;
+  left: 0;
+  z-index: 0;
+  height: calc(var(--schedule-hour-height) * var(--hours));
+  cursor: pointer;
+}
+
+.columnHit:hover { background: color-mix(in srgb, var(--cab-blue-soft) 45%, transparent); }
+
+.now {
+  position: absolute;
+  right: 0;
+  left: 0;
+  z-index: 2;
+  height: 0;
+  border-top: 2px solid var(--color-error);
+  pointer-events: none;
+}
+
+.now::before {
+  position: absolute;
+  top: -6px;
+  left: -5px;
+  width: 10px;
+  height: 10px;
+  border-radius: var(--radius-round);
+  background: var(--color-error);
+  content: "";
+}
+
+.dayLayout {
+  display: grid;
+  grid-template-columns: minmax(0, 3fr) minmax(0, 2fr);
+  gap: var(--space-4);
+  align-items: start;
+}
+
+.lessonRow {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  width: 100%;
+  padding: var(--space-3) var(--space-4) var(--space-3) var(--space-3);
+  border: 1px solid var(--cab-line);
+  border-left: 4px solid var(--lesson-strong);
+  border-radius: var(--radius-input);
+  background: var(--color-paper);
+  text-align: left;
+  transition: border-color 0.15s, box-shadow 0.15s, transform 0.15s;
+}
+
+.lessonRow:hover { box-shadow: var(--shadow-card); }
+.lessonRow:active { transform: translateY(1px); }
+.lessonRowPast .rowTime,
+.lessonRowPast .rowText { color: var(--color-muted); }
+.lessonRowPast .rowAvatar { opacity: 0.6; }
+
+.rowTime {
+  display: grid;
+  flex: none;
+  width: 72px;
+  font-variant-numeric: tabular-nums;
+}
+.rowTime b { font-family: var(--font-display); font-weight: 800; font-size: var(--fs-base); line-height: 1.2; }
+.rowTime small { color: var(--color-muted); font-weight: 700; font-size: var(--fs-xs); }
+
+.rowText { min-width: 0; flex: 1; }
+.rowText b { display: block; overflow: hidden; font-size: var(--fs-md); text-overflow: ellipsis; white-space: nowrap; }
+.rowText span { color: var(--color-muted); font-weight: 600; font-size: var(--fs-xs); }
+
+.monthHead,
+.monthGrid { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); }
+
+.monthHead {
+  border-bottom: 1px solid var(--cab-line);
+  color: var(--color-muted);
+  font-weight: 800;
+  font-size: var(--fs-xs);
+  text-align: center;
+}
+
+.monthHead span { padding: var(--space-3) 0; }
+
+.monthCell {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-2);
+  min-width: 0;
+  min-height: 96px;
+  padding: var(--space-2);
+  border: 0;
+  border-right: 1px solid var(--cab-line);
+  border-bottom: 1px solid var(--cab-line);
+  border-radius: 0;
+  background: var(--color-paper);
+  text-align: left;
+  transition: background-color 0.15s;
+}
+
+.monthCell:nth-child(7n) { border-right: 0; }
+.monthCell:hover { background: var(--cab-blue-soft); }
+.monthCell:active { background: var(--color-mist); }
+.monthWeekend { background: var(--color-mist); }
+.monthOut .monthNumber { color: var(--color-muted); }
+.monthOut { opacity: 0.7; }
+
+.monthNumber {
+  display: grid;
+  place-items: center;
+  min-width: 26px;
+  height: 26px;
+  border-radius: var(--radius-pill);
+  font-weight: 800;
+  font-size: var(--fs-sm);
+  font-variant-numeric: tabular-nums;
+}
+
+.monthToday .monthNumber { background: var(--color-blue); color: var(--color-paper); }
+.dots { display: none; flex-wrap: wrap; gap: 3px; }
+.monthNames { display: grid; gap: 2px; width: 100%; min-width: 0; }
+.monthName {
+  overflow: hidden;
+  padding: 1px 6px;
+  border-left: 3px solid var(--lesson-strong);
+  border-radius: var(--radius-2xs);
+  background: var(--lesson-soft, var(--color-mist));
+  font-weight: 600;
+  font-size: var(--fs-2xs);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.monthName b { font-weight: 800; font-variant-numeric: tabular-nums; }
+.dot { width: 8px; height: 8px; border-radius: var(--radius-round); background: var(--lesson-strong); }
+.monthCount { color: var(--color-muted); font-weight: 700; font-size: var(--fs-2xs); }
+
+.listDate {
+  margin: 0 0 var(--space-2);
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: var(--fs-md);
+}
+
+.listGroups { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--space-5); }
+.listStack { display: flex; flex-direction: column; gap: var(--space-2); }
+
+@media (max-width: 1180px) {
+  .dayLayout { grid-template-columns: minmax(0, 1fr); }
+}
+
+@media (max-width: 520px) {
+  .monthCell { min-height: 72px; padding: var(--space-1); }
+  .monthCount { display: none; }
+  .monthNames { display: none; }
+  .dots { display: flex; }
+  .rowTime { width: 60px; }
+  .rowAvatar { display: none; }
+}

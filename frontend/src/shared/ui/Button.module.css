@@ -1,0 +1,71 @@
+.button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  border: 0;
+  border-radius: var(--radius-pill);
+  font-weight: 800;
+  text-align: center;
+  text-decoration: none;
+}
+
+.lime {
+  padding: 16px 28px;
+  background: var(--color-lime);
+  color: var(--color-ink);
+  font-size: var(--fs-base);
+  box-shadow: var(--shadow-lime-button);
+  transition:
+    transform var(--duration-press),
+    box-shadow var(--duration-press);
+}
+
+.lime:hover {
+  transform: translateY(2px);
+  box-shadow: var(--shadow-lime-button-hover);
+}
+
+.lime:active {
+  transform: translateY(6px);
+  box-shadow: var(--shadow-lime-button-active);
+}
+
+.ghost {
+  padding: 14px 24px;
+  background: transparent;
+  color: var(--color-paper);
+  font-size: var(--fs-base);
+  border: 2px solid var(--color-paper);
+}
+
+.outline {
+  padding: 10px 22px;
+  background: transparent;
+  color: var(--color-paper);
+  font-size: var(--fs-sm);
+  border: 1.5px solid var(--color-paper);
+}
+
+.ghost:hover,
+.outline:hover {
+  background: var(--color-paper);
+  color: var(--color-blue);
+}
+
+.primary {
+  width: 100%;
+  padding: 15px;
+  border-radius: var(--radius-control);
+  background: var(--color-blue);
+  color: var(--color-paper);
+  font-size: var(--fs-base);
+}
+
+.primary:hover {
+  background: var(--color-blue-hover);
+}
+
+.primary:disabled {
+  opacity: 0.7;
+}

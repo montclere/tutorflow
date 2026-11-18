@@ -1,0 +1,222 @@
+.hero {
+  position: relative;
+  padding: 18px 20px 40px;
+  text-align: center;
+}
+
+.headline {
+  position: relative;
+  z-index: 1;
+  color: var(--color-paper);
+  font-family: var(--font-display);
+  font-weight: 900;
+  font-size: var(--fs-hero);
+  line-height: 0.86;
+  letter-spacing: -0.045em;
+  text-transform: uppercase;
+}
+
+.hash {
+  display: inline-block;
+  margin-right: 0.04em;
+  color: var(--color-lime);
+  transform: rotate(-8deg) translateY(-0.04em);
+}
+
+.sub {
+  position: relative;
+  z-index: 3;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 18px;
+  margin-top: 30px;
+}
+
+.subtitle {
+  max-width: 46ch;
+  color: var(--color-paper);
+  font-weight: 700;
+  font-size: var(--fs-lg);
+  text-wrap: balance;
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 12px;
+}
+
+
+.lesson,
+.reminder {
+  display: flex;
+  align-items: center;
+}
+
+.lesson {
+  top: 40%;
+  left: 1%;
+  width: 212px;
+  gap: 12px;
+  transform: rotate(-6deg);
+}
+
+.payment {
+  top: 4%;
+  right: 0;
+  width: 190px;
+  transform: rotate(5deg);
+}
+
+.reminder {
+  top: 68%;
+  right: 9%;
+  width: 236px;
+  gap: 10px;
+  padding: 11px 14px;
+  transform: rotate(-3deg);
+}
+
+.avatar {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border-radius: var(--radius-control);
+  background: var(--color-avatar);
+  color: var(--color-ink);
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: var(--fs-md);
+}
+
+.cardTitle {
+  display: block;
+  font-weight: 800;
+  font-size: var(--fs-md);
+}
+
+.cardNote {
+  display: block;
+  font-size: var(--fs-xs);
+  opacity: 0.85;
+}
+
+.money {
+  display: block;
+  color: var(--color-lime);
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: var(--fs-2xl);
+  letter-spacing: -0.02em;
+}
+
+.dot {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  border-radius: var(--radius-round);
+  background: var(--color-lime);
+  color: var(--color-ink);
+  font-weight: 900;
+}
+
+.badge {
+  top: 76%;
+  right: 0;
+}
+
+.coin {
+  top: 8%;
+  left: 13%;
+  width: 118px;
+}
+
+.calendar {
+  top: 33%;
+  right: 4%;
+  width: 92px;
+}
+
+.plane {
+  top: 19%;
+  left: 3%;
+  width: 84px;
+}
+
+.loop {
+  top: 62%;
+  left: 18%;
+  width: 150px;
+}
+
+.swirl {
+  top: -4%;
+  right: 15%;
+  width: 150px;
+}
+
+.wave {
+  top: -6%;
+  left: 30%;
+  width: 90px;
+}
+
+@media (max-width: 1100px) {
+  .reminder {
+    top: 70%;
+    right: 4%;
+  }
+
+  .badge {
+    top: auto;
+    right: 2%;
+    bottom: -10px;
+  }
+}
+
+@media (max-width: 860px) {
+  .payment {
+    top: -4%;
+    right: 2%;
+    width: 160px;
+  }
+
+  .lesson,
+  .reminder,
+  .swirl,
+  .calendar {
+    display: none;
+  }
+
+  .badge {
+    width: 104px;
+    height: 104px;
+  }
+}
+
+@media (max-width: 560px) {
+  .hero {
+    padding: 10px 12px 30px;
+  }
+
+  .coin {
+    top: -2%;
+    left: 2%;
+    width: 70px;
+  }
+
+  .lesson,
+  .payment,
+  .reminder,
+  .plane,
+  .loop,
+  .wave {
+    display: none;
+  }
+}

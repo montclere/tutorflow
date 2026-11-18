@@ -1,0 +1,30 @@
+import { cabinet } from "../../content/cabinet.ru";
+import type { PaymentStatus, ScheduleLesson, Student, Tone } from "../../mocks/types";
+import { lessonEnd } from "../../model/lessons";
+import { Pill } from "../../ui/Pill";
+
+const text = cabinet.teacher.schedule;
+
+const paymentTones: Record<PaymentStatus, Tone> = { paid: "ok", debt: "bad", low: "warn" };
+
+export function lessonTime(lesson: ScheduleLesson): string {
+  return `${lesson.start}–${lessonEnd(lesson)}`;
+}
+
+/** Время в строке урока: крупно начало, мелко длительность — не ломается в две строки на телефоне. */
+export function RowTime({ lesson, className }: { lesson: ScheduleLesson; className?: string }) {
+  return (
+    <span className={className} aria-label={lessonTime(lesson)}>
+      <b>{lesson.start}</b>
+      <small>{text.lesson.duration(lesson.durationMin)}</small>
+    </span>
+  );
+}
+
+export function PaymentBadge({ payment, full }: { payment: PaymentStatus; full?: boolean }) {
+  return <Pill tone={paymentTones[payment]}>{full ? text.payFull[payment] : text.pay[payment]}</Pill>;
+}
+
+export function lessonSummary(lesson: ScheduleLesson, student: Student): string {
+  return `${student.name} · ${lessonTime(lesson)} · ${student.goal}`;
+}
