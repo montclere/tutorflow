@@ -9,6 +9,8 @@ import styles from "./schedule.module.css";
 
 const text = cabinet.teacher.schedule;
 const MAX_DOTS = 6;
+// На широком экране в ячейке месяца — до трёх уроков с именами, на узком — цветные точки.
+const MAX_NAMES = 3;
 
 type Props = {
   lessons: ScheduleLesson[];
@@ -46,7 +48,17 @@ export function MonthView({ lessons, date, today, onPick }: Props) {
                   <i key={lesson.id} className={styles.dot} style={lessonColorStyle(getStudent(lesson.studentId))} />
                 ))}
               </span>
-              {dayLessons.length > 0 && <span className={styles.monthCount}>{text.monthDay(dayLessons.length)}</span>}
+              <span className={styles.monthNames} aria-hidden="true">
+                {dayLessons.slice(0, MAX_NAMES).map((lesson) => {
+                  const student = getStudent(lesson.studentId);
+                  return (
+                    <span key={lesson.id} className={styles.monthName} style={lessonColorStyle(student)}>
+                      <b>{lesson.start}</b> {student.name.split(" ")[0]}
+                    </span>
+                  );
+                })}
+                {dayLessons.length > MAX_NAMES && <span className={styles.monthCount}>{text.monthMore(dayLessons.length - MAX_NAMES)}</span>}
+              </span>
             </button>
           );
         })}

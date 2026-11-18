@@ -1,7 +1,6 @@
 import { cabinet } from "../../content/cabinet.ru";
 import { getStudent } from "../../data";
 import type { ScheduleData, ScheduleLesson } from "../../mocks/types";
-import { addDays } from "../../model/dates";
 import { formatSigned } from "../../model/format";
 import { paymentStatus } from "../../model/students";
 import { isPast, lessonsOn, nextLesson } from "../../model/lessons";
@@ -10,8 +9,7 @@ import { Button } from "../../ui/Button";
 import { Card } from "../../ui/Card";
 import { cx } from "../../ui/cx";
 import { useNotifier } from "../../ui/Notifications";
-import { Tabs } from "../../ui/Tabs";
-import { lessonTime, PaymentBadge } from "./LessonMeta";
+import { lessonTime, PaymentBadge, RowTime } from "./LessonMeta";
 import { lessonColorStyle } from "./scheduleStyle";
 import styles from "./schedule.module.css";
 
@@ -21,7 +19,6 @@ type Props = {
   data: ScheduleData;
   lessons: ScheduleLesson[];
   date: string;
-  onDate: (date: string) => void;
   onOpen: (lesson: ScheduleLesson) => void;
 };
 
@@ -34,25 +31,15 @@ function Fact({ label, value }: { label: string; value: string }) {
   );
 }
 
-export function DayView({ data, lessons, date, onDate, onOpen }: Props) {
+export function DayView({ data, lessons, date, onOpen }: Props) {
   const { notifySoon } = useNotifier();
   const { today, now } = data;
   const dayLessons = lessonsOn(lessons, date);
   const focus = date === today ? nextLesson(dayLessons, today, now) : (dayLessons[0] ?? null);
   const focusStudent = focus ? getStudent(focus.studentId) : null;
-  const tomorrow = addDays(today, 1);
 
   return (
     <>
-      <Tabs
-        label={text.viewLabel}
-        items={[
-          { id: today, label: text.today },
-          { id: tomorrow, label: text.tomorrow },
-        ]}
-        selectedId={date === today || date === tomorrow ? date : ""}
-        onSelect={onDate}
-      />
       <div className={styles.dayLayout}>
         <div className={styles.listStack}>
           {dayLessons.length === 0 && <p className="m-0 rounded-xl border bg-card p-6 text-center text-sm font-semibold text-muted-foreground">{text.noLessons}</p>}
@@ -67,7 +54,7 @@ export function DayView({ data, lessons, date, onDate, onOpen }: Props) {
                 style={lessonColorStyle(student)}
                 onClick={() => onOpen(lesson)}
               >
-                <span className={styles.rowTime}>{lessonTime(lesson)}</span>
+                <RowTime lesson={lesson} className={styles.rowTime} />
                 <span className={styles.rowAvatar}>
                   <Avatar initials={student.initials} color={student.color} />
                 </span>

@@ -3,7 +3,7 @@ import { useState } from "react";
 import { ru } from "react-day-picker/locale";
 import { cabinet } from "../../content/cabinet.ru";
 import { parseDate, toDateString } from "../../model/dates";
-import { periodTitle, stepDate, type ScheduleView } from "../../model/scheduleRange";
+import { periodTitle, stepDate, viewRange, type ScheduleView } from "../../model/scheduleRange";
 import { Button, IconButton } from "../../ui/Button";
 import { Calendar } from "@/shared/ui/kit/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/shared/ui/kit/popover";
@@ -21,6 +21,9 @@ type Props = {
 
 export function ScheduleHeader({ view, date, today, onChange, onAdd }: Props) {
   const [pickerOpen, setPickerOpen] = useState(false);
+  const range = viewRange(view, date);
+  // На телефоне «Сегодня» лишняя строка, если сегодняшний день уже на экране.
+  const showsToday = today >= range.from && today <= range.to;
 
   return (
     <div className="mb-4 flex flex-wrap items-center justify-between gap-x-4 gap-y-3">
@@ -55,7 +58,9 @@ export function ScheduleHeader({ view, date, today, onChange, onAdd }: Props) {
         </Popover>
         <IconButton icon={ChevronLeft} label={text.step[view].prev} onClick={() => onChange({ date: stepDate(view, date, -1) })} />
         <IconButton icon={ChevronRight} label={text.step[view].next} onClick={() => onChange({ date: stepDate(view, date, 1) })} />
-        <Button onClick={() => onChange({ date: today })}>{text.today}</Button>
+        <Button onClick={() => onChange({ date: today })} className={showsToday ? "max-[520px]:hidden" : undefined}>
+          {text.today}
+        </Button>
       </div>
       <div className="flex flex-wrap items-center gap-2">
         <ToggleGroup
@@ -72,7 +77,7 @@ export function ScheduleHeader({ view, date, today, onChange, onAdd }: Props) {
             </ToggleGroupItem>
           ))}
         </ToggleGroup>
-        <Button variant="primary" icon={Plus} onClick={onAdd}>
+        <Button variant="primary" icon={Plus} onClick={onAdd} className="max-[520px]:hidden">
           {text.addLesson}
         </Button>
       </div>

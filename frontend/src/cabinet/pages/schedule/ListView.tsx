@@ -6,7 +6,7 @@ import { groupByDate, isPast } from "../../model/lessons";
 import { paymentStatus } from "../../model/students";
 import { Avatar } from "../../ui/Avatar";
 import { cx } from "../../ui/cx";
-import { lessonTime, PaymentBadge } from "./LessonMeta";
+import { PaymentBadge, RowTime } from "./LessonMeta";
 import { lessonColorStyle } from "./scheduleStyle";
 import styles from "./schedule.module.css";
 
@@ -43,7 +43,7 @@ export function ListView({ data, lessons, filtered, onOpen }: Props) {
                   style={lessonColorStyle(student)}
                   onClick={() => onOpen(lesson)}
                 >
-                  <span className={styles.rowTime}>{lessonTime(lesson)}</span>
+                  <RowTime lesson={lesson} className={styles.rowTime} />
                   <span className={styles.rowAvatar}>
                     <Avatar initials={student.initials} color={student.color} />
                   </span>

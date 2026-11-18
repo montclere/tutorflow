@@ -146,6 +146,7 @@ export const cabinet = {
         noStudents: "Ученик не найден",
         type: "Тип урока",
         allTypes: "Все типы",
+        toggle: (active: number) => (active > 0 ? `Фильтры · ${active}` : "Фильтры"),
       },
       types: { individual: "Индивидуальный", group: "Групповой", trial: "Пробный" },
       summary: (lessons: number, windows: number) =>
@@ -159,6 +160,7 @@ export const cabinet = {
       weekGridLabel: "Недельное расписание",
       monthLabel: "Расписание на месяц",
       monthDay: (count: number) => `${count} ${plural(count, lessonForms)}`,
+      monthMore: (count: number) => `ещё ${count}`,
       noLessons: "Уроков нет",
       emptyList: "Ближайших уроков нет",
       emptyFiltered: "По выбранным фильтрам уроков нет",

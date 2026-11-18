@@ -1,3 +1,4 @@
+import { Plus } from "lucide-react";
 import { useMemo, useState } from "react";
 import { cabinet } from "../../content/cabinet.ru";
 import { getStudents } from "../../data";
@@ -6,6 +7,7 @@ import type { ScheduleLesson } from "../../mocks/types";
 import { upcomingFreeWindows } from "../../model/freeSlots";
 import { filterLessons, lessonsBetween, type LessonFilters } from "../../model/lessons";
 import { addDays } from "../../model/dates";
+import { Button } from "../../ui/Button";
 import { viewRange } from "../../model/scheduleRange";
 import { DayView } from "./DayView";
 import { LessonSheet } from "./LessonSheet";
@@ -52,9 +54,18 @@ export function SchedulePage() {
       {view === "week" && (
         <WeekView data={data} lessons={lessons} date={date} onOpen={setSelected} onCreate={(day, start) => setNewLesson({ date: day, start, studentId: filters.studentId ?? undefined })} />
       )}
-      {view === "day" && <DayView data={data} lessons={lessons} date={date} onDate={(next) => go({ date: next })} onOpen={setSelected} />}
+      {view === "day" && <DayView data={data} lessons={lessons} date={date} onOpen={setSelected} />}
       {view === "month" && <MonthView lessons={lessons} date={date} today={data.today} onPick={(next) => go({ view: "day", date: next })} />}
       {view === "list" && <ListView data={data} lessons={lessonsBetween(lessons, range.from, range.to)} filtered={isFiltered} onOpen={setSelected} />}
+      {/* На телефоне «+ Урок» — плавающая кнопка внизу, а не ещё одна строка шапки. */}
+      <Button
+        variant="primary"
+        icon={Plus}
+        className="fixed right-4 bottom-4 z-40 h-12 rounded-full px-5 shadow-lg min-[521px]:hidden"
+        onClick={() => setNewLesson({ date, studentId: filters.studentId ?? undefined })}
+      >
+        {text.addLesson}
+      </Button>
       <LessonSheet lesson={selected} onClose={() => setSelected(null)} />
       <NewLessonSheet
         seed={newLesson}
