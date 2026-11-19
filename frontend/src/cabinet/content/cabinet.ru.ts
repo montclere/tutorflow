@@ -377,10 +377,9 @@ export const cabinet = {
         label: (state: string) => `Последнее ДЗ: ${state}`,
       },
       waiting: "не подключён",
-      // Чипы в строке ученика (VIBE-6): новичок и средняя оценка уроков.
+      // Чип в строке ученика (VIBE-6): новичок.
       fresh: "Новый",
       freshHint: "Меньше трёх уроков — присмотритесь, как идёт",
-      rating: (average: number, count: number) => `Оценка уроков ${average.toFixed(1)} из 5, оценок: ${count}`,
       packageLow: (left: number) => `в пакете ${left} ${plural(left, lessonForms)}`,
       listLabel: "Список учеников",
       openCard: (name: string) => `Открыть карточку: ${name}`,
@@ -487,19 +486,14 @@ export const cabinet = {
           recent: "Последние уроки",
           progress: "Успеваемость",
           progressEmpty: "Проверенных домашек пока нет",
-          // Плитки-показатели ученика (VIBE-7): эмодзи на пастели, оценка — из отзывов ученика после урока.
+          // Плитки-показатели ученика (VIBE-7).
           tiles: {
             done: "Проведено",
             doneNote: (count: number) => plural(count, lessonForms),
             missed: "Отмены и переносы",
             missedNote: (total: number) => `из последних ${total}`,
-            rating: "Оценка уроков",
-            ratingNote: (count: number) => `${count} ${plural(count, ["оценка", "оценки", "оценок"])}`,
-            ratingNone: "ещё не оценивал",
             materials: "Материалы открыты",
             materialsNote: (sent: number) => `из ${sent} отправленных`,
-            quote: (date: string, topic: string) => `Отзыв ${date} · ${topic}`,
-            stars: (stars: number) => `${stars} из 5`,
           },
           average: "Средний результат",
           details: "Подробнее →",

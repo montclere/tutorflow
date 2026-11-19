@@ -14,7 +14,6 @@ import { MaterialIcon } from "../ui/MaterialIcon";
 import { chunky } from "./learn/chunky";
 import styles from "./learn/learn.module.css";
 import { learnText } from "./learn/learn.ru";
-import { RateLesson } from "./learn/RateLesson";
 import { Ring } from "./learn/Ring";
 
 const text = learnText.home;
@@ -241,8 +240,7 @@ export function StudentHomePage() {
               ))}
             </ul>
           </Panel>
-          <RateLesson student={student} />
-          <Panel title={text.feedbackTitle} delay={520}>
+          <Panel title={text.feedbackTitle} delay={480}>
             <div className="flex gap-3">
               <MessageSquareQuote size={22} className="flex-none text-primary" aria-hidden="true" />
               <p className="m-0 text-sm font-semibold">{feedback?.feedback ? Object.values(feedback.feedback).join(" ") : studentFeedback}</p>

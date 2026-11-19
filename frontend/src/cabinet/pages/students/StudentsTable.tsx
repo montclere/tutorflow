@@ -1,9 +1,8 @@
-import { ChevronRight, Star } from "lucide-react";
+import { ChevronRight } from "lucide-react";
 import { cabinet } from "../../content/cabinet.ru";
 import type { Student } from "../../mocks/types";
 import { formatRubles, formatTimesPerWeek } from "../../model/format";
 import { lessonsAhead } from "../../model/finance";
-import { satisfaction, useRatings } from "../../model/ratings";
 import { debtLessons, formatNextLesson, lastHomework, paymentStatus } from "../../model/students";
 import { Avatar } from "../../ui/Avatar";
 import { cx } from "../../ui/cx";
@@ -98,27 +97,16 @@ function Waiting({ student }: { student: Student }) {
   return <span className="inline-flex rounded-full bg-[var(--cab-warn-soft)] px-2 py-0.5 text-xs font-bold whitespace-nowrap text-[var(--cab-warn)]">{text.waiting}</span>;
 }
 
-/** Строка под именем: цель и чипы — новичок, средняя оценка уроков учеником (VIBE-6). */
+/** Строка под именем: цель и чип «Новый» у ученика меньше чем с тремя уроками (VIBE-6). */
 function GoalLine({ student }: { student: Student }) {
-  const rating = satisfaction(useRatings(), student.id);
   const fresh = student.status === "active" && student.lessonsCount < FRESH_LESSONS;
-  if (!student.goal && !fresh && !rating) return null;
+  if (!student.goal && !fresh) return null;
   return (
     <span className="flex min-w-0 items-center gap-1.5">
       {student.goal && <TruncatedText text={student.goal} className="min-w-0 text-sm font-semibold text-muted-foreground" />}
       {fresh && (
         <span title={text.freshHint} className="inline-flex flex-none rounded-full bg-[var(--vibe-pop)] px-2 py-0.5 text-[11px] font-extrabold tracking-wide whitespace-nowrap text-white uppercase">
           {text.fresh}
-        </span>
-      )}
-      {rating && (
-        <span
-          title={text.rating(rating.average, rating.count)}
-          aria-label={text.rating(rating.average, rating.count)}
-          className="inline-flex flex-none items-center gap-0.5 rounded-full bg-[var(--vibe-peach)] px-2 py-0.5 text-xs font-extrabold whitespace-nowrap tabular-nums"
-        >
-          <Star size={12} className="fill-current text-[#f59e0b]" aria-hidden="true" />
-          {rating.average.toFixed(1)}
         </span>
       )}
     </span>
