@@ -1,4 +1,4 @@
-import { Moon, Sun, Sunrise, Sunset } from "lucide-react";
+import { CloudMoon, MoonStars, Sun, SunHorizon } from "@phosphor-icons/react";
 import { cabinet } from "../../content/cabinet.ru";
 import { formatLongDay } from "../../model/dates";
 import { toMinutes } from "../../model/time";
@@ -15,7 +15,7 @@ export function dayPart(time: string): DayPart {
   return "evening";
 }
 
-const icons = { night: Moon, morning: Sunrise, day: Sun, evening: Sunset } as const;
+const icons = { night: MoonStars, morning: SunHorizon, day: Sun, evening: CloudMoon } as const;
 
 type Props = { name: string; today: string; now: string; summary: string };
 
@@ -41,7 +41,7 @@ export function Greeting({ name, today, now, summary }: Props) {
         <p className="m-0 text-base font-semibold text-muted-foreground">{summary}</p>
       </div>
       <span className="glass grid size-16 flex-none place-items-center rounded-3xl [--glass-bg:color-mix(in_srgb,var(--vibe-peach)_70%,transparent)] max-[520px]:hidden" aria-hidden="true">
-        <Icon size={30} strokeWidth={2.2} className={part === "night" || part === "evening" ? "text-[#7b4dff]" : "text-[#ff8a3d]"} />
+        <Icon size={34} className={part === "night" || part === "evening" ? "text-[#7b4dff]" : "text-[#ff8a3d]"} />
       </span>
     </header>
   );

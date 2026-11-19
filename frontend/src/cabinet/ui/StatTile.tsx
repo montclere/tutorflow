@@ -1,4 +1,4 @@
-import type { LucideIcon } from "lucide-react";
+import type { AppIcon } from "@/shared/ui/icon";
 import { GradientIcon, type GradientTone } from "@/shared/ui/GradientIcon";
 import { cx } from "./cx";
 
@@ -12,7 +12,7 @@ const pastel: Record<GradientTone, string> = {
   blue: "[--glass-bg:color-mix(in_srgb,var(--cab-blue-soft)_62%,transparent)]",
 };
 
-type Props = { label: string; value: string; note?: string; tone: GradientTone; icon: LucideIcon; className?: string; onClick?: () => void };
+type Props = { label: string; value: string; note?: string; tone: GradientTone; icon: AppIcon; className?: string; onClick?: () => void };
 
 /** Плитка-показатель на пастельном фоне: градиентная иконка, число и подпись (VIBE-1). */
 export function StatTile({ label, value, note, tone, icon, className, onClick }: Props) {

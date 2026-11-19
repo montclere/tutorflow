@@ -1,3 +1,4 @@
+import { IconContext } from "@phosphor-icons/react";
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import { App } from "./app/App";
@@ -28,6 +29,9 @@ if (!root) throw new Error("В index.html нет элемента #root");
 
 createRoot(root).render(
   <StrictMode>
-    <Root />
+    {/* Иконки Phosphor — двухтоновые по умолчанию (VIBE-15). */}
+    <IconContext.Provider value={{ weight: "duotone" }}>
+      <Root />
+    </IconContext.Provider>
   </StrictMode>,
 );

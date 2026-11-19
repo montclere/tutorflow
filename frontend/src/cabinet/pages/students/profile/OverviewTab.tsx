@@ -1,4 +1,5 @@
-import { AlertTriangle, BookOpen, CalendarX, CheckCircle2, ClipboardCheck, MessageCircle, Presentation, Wallet } from "lucide-react";
+import { BookOpenText, CalendarX as PhCalendarX, ChalkboardTeacher } from "@phosphor-icons/react";
+import { AlertTriangle, CalendarX, CheckCircle2, ClipboardCheck, MessageCircle, Wallet } from "lucide-react";
 import { cabinet } from "../../../content/cabinet.ru";
 import { getStudentDetails } from "../../../data";
 import type { ScheduleLesson, Student, StudentDetails } from "../../../mocks/types";
@@ -46,9 +47,9 @@ function StudentTiles({ student, details }: { student: Student; details: Student
   const tiles = text.tiles;
   return (
     <div className="grid grid-cols-3 gap-3 max-[700px]:grid-cols-1">
-        <StatTile tone="cyan" icon={Presentation} label={tiles.done} value={String(student.lessonsCount)} note={tiles.doneNote(student.lessonsCount)} />
-        <StatTile tone="pink" icon={CalendarX} label={tiles.missed} value={String(missed)} note={tiles.missedNote(student.recentLessons.length)} />
-        <StatTile tone="green" icon={BookOpen} label={tiles.materials} value={String(opened)} note={tiles.materialsNote(details.materials.length)} />
+        <StatTile tone="cyan" icon={ChalkboardTeacher} label={tiles.done} value={String(student.lessonsCount)} note={tiles.doneNote(student.lessonsCount)} />
+        <StatTile tone="pink" icon={PhCalendarX} label={tiles.missed} value={String(missed)} note={tiles.missedNote(student.recentLessons.length)} />
+        <StatTile tone="green" icon={BookOpenText} label={tiles.materials} value={String(opened)} note={tiles.materialsNote(details.materials.length)} />
     </div>
   );
 }

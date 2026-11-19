@@ -1,4 +1,4 @@
-import { CloudOff } from "lucide-react";
+import { CloudSlash as PhCloudSlash } from "@phosphor-icons/react";
 import { useCallback, useEffect, useState, type ReactNode } from "react";
 import { env } from "../../config/env";
 import { routes } from "../../config/routes";
@@ -70,7 +70,7 @@ export function SessionGate({ children }: { children: ReactNode }) {
   if (state.kind === "failed") {
     return (
       <Centered>
-        <EmptyState icon={CloudOff} title={text.failed} action={<Button onClick={() => void load()}>{text.retry}</Button>} />
+        <EmptyState icon={PhCloudSlash} title={text.failed} action={<Button onClick={() => void load()}>{text.retry}</Button>} />
       </Centered>
     );
   }

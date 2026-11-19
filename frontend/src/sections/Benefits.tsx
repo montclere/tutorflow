@@ -1,10 +1,10 @@
-import { HeartHandshake, Timer, Wallet } from "lucide-react";
+import { HandHeart, Timer, Wallet } from "@phosphor-icons/react";
 import { landing } from "../content/landing.ru";
 import { GradientIcon } from "../shared/ui/GradientIcon";
 import styles from "./Benefits.module.css";
 
 const text = landing.benefits;
-const icons = { green: Timer, orange: Wallet, pink: HeartHandshake } as const;
+const icons = { green: Timer, orange: Wallet, pink: HandHeart } as const;
 
 /** Три выгоды пастельными карточками с градиентными иконками (VIBE-2). */
 export function Benefits() {

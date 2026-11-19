@@ -1,46 +1,30 @@
-import {
-  Zap,
-  CalendarDays,
-  ChartColumn,
-  ClipboardCheck,
-  ClipboardList,
-  Clock,
-  CreditCard,
-  BookOpen,
-  Flag,
-  House,
-  ListChecks,
-  Package,
-  UserX,
-  Users,
-  Wallet,
-  type LucideIcon,
-} from "lucide-react";
+import { BookOpenText, CalendarDots, ChartBar, ClipboardText, Clock, CreditCard, Exam, FlagBanner, House, Lightning, ListChecks, Package, UserMinus, UsersThree, Wallet } from "@phosphor-icons/react";
+import type { AppIcon } from "@/shared/ui/icon";
 import type { AttentionKind } from "../mocks/types";
 import type { IconName } from "../content/cabinet.ru";
 
-const navIcons: Record<IconName, LucideIcon> = {
+const navIcons: Record<IconName, AppIcon> = {
   home: House,
-  calendar: CalendarDays,
-  users: Users,
-  tasks: ClipboardList,
+  calendar: CalendarDots,
+  users: UsersThree,
+  tasks: ClipboardText,
   check: ListChecks,
   money: Wallet,
-  bolt: Zap,
-  flag: Flag,
-  chart: ChartColumn,
-  book: BookOpen,
+  bolt: Lightning,
+  flag: FlagBanner,
+  chart: ChartBar,
+  book: BookOpenText,
 };
 
-const attentionIcons: Record<AttentionKind, LucideIcon> = {
+const attentionIcons: Record<AttentionKind, AppIcon> = {
   lesson: Clock,
-  review: ClipboardCheck,
+  review: Exam,
   debt: CreditCard,
   package: Package,
-  inactive: UserX,
+  inactive: UserMinus,
 };
 
-export const ICON_SIZE = 18;
+export const ICON_SIZE = 20;
 
 export function NavIcon({ name }: { name: IconName }) {
   const Component = navIcons[name];

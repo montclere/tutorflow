@@ -1,4 +1,4 @@
-import { Check, ChevronDown, Crown, Globe, GraduationCap, LayoutGrid, LifeBuoy, LogOut, Menu, Presentation } from "lucide-react";
+import { CaretDown, ChalkboardTeacher, Check, Crown, Globe, GraduationCap, Lifebuoy, List, SignOut, SquaresFour } from "@phosphor-icons/react";
 import { navigate } from "../../app/router";
 import { env } from "../../config/env";
 import { routes } from "../../config/routes";
@@ -14,7 +14,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel,
 import styles from "./layout.module.css";
 
 const text = cabinet.shell;
-const roleIcons = { teacher: Presentation, student: GraduationCap } as const;
+const roleIcons = { teacher: ChalkboardTeacher, student: GraduationCap } as const;
 const itemClass = "gap-2.5 rounded-lg px-2.5 py-2 text-sm font-bold";
 
 type Props = { role: Role; menuOpen: boolean; onToggleMenu: () => void };
@@ -38,7 +38,7 @@ export function Topbar({ role, menuOpen, onToggleMenu }: Props) {
     <header className={styles.top}>
       <div className={styles.topLeft}>
         <IconButton
-          icon={Menu}
+          icon={List}
           label={menuOpen ? text.closeMenu : text.openMenu}
           className={styles.burger}
           aria-expanded={menuOpen}
@@ -53,7 +53,7 @@ export function Topbar({ role, menuOpen, onToggleMenu }: Props) {
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <button type="button" className={styles.apps} aria-label={text.apps}>
-              <LayoutGrid size={20} aria-hidden="true" />
+              <SquaresFour size={24} aria-hidden="true" />
             </button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="start" sideOffset={8} className="w-60 rounded-xl p-1.5">
@@ -81,19 +81,19 @@ export function Topbar({ role, menuOpen, onToggleMenu }: Props) {
 
       <div className={styles.me}>
         <a className={styles.help} href={help} aria-label={text.help} {...(env.supportUrl ? { target: "_blank", rel: "noreferrer" } : {})}>
-          <LifeBuoy size={22} aria-hidden="true" />
+          <Lifebuoy size={24} aria-hidden="true" />
           <span>{text.help}</span>
         </a>
         {session.demo && role === "teacher" && (
           <span className={styles.plan} title={text.planLabel} aria-label={text.planLabel}>
-            <Crown size={18} aria-hidden="true" />
+            <Crown size={20} weight="fill" aria-hidden="true" />
             {text.plan}
           </span>
         )}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <button type="button" className={styles.account} aria-label={text.account(person.name)}>
-              <ChevronDown size={18} className={styles.chevron} aria-hidden="true" />
+              <CaretDown size={18} weight="bold" className={styles.chevron} aria-hidden="true" />
               <span className={styles.avatarRing}>
                 <Avatar initials={person.initials} color={person.color} />
               </span>
@@ -106,7 +106,7 @@ export function Topbar({ role, menuOpen, onToggleMenu }: Props) {
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
             <DropdownMenuItem className={itemClass} onSelect={session.logout}>
-              <LogOut size={18} aria-hidden="true" />
+              <SignOut size={18} aria-hidden="true" />
               {text.logout}
             </DropdownMenuItem>
           </DropdownMenuContent>

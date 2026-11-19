@@ -1,4 +1,5 @@
-import { Archive, CheckCheck, List, PauseCircle, Plus, Search, Table2, TriangleAlert, UserPlus } from "lucide-react";
+import { Archive as PhArchive, Checks as PhChecks, MagnifyingGlass as PhMagnifyingGlass, PauseCircle as PhPauseCircle, UserPlus as PhUserPlus } from "@phosphor-icons/react";
+import { List, Plus, Search, Table2, TriangleAlert } from "lucide-react";
 import { useState } from "react";
 import { cabinet } from "../../content/cabinet.ru";
 import { getSchedule } from "../../data";
@@ -36,12 +37,12 @@ export function StudentsPage() {
   const selected = students.find((student) => student.id === studentId) ?? null;
 
   const emptyState = () => {
-    if (query.trim() !== "") return <EmptyState icon={Search} title={text.empty.search} />;
-    if (debtorsOnly) return <EmptyState icon={CheckCheck} title={text.empty.debtors} />;
+    if (query.trim() !== "") return <EmptyState icon={PhMagnifyingGlass} title={text.empty.search} />;
+    if (debtorsOnly) return <EmptyState icon={PhChecks} title={text.empty.debtors} />;
     if (status === "active") {
       return (
         <EmptyState
-          icon={UserPlus}
+          icon={PhUserPlus}
           title={text.empty.first.title}
           text={text.empty.first.text}
           action={
@@ -52,7 +53,7 @@ export function StudentsPage() {
         />
       );
     }
-    return <EmptyState icon={status === "pause" ? PauseCircle : Archive} title={status === "pause" ? text.empty.pause : text.empty.archive} />;
+    return <EmptyState icon={status === "pause" ? PhPauseCircle : PhArchive} title={status === "pause" ? text.empty.pause : text.empty.archive} />;
   };
 
   const restoreFocus = (event: Event) => {

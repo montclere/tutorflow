@@ -1,4 +1,5 @@
-import { Clock, PiggyBank, TriangleAlert, Wallet, type LucideIcon } from "lucide-react";
+import { Hourglass, PiggyBank, Wallet, WarningCircle } from "@phosphor-icons/react";
+import type { AppIcon } from "@/shared/ui/icon";
 import { cabinet } from "../../content/cabinet.ru";
 import type { FinanceOverview } from "../../mocks/types";
 import { formatRubles } from "../../model/format";
@@ -14,7 +15,7 @@ const ROUND = 100;
 
 const rubles = (kopecks: number) => formatRubles(Math.round(kopecks / ROUND) * ROUND);
 
-type TileProps = { icon: LucideIcon; label: string; amount: number; note: string; tone?: "main" | "bad"; vibe?: GradientTone; badge?: string | null; delay: number };
+type TileProps = { icon: AppIcon; label: string; amount: number; note: string; tone?: "main" | "bad"; vibe?: GradientTone; badge?: string | null; delay: number };
 
 /** Пастельный фон под цвет градиентной иконки (VIBE-8); у пустого долга — обычная карточка. */
 const pastel: Partial<Record<GradientTone, string>> = { cyan: "bg-[var(--vibe-sky)]", pink: "bg-[var(--vibe-pink)]", green: "bg-[var(--vibe-mint)]" };
@@ -55,8 +56,8 @@ export function MoneyTiles({ data }: { data: FinanceOverview }) {
   return (
     <div className="grid grid-cols-4 gap-4 max-[1180px]:grid-cols-2 max-[520px]:gap-2.5">
       <Tile icon={Wallet} tone="main" label={tiles.received.label} amount={data.stat?.received ?? 0} note={tiles.received.note(data.stat?.payments ?? 0)} badge={growth} delay={0} />
-      <Tile icon={Clock} vibe="cyan" label={tiles.expected.label} amount={data.expected.amount} note={tiles.expected.note} delay={80} />
-      <Tile icon={TriangleAlert} tone="bad" vibe="pink" label={tiles.debt.label} amount={data.debt.amount} note={tiles.debt.note(data.debt.count)} delay={160} />
+      <Tile icon={Hourglass} vibe="cyan" label={tiles.expected.label} amount={data.expected.amount} note={tiles.expected.note} delay={80} />
+      <Tile icon={WarningCircle} tone="bad" vibe="pink" label={tiles.debt.label} amount={data.debt.amount} note={tiles.debt.note(data.debt.count)} delay={160} />
       <Tile icon={PiggyBank} vibe="green" label={tiles.prepaid.label} amount={data.prepaid.amount} note={tiles.prepaid.note(data.prepaid.lessons)} delay={240} />
     </div>
   );
