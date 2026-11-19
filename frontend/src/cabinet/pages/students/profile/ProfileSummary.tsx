@@ -1,48 +1,54 @@
-import { CalendarPlus, Copy } from "lucide-react";
+import { CalendarClock, CalendarPlus, Copy, MessageCircle, Phone, Target, Wallet, type LucideIcon } from "lucide-react";
 import type { ReactNode } from "react";
 import { cabinet } from "../../../content/cabinet.ru";
 import type { Student } from "../../../mocks/types";
-import { formatRubles, formatTimesPerWeek } from "../../../model/format";
+import { formatRubles } from "../../../model/format";
 import { Button } from "../../../ui/Button";
 import { cx } from "../../../ui/cx";
 import { useNotifier } from "../../../ui/Notifications";
-import { ProgressBar } from "../../../ui/ProgressBar";
+import { Ring } from "../../learn/Ring";
 import { inviteLink } from "../NewStudentDialog";
-import { balanceClass, balanceNote, formatBalance, nextLessonText } from "../StudentsTable";
+import { balanceNote, formatBalance, nextLessonText } from "../StudentsTable";
 
 const students = cabinet.teacher.students;
 const text = students.profile.summary;
 
-function Group({ title, children }: { title: string; children: ReactNode }) {
+/** Карточка сводки: иконка, заголовок, содержимое. */
+function Block({ icon: Icon, title, tone = "default", children }: { icon: LucideIcon; title: string; tone?: "default" | "accent"; children: ReactNode }) {
   return (
-    <section className="grid gap-3 border-b border-border py-5 first:pt-0 last:border-b-0">
-      <h3 className="m-0 text-xs font-bold tracking-wide text-muted-foreground uppercase">{title}</h3>
+    <section className={cx("grid gap-3 rounded-2xl border p-4", tone === "accent" ? "border-primary/20 bg-accent" : "bg-card")}>
+      <h3 className="m-0 flex items-center gap-2 text-xs font-extrabold tracking-wide text-muted-foreground uppercase">
+        <span className={cx("grid size-7 place-items-center rounded-lg", tone === "accent" ? "bg-primary text-primary-foreground" : "bg-secondary text-foreground")} aria-hidden="true">
+          <Icon size={15} />
+        </span>
+        {title}
+      </h3>
       {children}
     </section>
   );
 }
 
-function Fact({ label, children, note, valueClass }: { label: string; children: ReactNode; note?: string | null; valueClass?: string }) {
+function MiniStat({ label, value, note }: { label: string; value: ReactNode; note?: string }) {
   return (
-    <div className="grid gap-0.5">
-      <dt className="text-sm font-semibold text-muted-foreground">{label}</dt>
-      <dd className={cx("m-0 text-base font-extrabold tabular-nums", valueClass)}>{children}</dd>
-      {note && <dd className="m-0 text-xs font-bold text-muted-foreground">{note}</dd>}
+    <div className="grid content-start gap-0.5 rounded-xl bg-secondary/60 px-3 py-2.5">
+      <span className="text-xs font-bold text-muted-foreground">{label}</span>
+      <b className="font-[family-name:var(--font-display)] text-base leading-tight font-extrabold tabular-nums">{value}</b>
+      {note && <span className="text-[11px] font-semibold text-muted-foreground tabular-nums">{note}</span>}
     </div>
   );
 }
 
+const balanceTone = (balance: number) => (balance < 0 ? "bg-[var(--cab-bad-soft)] text-destructive" : "bg-[var(--cab-ok-soft)] text-success");
+
 type Props = { student: Student; today: string; onAssignSchedule: () => void };
 
-/** Сводка слева: главное о ученике видно на любой вкладке. */
+/** Сводка слева: урок, оплата, экзамен, контакты — карточками, главное видно с любой вкладки (STUDENTS-13). */
 export function ProfileSummary({ student, today, onAssignSchedule }: Props) {
   const { notify } = useNotifier();
   const { schedule, payment, parent, exam } = student;
   const note = balanceNote(student);
-  const tariff =
-    payment.model === "package" && payment.package
-      ? { value: students.payment.package, note: students.sheet.tariff.package(payment.package.left, payment.package.lessons) }
-      : { value: students.payment.perLesson, note: students.payment.pricePerLesson(formatRubles(payment.pricePerLesson)) };
+  const pack = payment.model === "package" ? payment.package : undefined;
+  const mixed = schedule.time === students.mixedTime;
 
   const copyInvite = async () => {
     try {
@@ -54,15 +60,32 @@ export function ProfileSummary({ student, today, onAssignSchedule }: Props) {
   };
 
   return (
-    <div aria-label={text.label} role="region">
-      <Group title={text.next}>
-        <p className={cx("m-0 font-[family-name:var(--font-display)] text-xl leading-tight font-black", !student.nextLesson && "text-muted-foreground")}>
+    <div className="grid gap-3" aria-label={text.label} role="region">
+      <Block icon={CalendarClock} title={text.next} tone="accent">
+        <p className={cx("m-0 font-[family-name:var(--font-display)] text-2xl leading-tight font-black", !student.nextLesson && "text-muted-foreground")}>
           {student.nextLesson ? nextLessonText(student, today) : text.noNext}
         </p>
         {schedule.timesPerWeek > 0 ? (
-          <p className="m-0 text-sm font-semibold text-muted-foreground tabular-nums">
-            {students.sheet.overview.scheduleLine(formatTimesPerWeek(schedule.timesPerWeek), schedule.days.join(", "), schedule.time, schedule.durationMin)}
-          </p>
+          <div className="grid gap-2">
+            <ul className="m-0 flex list-none gap-1 p-0" aria-label={text.daysLabel}>
+              {cabinet.weekdays.map((day) => {
+                const on = schedule.days.includes(day);
+                return (
+                  <li
+                    key={day}
+                    className={cx("grid h-8 flex-1 place-items-center rounded-lg text-xs font-extrabold", on ? "bg-primary text-primary-foreground" : "bg-card/70 text-muted-foreground")}
+                    aria-label={on ? day : undefined}
+                    aria-hidden={on ? undefined : true}
+                  >
+                    {day}
+                  </li>
+                );
+              })}
+            </ul>
+            <span className="text-sm font-bold text-muted-foreground tabular-nums">
+              {mixed ? text.mixedTime : schedule.time} · {text.duration(schedule.durationMin)}
+            </span>
+          </div>
         ) : (
           <span>
             <Button size="sm" icon={CalendarPlus} onClick={onAssignSchedule}>
@@ -70,46 +93,75 @@ export function ProfileSummary({ student, today, onAssignSchedule }: Props) {
             </Button>
           </span>
         )}
-      </Group>
+      </Block>
 
-      <Group title={text.payment}>
-        <dl className="m-0 grid grid-cols-2 gap-4">
-          <div className="col-span-2">
-            <Fact label={students.profile.payments.balance} valueClass={balanceClass(student.balance)} note={note?.text}>
-              {formatBalance(student.balance)}
-            </Fact>
-          </div>
-          <Fact label={text.tariff} note={tariff.note}>
-            {tariff.value}
-          </Fact>
-          <Fact label={text.done}>{student.lessonsCount}</Fact>
-        </dl>
-      </Group>
+      <Block icon={Wallet} title={text.payment}>
+        <div className="grid gap-1">
+          <span className={cx("w-fit rounded-full px-3 py-1 text-sm font-extrabold tabular-nums", balanceTone(student.balance))}>{formatBalance(student.balance)}</span>
+          {note && <span className={cx("text-xs font-bold", note.warn ? "text-[var(--cab-warn)]" : "text-muted-foreground")}>{note.text}</span>}
+        </div>
+        <div className="grid grid-cols-2 gap-2">
+          <MiniStat
+            label={text.tariff}
+            value={pack ? students.payment.package : students.payment.perLesson}
+            note={pack ? text.lessonsLeft(pack.left, pack.lessons) : students.payment.pricePerLesson(formatRubles(payment.pricePerLesson))}
+          />
+          <MiniStat label={text.doneShort} value={student.lessonsCount} note={text.lessonsUnit} />
+        </div>
+      </Block>
 
       {exam && (
-        <Group title={text.exam}>
-          <div className="grid gap-2">
-            <div className="flex items-baseline justify-between gap-2">
+        <Block icon={Target} title={text.exam}>
+          <div className="flex items-center gap-3">
+            <Ring value={exam.readiness} size={64} stroke={7} label={text.readiness(exam.readiness)}>
+              <b className="text-sm font-black tabular-nums">{exam.readiness}%</b>
+            </Ring>
+            <div className="grid gap-0.5">
               <b className="text-base font-extrabold">{student.goal.split(" · ")[0]}</b>
-              <span className="text-sm font-bold text-muted-foreground tabular-nums">{text.examLine(exam.daysLeft)}</span>
+              <span className="text-sm font-semibold text-muted-foreground tabular-nums">{text.examLine(exam.daysLeft)}</span>
             </div>
-            <ProgressBar percent={exam.readiness} label={text.readiness(exam.readiness)} />
-            <span className="text-sm font-semibold text-muted-foreground tabular-nums">
-              {text.readiness(exam.readiness)} · {text.weak(exam.weak)}
-            </span>
           </div>
-        </Group>
+          {exam.weak.length > 0 && (
+            <div className="flex flex-wrap items-center gap-1.5">
+              <span className="text-xs font-bold text-muted-foreground">{text.weakLabel}:</span>
+              {exam.weak.map((number) => (
+                <span key={number} className="rounded-md bg-[var(--cab-bad-soft)] px-2 py-0.5 text-xs font-extrabold text-destructive">
+                  №{number}
+                </span>
+              ))}
+            </div>
+          )}
+        </Block>
       )}
 
-      <Group title={text.contacts}>
-        <dl className="m-0 grid gap-4">
-          {parent && (
-            <Fact label={text.parent} note={parent.phone}>
-              {[parent.relation, parent.name].filter(Boolean).join(": ")}
-            </Fact>
-          )}
-          <Fact label={text.source}>{student.source}</Fact>
-        </dl>
+      <Block icon={MessageCircle} title={text.contacts}>
+        {parent && (
+          <div className="flex items-center gap-3">
+            <span className="grid size-10 flex-none place-items-center rounded-full bg-secondary text-sm font-extrabold" aria-hidden="true">
+              {parent.name
+                .split(" ")
+                .map((part) => part[0])
+                .join("")
+                .slice(0, 2)}
+            </span>
+            <div className="grid min-w-0 flex-1">
+              <span className="text-xs font-bold text-muted-foreground">{parent.relation}</span>
+              <b className="truncate text-sm font-extrabold">{parent.name}</b>
+              <span className="text-xs font-semibold text-muted-foreground tabular-nums">{parent.phone}</span>
+            </div>
+            <a
+              href={`tel:${parent.phone.replace(/[^\d+]/g, "")}`}
+              aria-label={text.call(parent.phone)}
+              className="grid size-9 flex-none place-items-center rounded-full bg-primary text-primary-foreground no-underline transition-opacity hover:opacity-90"
+            >
+              <Phone size={16} aria-hidden="true" />
+            </a>
+          </div>
+        )}
+        <div className="flex flex-wrap gap-1.5">
+          <span className="rounded-full bg-secondary px-2.5 py-1 text-xs font-bold text-muted-foreground">{text.sourceChip(student.source)}</span>
+          {!student.telegramConnected && <span className="rounded-full bg-[var(--cab-warn-soft)] px-2.5 py-1 text-xs font-bold text-[var(--cab-warn)]">{text.telegramOff}</span>}
+        </div>
         {!student.telegramConnected && (
           <span>
             <Button size="sm" icon={Copy} onClick={() => void copyInvite()}>
@@ -117,7 +169,7 @@ export function ProfileSummary({ student, today, onAssignSchedule }: Props) {
             </Button>
           </span>
         )}
-      </Group>
+      </Block>
     </div>
   );
 }

@@ -1,7 +1,7 @@
-import { Ellipsis, MessageCircle, Plus, Upload, X } from "lucide-react";
+import { CalendarDays, ClipboardList, Ellipsis, FolderOpen, LayoutGrid, MessageCircle, NotebookPen, Plus, Upload, Wallet, X, type LucideIcon } from "lucide-react";
 import { useState } from "react";
 import { cabinet } from "../../../content/cabinet.ru";
-import { getSchedule, removeStudent, setStudentStatus } from "../../../data";
+import { getSchedule, getStudentDetails, removeStudent, setStudentStatus } from "../../../data";
 import type { ScheduleLesson, Student, StudentStatus } from "../../../mocks/types";
 import { formatDayMonth } from "../../../model/dates";
 import { Avatar } from "../../../ui/Avatar";
@@ -28,6 +28,8 @@ import { TasksTab } from "./TasksTab";
 const sheet = cabinet.teacher.students.sheet;
 const text = cabinet.teacher.students.profile;
 
+const tabIcons: Record<ProfileTab, LucideIcon> = { overview: LayoutGrid, lessons: CalendarDays, tasks: ClipboardList, materials: FolderOpen, payments: Wallet, notes: NotebookPen };
+
 const statusTone: Record<StudentStatus, string> = {
   active: "bg-[var(--cab-ok-soft)] text-success",
   pause: "bg-[var(--cab-warn-soft)] text-[var(--cab-warn)]",
@@ -53,6 +55,16 @@ function Profile({ student, actions }: { student: Student; actions: Actions }) {
   const { notify } = useNotifier();
   const [tab, setTab] = useState<ProfileTab>("overview");
   const { today } = getSchedule();
+  const details = getStudentDetails(student.id);
+  // Счётчики на вкладках: что требует внимания или сколько записей внутри.
+  const counts: Record<ProfileTab, number | "dot" | null> = {
+    overview: null,
+    lessons: null,
+    tasks: details.tasks.filter((task) => task.status !== "done").length,
+    materials: details.materials.length,
+    payments: student.balance < 0 ? "dot" : null,
+    notes: details.notes.length,
+  };
 
   const moveTo = (status: StudentStatus) => {
     setStudentStatus(student.id, status);
@@ -115,23 +127,38 @@ function Profile({ student, actions }: { student: Student; actions: Actions }) {
 
       {/* На широком экране сводка и разделы прокручиваются отдельно. */}
       <div className="min-h-0 flex-1 overflow-y-auto lg:grid lg:grid-cols-[320px_minmax(0,1fr)] lg:overflow-hidden">
-        <aside className="hidden border-r bg-secondary/40 p-6 lg:block lg:overflow-y-auto">
+        <aside className="hidden border-r bg-secondary/40 p-4 lg:block lg:overflow-y-auto">
           <ProfileSummary student={student} today={today} onAssignSchedule={() => actions.onLesson({ studentId: student.id, repeatWeekly: true })} />
         </aside>
         <Tabs value={tab} onValueChange={(value) => setTab(value as ProfileTab)} className="min-w-0 gap-0 lg:overflow-y-auto">
-          <div className="sticky top-0 z-10 shrink-0 overflow-x-auto border-b bg-background/95 px-5 py-3 backdrop-blur sm:px-6">
-            <TabsList aria-label={sheet.tabsLabel}>
-              {text.tabs.map((item) => (
-                <TabsTrigger key={item.id} value={item.id}>
-                  {item.label}
-                </TabsTrigger>
-              ))}
+          <div className="sticky top-0 z-10 shrink-0 overflow-x-auto border-b bg-background/95 px-5 backdrop-blur [scrollbar-width:none] sm:px-6">
+            <TabsList aria-label={sheet.tabsLabel} className="h-auto w-max max-w-none gap-1 overflow-visible rounded-none border-0 bg-transparent p-0">
+              {text.tabs.map((item) => {
+                const Icon = tabIcons[item.id];
+                const count = counts[item.id];
+                return (
+                  <TabsTrigger
+                    key={item.id}
+                    value={item.id}
+                    className="group relative h-12 gap-2 rounded-none border-0 px-3 text-sm after:absolute after:inset-x-2 after:-bottom-px after:h-[3px] after:rounded-full after:bg-primary after:opacity-0 after:transition-opacity hover:bg-secondary/60 data-[state=active]:bg-transparent data-[state=active]:text-primary data-[state=active]:after:opacity-100"
+                  >
+                    <Icon aria-hidden="true" />
+                    {item.label}
+                    {count === "dot" && <span className="size-2 rounded-full bg-destructive" aria-label={text.tabCounts.debt} />}
+                    {typeof count === "number" && count > 0 && (
+                      <span className="min-w-5 rounded-full bg-secondary px-1.5 py-0.5 text-center text-[11px] leading-none font-extrabold text-muted-foreground tabular-nums group-data-[state=active]:bg-primary group-data-[state=active]:text-primary-foreground">
+                        {count}
+                      </span>
+                    )}
+                  </TabsTrigger>
+                );
+              })}
             </TabsList>
           </div>
           <div className="mx-auto w-full max-w-[1100px] shrink-0 p-5 sm:p-6">
             <TabsContent value="overview" className="grid grid-cols-[minmax(0,1fr)] gap-4">
               {/* На узком экране сводка — в начале обзора, а вкладки сразу под шапкой. */}
-              <div className="rounded-2xl border bg-card p-5 lg:hidden">
+              <div className="lg:hidden">
                 <ProfileSummary student={student} today={today} onAssignSchedule={() => actions.onLesson({ studentId: student.id, repeatWeekly: true })} />
               </div>
               <OverviewTab student={student} today={today} onOpenLesson={actions.onOpenLesson} onTab={setTab} />
