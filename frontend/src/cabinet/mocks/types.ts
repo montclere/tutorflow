@@ -87,7 +87,6 @@ export type Person = { name: string; initials: string; color: StudentColor; role
 
 export type StatData = { label: string; value: string; note: string; highlight?: boolean };
 
-export type TaskStatus = { title: string; note: string; tone: Tone; status: string };
 
 export type LessonStatus = "done" | "soon" | "paid" | "debt";
 
@@ -171,52 +170,6 @@ export type FinanceOverview = {
   operations: FinanceOperation[];
 };
 
-export type ChatMessage = { author: "me" | "ai"; text: string };
-export type ParamField = { label: string; options: string[] };
-export type DraftCard = { badge: string; source: string; question: Rich; answer: string };
-export type TaskDraft = { title: string; subtitle: string; cards: DraftCard[]; hiddenCards: number };
-export type ExamNumber = { number: number; topic: string; count: number };
-export type Prototype = { label: string; question: Rich; source: string };
-export type MyTask = { title: string; cards: number; assigned: string; average: string };
-
-export type TaskLab = {
-  params: ParamField[];
-  messages: ChatMessage[];
-  quickReplies: string[];
-  draft: TaskDraft;
-  exams: string[];
-  numbers: ExamNumber[];
-  prototypes: Prototype[];
-  mine: MyTask[];
-  aiReply: (request: string) => string;
-};
-
-
-export type StudentHome = {
-  greeting: string;
-  subtitle: string;
-  stats: StatData[];
-  homework: TaskStatus[];
-  weak: { number: number; topic: string; percent: number }[];
-  feedback: { title: string; text: string };
-};
-
-export type HomeworkCard = { title: string; subtitle: string; deadline: string; tone: Tone; status: string };
-export type DoneHomework = {
-  title: string;
-  checkedOn: string;
-  score: string;
-  results: { ok: boolean; title: string; note: string }[];
-};
-export type Homework = {
-  todo: HomeworkCard[];
-  waiting: { title: string; note: string; status: string };
-  done: DoneHomework;
-};
-
-export type Drill = { number: number; question: Rich; answer: string; hint: string; solution: string };
-export type TrainerData = { drills: Drill[]; streak: number; solved: number; dailyGoal: number; numbers: ExamNumber[] };
-
 export type ExamData = {
   title: string;
   subtitle: string;
@@ -227,7 +180,6 @@ export type ExamData = {
   current: { number: number; question: Rich; points: number };
 };
 
-export type Progress = { stats: StatData[]; levels: number[] };
 
 export type LessonType = "individual" | "group" | "trial";
 

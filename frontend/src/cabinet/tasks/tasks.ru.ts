@@ -186,6 +186,9 @@ export const tasksText = {
     print: "Распечатать",
     photos: "Сдать фото решения",
     returned: (comment: string) => `Вернули на доработку: «${comment}»`,
+    groups: { todo: "Сейчас", wait: "На проверке", done: "Готово" },
+    groupEmpty: { todo: "Новых заданий нет — загляните в тренажёр", wait: "Ничего не ждёт проверки", done: "Пока ничего не сдано" },
+    tasksCount: (count: number) => `${count} ${plural(count, taskForms)}`,
     feedback: "Комментарий репетитора",
   },
   player: {

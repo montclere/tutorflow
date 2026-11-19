@@ -8,8 +8,7 @@ import { studentDetails } from "../mocks/studentDetails";
 import { expectedIncome, growthPercent, lessonsAhead, methodOfTitle, monthKeyOf, shiftMonth } from "../model/finance";
 import { deriveSchedule, LOW_PACKAGE_LEFT, nextLessonOf, templatesFromLessons } from "../model/students";
 import { lessonTemplates, scheduleNow, scheduleRange, scheduleToday, singleLessons, workHours } from "../mocks/schedule";
-import { exam, homework, progress, studentHome, trainer } from "../mocks/student";
-import { taskLab } from "../mocks/tasks";
+import { exam } from "../mocks/student";
 import { assignedTasksOf, subscribeLibrary } from "../tasks/library";
 import { finance, financeToday } from "../mocks/finance";
 import { overviewBase } from "../mocks/teacher";
@@ -17,8 +16,6 @@ import type {
   ExamData,
   FinanceOperation,
   FinanceOverview,
-  Homework,
-  Progress,
   ScheduleData,
   PaymentMove,
   ScheduleLesson,
@@ -29,10 +26,7 @@ import type {
   ExamPrep,
   Student,
   StudentDetails,
-  StudentHome,
-  TaskLab,
   TeacherOverview,
-  TrainerData,
 } from "../mocks/types";
 
 // Тестовые данные расписания. Это хранилище в памяти вместо сервера: созданные уроки живут до перезагрузки (SCHEDULE-3).
@@ -216,9 +210,6 @@ export function getTeacherOverview(): TeacherOverview {
   };
 }
 
-export function getTaskLab(): TaskLab {
-  return taskLab;
-}
 
 
 export function getCurrentMonth(): string {
@@ -288,22 +279,10 @@ export function getFinanceOverview(month: string): FinanceOverview {
   };
 }
 
-export function getStudentHome(): StudentHome {
-  return studentHome;
-}
 
-export function getHomework(): Homework {
-  return homework;
-}
 
-export function getTrainer(): TrainerData {
-  return trainer;
-}
 
 export function getExam(): ExamData {
   return exam;
 }
 
-export function getProgress(): Progress {
-  return progress;
-}

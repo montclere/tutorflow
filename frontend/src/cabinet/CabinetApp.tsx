@@ -5,6 +5,7 @@ import { CabinetShell } from "./layout/CabinetShell";
 import { ExamPage } from "./pages/ExamPage";
 import { FinancePage } from "./pages/finance/FinancePage";
 import { HomeworkPage } from "./pages/HomeworkPage";
+import { MaterialsPage } from "./pages/learn/MaterialsPage";
 import { LiveOverviewPage } from "./pages/overview/LiveOverviewPage";
 import { OverviewPage } from "./pages/overview/OverviewPage";
 import { ProgressPage } from "./pages/ProgressPage";
@@ -33,6 +34,7 @@ const screens: Record<string, () => ReactNode> = {
   [teacherRoutes.finance]: demoOnly(<FinancePage />, "finance"),
   [studentRoutes.home]: demoOnly(<StudentHomePage />, "student"),
   [studentRoutes.tasks]: demoOnly(<HomeworkPage />, "student"),
+  [studentRoutes.materials]: demoOnly(<MaterialsPage />, "student"),
   [studentRoutes.trainer]: demoOnly(<TrainerPage />, "student"),
   [studentRoutes.exam]: demoOnly(<ExamPage />, "student"),
   [studentRoutes.progress]: demoOnly(<ProgressPage />, "student"),

@@ -11,7 +11,8 @@ export type IconName =
   | "money"
   | "bolt"
   | "flag"
-  | "chart";
+  | "chart"
+  | "book";
 
 const lessonForms: [string, string, string] = ["урок", "урока", "уроков"];
 const dayForms: [string, string, string] = ["день", "дня", "дней"];
@@ -36,7 +37,8 @@ const teacherNav: NavItem[] = [
 
 const studentNav: NavItem[] = [
   { path: studentRoutes.home, label: "Главная", icon: "home" },
-  { path: studentRoutes.tasks, label: "Задания", icon: "tasks", badge: 2 },
+  { path: studentRoutes.tasks, label: "Задания", icon: "tasks" },
+  { path: studentRoutes.materials, label: "Материалы", icon: "book" },
   { path: studentRoutes.trainer, label: "Тренажёр", icon: "bolt" },
   { path: studentRoutes.exam, label: "Вариант ЕГЭ", icon: "flag" },
   { path: studentRoutes.progress, label: "Прогресс", icon: "chart" },
@@ -51,7 +53,7 @@ export const cabinet = {
   nav: { teacher: teacherNav, student: studentNav } as Record<Role, NavItem[]>,
   promo: {
     teacher: { title: "ИИ-помощник", text: "Соберёт ДЗ по теме или аналоги заданий ЕГЭ за минуту." },
-    student: { title: "Серия 4 дня", text: "Решай по 10 задач в день — не теряй серию." },
+    student: { title: "Цель дня — 20 задач", text: "Тренажёр засчитывает каждую решённую задачу." },
   } as Record<Role, { title: string; text: string }>,
   shell: {
     homeLabel: "На главную",
@@ -884,15 +886,6 @@ export const cabinet = {
   },
   student: {
     home: {
-      trainer: "Тренажёр",
-      homeworkTitle: "Мои задания",
-      homeworkSub: "От преподавателя",
-      weakTitle: "Подтянуть",
-      weakSub: "Слабые номера по тренажёру",
-      feedbackTitle: "Последний отзыв",
-      materialsTitle: "Материалы от репетитора",
-      materialsSub: "Теория и конспекты к урокам",
-      materialsEmpty: "Репетитор пока ничего не прислал",
       materialSent: (date: string) => `прислано ${date}`,
       materialNew: "Новое",
       open: "Открыть",
@@ -900,42 +893,7 @@ export const cabinet = {
     },
     tasks: {
       title: "Задания",
-      subtitle: "От преподавателя",
-      tabsLabel: "Статус заданий",
-      tabs: [
-        { id: "todo", label: "К выполнению · 2" },
-        { id: "wait", label: "На проверке · 1" },
-        { id: "done", label: "Выполнено · 16" },
-      ] as const,
-      pdf: "PDF",
-      submitPhoto: "Сдать фото",
-      mistakes: "Работа над ошибками",
-      explanations: "Разборы",
-    },
-    trainer: {
-      title: "Тренажёр",
-      subtitle: "Решай сам. Проверка мгновенная, задачи не кончаются",
-      exam: "ЕГЭ профиль",
-      taskNumber: (solved: number) => `Задача ${solved + 1} · аналог`,
-      answerLabel: "Ответ",
-      check: "Проверить",
-      hint: "Подсказка",
-      hintText: (hint: string) => `Подсказка: ${hint}`,
-      empty: "Введите ответ",
-      correct: "Верно!",
-      wrong: (answer: string) => `Неверно. Правильный ответ: ${answer}`,
-      next: "Следующая →",
-      streakDays: "дня подряд",
-      today: (solved: number, goal: number) => `сегодня ${solved} из ${goal} задач`,
-      pickTitle: "Выбрать номер",
-      pickSub: "Цвет — насколько освоено",
-      modesTitle: "Режимы",
-      modes: [
-        { label: "По номеру", pressed: true },
-        { label: "Мои ошибки", pressed: false },
-        { label: "На время", pressed: false },
-      ],
-      fullVariant: "Весь вариант",
+      subtitle: "От репетитора: задания и тесты",
     },
     exam: {
       title: "Вариант ЕГЭ",
@@ -959,13 +917,6 @@ export const cabinet = {
       saved: "Ответ сохранён",
       doneUpTo: 5,
     },
-    progress: {
-      title: "Прогресс",
-      subtitle: "ЕГЭ профиль · по номерам заданий",
-      mapTitle: "Карта номеров",
-      mapSub: "Чем зеленее, тем лучше",
-    },
   },
-  levels: ["слабо", "средне", "хорошо", "освоено"],
   placeholders: { answer: "Ответ" },
 };

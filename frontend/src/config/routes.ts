@@ -24,6 +24,7 @@ export const teacherRoutes = {
 export const studentRoutes = {
   home: "/student",
   tasks: "/student/tasks",
+  materials: "/student/materials",
   trainer: "/student/trainer",
   exam: "/student/exam",
   progress: "/student/progress",

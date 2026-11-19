@@ -6,6 +6,7 @@ import {
   ClipboardList,
   Clock,
   CreditCard,
+  BookOpen,
   Flag,
   House,
   ListChecks,
@@ -28,6 +29,7 @@ const navIcons: Record<IconName, LucideIcon> = {
   bolt: Zap,
   flag: Flag,
   chart: ChartColumn,
+  book: BookOpen,
 };
 
 const attentionIcons: Record<AttentionKind, LucideIcon> = {
