@@ -22,8 +22,8 @@ export function MaterialRow({ material, onRemove }: { material: StudentMaterial;
     <li className="flex flex-wrap items-center gap-3 py-3">
       <MaterialIcon kind={material.kind} />
       <div className="grid min-w-0 flex-1 gap-0.5">
-        <b className="truncate text-base font-extrabold">{material.title}</b>
-        <span className="text-sm font-semibold text-muted-foreground tabular-nums">{materialMeta(material)}</span>
+        <b className="truncate text-lg font-extrabold">{material.title}</b>
+        <span className="text-base font-semibold text-muted-foreground tabular-nums">{materialMeta(material)}</span>
         {material.note && <span className="text-sm font-semibold">{material.note}</span>}
       </div>
       <Pill tone={material.openedAt ? "ok" : "grey"}>{material.openedAt ? text.opened(formatShortDate(material.openedAt)) : text.notOpened}</Pill>

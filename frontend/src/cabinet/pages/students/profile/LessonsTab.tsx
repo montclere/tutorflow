@@ -32,7 +32,7 @@ export function HomeworkPill({ lesson }: { lesson: RecentLesson }) {
   return <Pill tone={homework.done / homework.total >= GOOD_SHARE ? "ok" : "warn"}>{text.homework(homework.done, homework.total)}</Pill>;
 }
 
-const rowClass = "-mx-2 flex w-[calc(100%+1rem)] flex-wrap items-center gap-x-3 gap-y-1 rounded-lg px-2 py-3 text-left";
+const rowClass = "-mx-2 flex w-[calc(100%+1rem)] flex-wrap items-center gap-x-3 gap-y-1 rounded-lg px-2 py-3.5 text-left";
 
 /** Строка прошедшего урока; если урок есть в расписании — открывает его карточку (STUDENTS-5). */
 export function PastLessonRow({ student, lesson, onOpenLesson, children }: { student: Student; lesson: RecentLesson; onOpenLesson: (lesson: ScheduleLesson) => void; children: ReactNode }) {
@@ -40,7 +40,7 @@ export function PastLessonRow({ student, lesson, onOpenLesson, children }: { stu
   const content = (
     <>
       <DateCell>{formatShortDate(lesson.date)}</DateCell>
-      <span className="min-w-28 flex-1 text-base font-bold">{lesson.topic}</span>
+      <span className="min-w-28 flex-1 text-lg font-bold">{lesson.topic}</span>
       {children}
     </>
   );
@@ -64,8 +64,8 @@ export function UpcomingRow({ lesson, onOpenLesson }: { lesson: ScheduleLesson; 
       onClick={() => onOpenLesson(lesson)}
       className={`${rowClass} appearance-none border-0 bg-transparent text-inherit transition-colors [font-family:inherit] hover:bg-secondary`}
     >
-      <span className="min-w-0 flex-1 text-base font-bold">{formatLongDay(lesson.date)}</span>
-      <span className="text-sm font-bold text-muted-foreground tabular-nums">{lessonTime(lesson)}</span>
+      <span className="min-w-0 flex-1 text-lg font-bold">{formatLongDay(lesson.date)}</span>
+      <span className="text-base font-bold text-muted-foreground tabular-nums">{lessonTime(lesson)}</span>
     </button>
   );
 }

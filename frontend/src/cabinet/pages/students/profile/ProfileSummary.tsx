@@ -16,10 +16,10 @@ const text = students.profile.summary;
 /** Карточка сводки: иконка, заголовок, содержимое. */
 function Block({ icon: Icon, title, tone = "default", children }: { icon: LucideIcon; title: string; tone?: "default" | "accent"; children: ReactNode }) {
   return (
-    <section className={cx("grid gap-3 rounded-2xl border p-4", tone === "accent" ? "border-primary/20 bg-accent" : "bg-card")}>
-      <h3 className="m-0 flex items-center gap-2 text-xs font-extrabold tracking-wide text-muted-foreground uppercase">
-        <span className={cx("grid size-7 place-items-center rounded-lg", tone === "accent" ? "bg-primary text-primary-foreground" : "bg-secondary text-foreground")} aria-hidden="true">
-          <Icon size={15} />
+    <section className={cx("grid gap-3.5 rounded-2xl border p-5", tone === "accent" ? "border-primary/20 bg-accent" : "bg-card")}>
+      <h3 className="m-0 flex items-center gap-2.5 text-sm font-extrabold tracking-wide text-muted-foreground uppercase">
+        <span className={cx("grid size-8 place-items-center rounded-lg", tone === "accent" ? "bg-primary text-primary-foreground" : "bg-secondary text-foreground")} aria-hidden="true">
+          <Icon size={17} />
         </span>
         {title}
       </h3>
@@ -31,9 +31,9 @@ function Block({ icon: Icon, title, tone = "default", children }: { icon: Lucide
 function MiniStat({ label, value, note }: { label: string; value: ReactNode; note?: string }) {
   return (
     <div className="grid content-start gap-0.5 rounded-xl bg-secondary/60 px-3 py-2.5">
-      <span className="text-xs font-bold text-muted-foreground">{label}</span>
-      <b className="font-[family-name:var(--font-display)] text-base leading-tight font-extrabold tabular-nums">{value}</b>
-      {note && <span className="text-[11px] font-semibold text-muted-foreground tabular-nums">{note}</span>}
+      <span className="text-sm font-bold text-muted-foreground">{label}</span>
+      <b className="font-[family-name:var(--font-display)] text-lg leading-tight font-extrabold tabular-nums">{value}</b>
+      {note && <span className="text-xs font-semibold text-muted-foreground tabular-nums">{note}</span>}
     </div>
   );
 }
@@ -97,8 +97,8 @@ export function ProfileSummary({ student, today, onAssignSchedule }: Props) {
 
       <Block icon={Wallet} title={text.payment}>
         <div className="grid gap-1">
-          <span className={cx("w-fit rounded-full px-3 py-1 text-sm font-extrabold tabular-nums", balanceTone(student.balance))}>{formatBalance(student.balance)}</span>
-          {note && <span className={cx("text-xs font-bold", note.warn ? "text-[var(--cab-warn)]" : "text-muted-foreground")}>{note.text}</span>}
+          <span className={cx("w-fit rounded-full px-3.5 py-1.5 text-base font-extrabold tabular-nums", balanceTone(student.balance))}>{formatBalance(student.balance)}</span>
+          {note && <span className={cx("text-sm font-bold", note.warn ? "text-[var(--cab-warn)]" : "text-muted-foreground")}>{note.text}</span>}
         </div>
         <div className="grid grid-cols-2 gap-2">
           <MiniStat
@@ -145,9 +145,9 @@ export function ProfileSummary({ student, today, onAssignSchedule }: Props) {
                 .slice(0, 2)}
             </span>
             <div className="grid min-w-0 flex-1">
-              <span className="text-xs font-bold text-muted-foreground">{parent.relation}</span>
-              <b className="truncate text-sm font-extrabold">{parent.name}</b>
-              <span className="text-xs font-semibold text-muted-foreground tabular-nums">{parent.phone}</span>
+              <span className="text-sm font-bold text-muted-foreground">{parent.relation}</span>
+              <b className="truncate text-base font-extrabold">{parent.name}</b>
+              <span className="text-sm font-semibold text-muted-foreground tabular-nums">{parent.phone}</span>
             </div>
             <a
               href={`tel:${parent.phone.replace(/[^\d+]/g, "")}`}
@@ -159,8 +159,7 @@ export function ProfileSummary({ student, today, onAssignSchedule }: Props) {
           </div>
         )}
         <div className="flex flex-wrap gap-1.5">
-          <span className="rounded-full bg-secondary px-2.5 py-1 text-xs font-bold text-muted-foreground">{text.sourceChip(student.source)}</span>
-          {!student.telegramConnected && <span className="rounded-full bg-[var(--cab-warn-soft)] px-2.5 py-1 text-xs font-bold text-[var(--cab-warn)]">{text.telegramOff}</span>}
+          <span className="rounded-full bg-secondary px-3 py-1 text-sm font-bold text-muted-foreground">{text.sourceChip(student.source)}</span>
         </div>
         {!student.telegramConnected && (
           <span>

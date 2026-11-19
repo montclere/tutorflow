@@ -37,7 +37,7 @@ const statusTone: Record<StudentStatus, string> = {
 };
 
 function Chip({ className, children }: { className: string; children: React.ReactNode }) {
-  return <span className={cx("inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-bold whitespace-nowrap", className)}>{children}</span>;
+  return <span className={cx("inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-sm font-bold whitespace-nowrap", className)}>{children}</span>;
 }
 
 type Props = { student: Student | null; onClose: () => void; onCloseAutoFocus: (event: Event) => void };
@@ -77,21 +77,21 @@ function Profile({ student, actions }: { student: Student; actions: Actions }) {
         <div className="flex min-w-0 flex-1 items-center gap-4 max-[640px]:pr-12">
           <Avatar initials={student.initials} color={student.color} large />
           <div className="grid min-w-0 gap-1">
-            <DialogTitle className="m-0 font-[family-name:var(--font-display)] text-2xl leading-tight font-black tracking-tight break-words max-[640px]:text-xl">{student.name}</DialogTitle>
-            <DialogDescription className="m-0 text-base font-semibold">
+            <DialogTitle className="m-0 font-[family-name:var(--font-display)] text-[28px] leading-tight font-black tracking-tight break-words max-[640px]:text-xl">{student.name}</DialogTitle>
+            <DialogDescription className="m-0 text-lg font-semibold">
               {student.goal} · {text.since(formatDayMonth(student.startedAt))}
             </DialogDescription>
             <div className="flex flex-wrap gap-1.5">
               <Chip className={statusTone[student.status]}>{text.status[student.status]}</Chip>
               <Chip className={student.telegramConnected ? "bg-accent text-accent-foreground" : "bg-[var(--cab-warn-soft)] text-[var(--cab-warn)]"}>
-                <MessageCircle size={12} aria-hidden="true" />
+                <MessageCircle size={14} aria-hidden="true" />
                 {student.telegramConnected ? text.telegram.on : text.telegram.off}
               </Chip>
             </div>
           </div>
         </div>
         {/* На телефоне действия — одной строкой с прокруткой, чтобы шапка не съедала экран. */}
-        <div className="flex items-center gap-2 max-[640px]:-mx-5 max-[640px]:w-[calc(100%+2.5rem)] max-[640px]:overflow-x-auto max-[640px]:px-5 [&>*]:shrink-0">
+        <div className="flex items-center gap-2 max-[640px]:-mx-5 [&_button]:h-11 [&_button]:px-4 [&_button]:text-base max-[640px]:w-[calc(100%+2.5rem)] max-[640px]:overflow-x-auto max-[640px]:px-5 [&>*]:shrink-0">
           <Button variant="primary" icon={Plus} onClick={() => actions.onLesson({ studentId: student.id })}>
             {text.actions.lesson}
           </Button>
@@ -126,7 +126,7 @@ function Profile({ student, actions }: { student: Student; actions: Actions }) {
       </header>
 
       {/* На широком экране сводка и разделы прокручиваются отдельно. */}
-      <div className="min-h-0 flex-1 overflow-y-auto lg:grid lg:grid-cols-[320px_minmax(0,1fr)] lg:overflow-hidden">
+      <div className="min-h-0 flex-1 overflow-y-auto lg:grid lg:grid-cols-[360px_minmax(0,1fr)] lg:overflow-hidden">
         <aside className="hidden border-r bg-secondary/40 p-4 lg:block lg:overflow-y-auto">
           <ProfileSummary student={student} today={today} onAssignSchedule={() => actions.onLesson({ studentId: student.id, repeatWeekly: true })} />
         </aside>
@@ -140,13 +140,13 @@ function Profile({ student, actions }: { student: Student; actions: Actions }) {
                   <TabsTrigger
                     key={item.id}
                     value={item.id}
-                    className="group relative h-12 gap-2 rounded-none border-0 px-3 text-sm after:absolute after:inset-x-2 after:-bottom-px after:h-[3px] after:rounded-full after:bg-primary after:opacity-0 after:transition-opacity hover:bg-secondary/60 data-[state=active]:bg-transparent data-[state=active]:text-primary data-[state=active]:after:opacity-100"
+                    className="group relative h-14 gap-2.5 rounded-none border-0 px-4 text-base font-bold after:absolute [&_svg:not([class*=size-])]:size-5 after:inset-x-2 after:-bottom-px after:h-[3px] after:rounded-full after:bg-primary after:opacity-0 after:transition-opacity hover:bg-secondary/60 data-[state=active]:bg-transparent data-[state=active]:text-primary data-[state=active]:after:opacity-100"
                   >
                     <Icon aria-hidden="true" />
                     {item.label}
-                    {count === "dot" && <span className="size-2 rounded-full bg-destructive" aria-label={text.tabCounts.debt} />}
+                    {count === "dot" && <span className="size-2.5 rounded-full bg-destructive" aria-label={text.tabCounts.debt} />}
                     {typeof count === "number" && count > 0 && (
-                      <span className="min-w-5 rounded-full bg-secondary px-1.5 py-0.5 text-center text-[11px] leading-none font-extrabold text-muted-foreground tabular-nums group-data-[state=active]:bg-primary group-data-[state=active]:text-primary-foreground">
+                      <span className="min-w-6 rounded-full bg-secondary px-2 py-1 text-center text-xs leading-none font-extrabold text-muted-foreground tabular-nums group-data-[state=active]:bg-primary group-data-[state=active]:text-primary-foreground">
                         {count}
                       </span>
                     )}
@@ -155,7 +155,7 @@ function Profile({ student, actions }: { student: Student; actions: Actions }) {
               })}
             </TabsList>
           </div>
-          <div className="mx-auto w-full max-w-[1100px] shrink-0 p-5 sm:p-6">
+          <div className="w-full shrink-0 p-5 sm:p-7">
             <TabsContent value="overview" className="grid grid-cols-[minmax(0,1fr)] gap-4">
               {/* На узком экране сводка — в начале обзора, а вкладки сразу под шапкой. */}
               <div className="lg:hidden">

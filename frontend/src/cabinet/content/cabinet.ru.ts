@@ -548,15 +548,7 @@ export const cabinet = {
           recent: "Последние уроки",
           progress: "Успеваемость",
           progressEmpty: "Проверенных домашек пока нет",
-          // Плитки-показатели ученика (VIBE-7).
-          tiles: {
-            done: "Проведено",
-            doneNote: (count: number) => plural(count, lessonForms),
-            missed: "Отмены и переносы",
-            missedNote: (total: number) => `из последних ${total}`,
-            materials: "Материалы открыты",
-            materialsNote: (sent: number) => `из ${sent} отправленных`,
-          },
+          checkedWorks: (count: number) => `по ${count} ${plural(count, ["проверенной работе", "проверенным работам", "проверенным работам"])}`,
           average: "Средний результат",
           details: "Подробнее →",
           materials: "Материалы",
