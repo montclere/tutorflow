@@ -5,7 +5,7 @@ import { expandTemplates, isPast, lessonsOn } from "../model/lessons";
 import { toLessonRow, weekDays } from "../model/overview";
 import { students } from "../mocks/people";
 import { studentDetails } from "../mocks/studentDetails";
-import { expectedIncome, growthPercent, lessonsAhead, monthKeyOf, shiftMonth } from "../model/finance";
+import { expectedIncome, growthPercent, lessonsAhead, methodOfTitle, monthKeyOf, shiftMonth } from "../model/finance";
 import { deriveSchedule, LOW_PACKAGE_LEFT, nextLessonOf, templatesFromLessons } from "../model/students";
 import { lessonTemplates, scheduleNow, scheduleRange, scheduleToday, singleLessons, workHours } from "../mocks/schedule";
 import { exam, homework, progress, studentHome, trainer } from "../mocks/student";
@@ -15,6 +15,7 @@ import { finance, financeToday } from "../mocks/finance";
 import { overviewBase, review } from "../mocks/teacher";
 import type {
   ExamData,
+  FinanceOperation,
   FinanceOverview,
   Homework,
   Progress,
@@ -232,8 +233,22 @@ export function getFinanceMonths(): string[] {
   return finance.history.map((item) => item.month);
 }
 
+/** Оплаты, записанные в кабинете (карточка ученика, «Финансы»), — операциями финансов. */
+function recordedOperations(): FinanceOperation[] {
+  return Object.entries(addedDetails).flatMap(([studentId, added]) =>
+    added.payments.map((move, index) => ({ id: `rec-${studentId}-${index}-${move.date}`, date: move.date, studentId, kind: "payment" as const, title: move.title, method: methodOfTitle(move.title), amount: move.amount })),
+  );
+}
+
 export function getFinanceOverview(month: string): FinanceOverview {
-  const { history, operations, debtDays } = finance;
+  const recorded = recordedOperations();
+  const operations = [...recorded, ...finance.operations].sort((a, b) => b.date.localeCompare(a.date));
+  const { debtDays } = finance;
+  // Записанные оплаты добавляются к приходу своего месяца.
+  const history = finance.history.map((item) => {
+    const extra = recorded.filter((operation) => monthKeyOf(operation.date) === item.month);
+    return extra.length === 0 ? item : { ...item, received: item.received + extra.reduce((sum, operation) => sum + operation.amount, 0), payments: item.payments + extra.length };
+  });
   const active = getStudents().filter((student) => student.status === "active");
   const stat = history.find((item) => item.month === month) ?? null;
   const previous = history.find((item) => item.month === shiftMonth(month, -1));

@@ -1,4 +1,4 @@
-import type { FinanceOperation, MonthStat, OperationKind, ScheduleLesson, Student } from "../mocks/types";
+import type { FinanceOperation, OperationKind, ScheduleLesson, Student } from "../mocks/types";
 import { isPast } from "./lessons";
 
 export type OperationFilter = OperationKind | "all";
@@ -64,18 +64,23 @@ export function filterOperations(
   });
 }
 
-export type DynamicsMetric = "received" | "payments" | "lessons";
-export type SeriesPoint = { month: string; value: number };
+export type StudentIncome = { studentId: string; amount: number; payments: number };
 
-export function chartSeries(history: MonthStat[], metric: DynamicsMetric): SeriesPoint[] {
-  return history.map((item) => ({ month: item.month, value: item[metric] }));
+/** Кто сколько заплатил за месяц — по убыванию; учитываются только оплаты. */
+export function incomeByStudent(operations: FinanceOperation[]): StudentIncome[] {
+  const byStudent = new Map<string, StudentIncome>();
+  for (const operation of operations) {
+    if (operation.kind !== "payment" || operation.amount <= 0) continue;
+    const current = byStudent.get(operation.studentId) ?? { studentId: operation.studentId, amount: 0, payments: 0 };
+    byStudent.set(operation.studentId, { ...current, amount: current.amount + operation.amount, payments: current.payments + 1 });
+  }
+  return [...byStudent.values()].sort((a, b) => b.amount - a.amount);
 }
 
-export function seriesDomain(points: SeriesPoint[]): [number, number] {
-  if (points.length === 0) return [0, 1];
-  const values = points.map((point) => point.value);
-  const min = Math.min(...values);
-  const max = Math.max(...values);
-  const pad = Math.max((max - min) * 0.35, max * 0.05);
-  return [Math.max(0, Math.floor(min - pad)), Math.ceil(max + pad)];
+/** Способ оплаты по подписи записи «Оплата · СБП». */
+export function methodOfTitle(title: string): FinanceOperation["method"] {
+  if (/сбп/i.test(title)) return "sbp";
+  if (/налич/i.test(title)) return "cash";
+  if (/перевод/i.test(title)) return "transfer";
+  return null;
 }

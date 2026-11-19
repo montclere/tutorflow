@@ -22,7 +22,7 @@ function Field({ label, error, children }: { label: string; error?: string; chil
   );
 }
 
-function PaymentForm({ student, onDone }: { student: Student; onDone: () => void }) {
+export function PaymentForm({ student, onDone }: { student: Student; onDone: () => void }) {
   const { notify } = useNotifier();
   const { today } = getSchedule();
   // По умолчанию — сумма долга, если он есть, иначе цена урока.

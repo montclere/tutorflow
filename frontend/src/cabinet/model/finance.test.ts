@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { FinanceOperation, ScheduleLesson } from "../mocks/types";
-import { chartSeries, expectedIncome, seriesDomain, filterOperations, growthPercent, lessonsAhead, monthIndex, monthKeyOf, shiftMonth } from "./finance";
+import { expectedIncome, filterOperations, growthPercent, incomeByStudent, lessonsAhead, methodOfTitle, monthIndex, monthKeyOf, shiftMonth } from "./finance";
 
 describe("месяцы", () => {
   it("берёт ключ месяца из даты", () => {
@@ -84,33 +84,20 @@ describe("filterOperations", () => {
   });
 });
 
-describe("chartSeries", () => {
-  const history = [
-    { month: "2026-10", received: 7_357_000, payments: 38, lessons: 52 },
-    { month: "2026-11", received: 8_240_000, payments: 42, lessons: 54 },
-  ];
 
-  it("берёт выбранный показатель по месяцам", () => {
-    expect(chartSeries(history, "payments")).toEqual([
-      { month: "2026-10", value: 38 },
-      { month: "2026-11", value: 42 },
+
+describe("доход по ученикам", () => {
+  it("только оплаты, по убыванию суммы", () => {
+    const op = (studentId: string, kind: "payment" | "lesson", amount: number) => ({ id: studentId + amount, date: "2026-11-10", studentId, kind, title: "", method: null, amount });
+    expect(incomeByStudent([op("a", "payment", 100), op("b", "payment", 300), op("a", "payment", 50), op("a", "lesson", -100)])).toEqual([
+      { studentId: "b", amount: 300, payments: 1 },
+      { studentId: "a", amount: 150, payments: 2 },
     ]);
   });
-});
 
-describe("seriesDomain", () => {
-  it("оставляет запас, чтобы разница между месяцами была видна, и не уходит ниже нуля", () => {
-    const [min, max] = seriesDomain([
-      { month: "a", value: 100 },
-      { month: "b", value: 200 },
-    ]);
-    expect(min).toBeGreaterThan(0);
-    expect(min).toBeLessThan(100);
-    expect(max).toBeGreaterThan(200);
-    expect(seriesDomain([{ month: "a", value: 1 }])[0]).toBeGreaterThanOrEqual(0);
-  });
-
-  it("не падает на пустом списке", () => {
-    expect(seriesDomain([])).toEqual([0, 1]);
+  it("способ по подписи записи", () => {
+    expect(methodOfTitle("Оплата · СБП")).toBe("sbp");
+    expect(methodOfTitle("Оплата · Наличные")).toBe("cash");
+    expect(methodOfTitle("Абонемент")).toBeNull();
   });
 });

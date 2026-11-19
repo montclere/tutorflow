@@ -1,5 +1,4 @@
 import { routes, studentRoutes, teacherRoutes } from "../../config/routes.ts";
-import { formatRubles } from "../model/format.ts";
 import { plural } from "../model/plural.ts";
 import type { AttentionKind } from "../mocks/types.ts";
 
@@ -18,7 +17,6 @@ const lessonForms: [string, string, string] = ["урок", "урока", "уро
 const dayForms: [string, string, string] = ["день", "дня", "дней"];
 const studentForms: [string, string, string] = ["ученик", "ученика", "учеников"];
 const paymentForms: [string, string, string] = ["оплата", "оплаты", "оплат"];
-const doneForms: [string, string, string] = ["проведён", "проведено", "проведено"];
 const dateForms: [string, string, string] = ["дата", "даты", "дат"];
 const monthsDative = ["январю", "февралю", "марту", "апрелю", "маю", "июню", "июлю", "августу", "сентябрю", "октябрю", "ноябрю", "декабрю"];
 const windowForms: [string, string, string] = ["свободное окно", "свободных окна", "свободных окон"];
@@ -776,33 +774,38 @@ export const cabinet = {
       monthNames: ["январь", "февраль", "март", "апрель", "май", "июнь", "июль", "август", "сентябрь", "октябрь", "ноябрь", "декабрь"],
       monthShort: ["Янв", "Фев", "Мар", "Апр", "Май", "Июн", "Июл", "Авг", "Сен", "Окт", "Ноя", "Дек"],
       received: {
-        title: (month: string) => `Пришло денег за ${month}`,
-        chartLabel: "Приход по месяцам",
         growth: (percent: number, monthIndex: number) => `${percent > 0 ? "+" : percent < 0 ? "−" : ""}${Math.abs(percent)}% к ${monthsDative[monthIndex] ?? ""}`,
-        summary: (payments: number, lessons: number) =>
-          `${payments} ${plural(payments, paymentForms)} · ${lessons} ${plural(lessons, lessonForms)} ${plural(lessons, doneForms)}`,
       },
       tiles: {
-        expected: { label: "Ожидается до конца месяца", note: "поурочные уроки и долги" },
-        debt: { label: "Должны сейчас", note: (count: number) => (count === 0 ? "долгов нет" : `${count} ${plural(count, studentForms)}`) },
-        prepaid: { label: "Предоплаты", note: (lessons: number) => `${lessons} ${plural(lessons, lessonForms)} вперёд` },
+        received: { label: "Получено", note: (payments: number) => `${payments} ${plural(payments, paymentForms)}` },
+        expected: { label: "Ожидается", note: "до конца месяца: уроки и долги" },
+        debt: { label: "Должны", note: (count: number) => (count === 0 ? "долгов нет" : `${count} ${plural(count, studentForms)}`) },
+        prepaid: { label: "Оплачено вперёд", note: (lessons: number) => `${lessons} ${plural(lessons, lessonForms)} вперёд` },
       },
-      dynamics: {
-        title: "Динамика",
-        metricLabel: "Показатель",
-        metrics: [
-          { id: "received", label: "Получено" },
-          { id: "payments", label: "Оплат" },
-          { id: "lessons", label: "Уроков" },
-        ] as const,
-        chartLabel: (metric: string) => `Динамика по месяцам: ${metric}`,
-        value: {
-          received: (kopecks: number) => formatRubles(kopecks),
-          payments: (count: number) => `${count} ${plural(count, paymentForms)}`,
-          lessons: (count: number) => `${count} ${plural(count, lessonForms)}`,
-        },
-        range: (from: string, to: string) => `${from} – ${to}`,
-        open: "Нажмите на месяц, чтобы открыть его",
+      // Доход по месяцам: столбики «получено», у текущего месяца сверху — «ожидается» (FINANCE-2).
+      income: {
+        title: "Доход по месяцам",
+        hint: "Нажмите на месяц, чтобы открыть его",
+        received: "Получено",
+        expected: "Ожидается",
+        legend: "Обозначения",
+        chartLabel: "Доход за последние полгода по месяцам",
+        bar: (month: string, received: string, expected: string | null) => `${month}: получено ${received}${expected ? `, ожидается ещё ${expected}` : ""}`,
+        thousands: (value: number) => (value === 0 ? "0" : `${value} тыс`),
+        average: "Средний месяц",
+        best: "Лучший месяц",
+        lessons: (month: string) => `Уроков за ${month}`,
+      },
+      byStudent: {
+        title: "Кто платил",
+        hint: (month: string) => `Оплаты за ${month}`,
+        empty: "В этом месяце оплат не было",
+        payments: (count: number) => `${count} ${plural(count, paymentForms)}`,
+      },
+      record: {
+        title: "Записать оплату",
+        student: "Ученик",
+        choose: "Выберите ученика",
       },
       debts: {
         title: "Долги и абонементы",
@@ -810,6 +813,7 @@ export const cabinet = {
         sent: "Отправлено",
         remind: "Напомнить",
         renew: "Продлить",
+        record: "Оплатил",
         debtNote: (amount: string, days: number, payer: string | null) =>
           [`долг ${amount}`, days > 0 ? `${days} ${plural(days, dayForms)}` : "", payer ? `платит ${payer}` : ""].filter(Boolean).join(" · "),
         packageEnding: (left: number) => `абонемент: остал${left === 1 ? "ся" : "ось"} ${left} ${plural(left, lessonForms)}`,

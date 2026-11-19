@@ -7,9 +7,13 @@ import { Button, IconButton } from "../../ui/Button";
 import { useNotifier } from "../../ui/Notifications";
 import { Button as KitButton } from "@/shared/ui/kit/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/shared/ui/kit/dropdown-menu";
+import { useState } from "react";
+import { monthIndex } from "../../model/finance";
+import { ByStudentCard } from "./ByStudentCard";
 import { DebtsCard } from "./DebtsCard";
-import { DynamicsCard } from "./DynamicsCard";
+import { IncomeChart } from "./IncomeChart";
 import { MoneyTiles } from "./MoneyTiles";
+import { RecordPaymentDialog } from "./RecordPaymentDialog";
 import { OperationsCard } from "./OperationsCard";
 import styles from "./finance.module.css";
 import { useFinanceUrl } from "./useFinanceUrl";
@@ -23,6 +27,10 @@ export function FinancePage() {
   const months = getFinanceMonths();
   const { month, go } = useFinanceUrl(months, getCurrentMonth());
   const data = getFinanceOverview(month);
+  const currentMonth = getCurrentMonth();
+  const current = month === currentMonth ? data : getFinanceOverview(currentMonth);
+  // Записать оплату: из шапки — с выбором ученика, из «Долгов» — сразу для него.
+  const [recording, setRecording] = useState<{ studentId: string | null } | null>(null);
   const previous = shiftMonth(month, -1);
   const next = shiftMonth(month, 1);
 
@@ -45,7 +53,7 @@ export function FinancePage() {
               <DropdownMenuItem onSelect={() => notifySoon(text.export)}>{text.export}</DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
-          <Button variant="primary" icon={Plus} onClick={() => notifySoon(text.addPayment)}>
+          <Button variant="primary" icon={Plus} onClick={() => setRecording({ studentId: null })}>
             {text.addPayment}
           </Button>
         </div>
@@ -55,16 +63,22 @@ export function FinancePage() {
         <MoneyTiles data={data} />
         <div className="grid grid-cols-[minmax(0,1fr)] gap-4 min-[1181px]:grid-cols-[minmax(0,3fr)_minmax(0,2fr)]">
           <div className={`${styles.rise} [&>*]:h-full`} style={rise(320)}>
-            <DynamicsCard history={data.history} month={month} onPick={go} />
+            <IncomeChart history={data.history} month={month} currentMonth={currentMonth} expected={current.expected.amount} onPick={go} />
           </div>
-          <div className={`${styles.rise} [&>*]:h-full`} style={rise(400)}>
-            <DebtsCard data={data} />
+          <div className="grid content-start gap-4">
+            <div className={styles.rise} style={rise(400)}>
+              <DebtsCard data={data} onRecord={(studentId) => setRecording({ studentId })} />
+            </div>
+            <div className={styles.rise} style={rise(480)}>
+              <ByStudentCard operations={data.operations} monthName={text.monthNames[monthIndex(month)] ?? month} />
+            </div>
           </div>
         </div>
-        <div className={styles.rise} style={rise(480)}>
+        <div className={styles.rise} style={rise(560)}>
           <OperationsCard key={month} operations={data.operations} />
         </div>
       </div>
+      <RecordPaymentDialog open={recording !== null} studentId={recording?.studentId} onClose={() => setRecording(null)} />
     </>
   );
 }

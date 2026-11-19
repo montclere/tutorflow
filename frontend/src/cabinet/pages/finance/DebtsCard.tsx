@@ -26,7 +26,7 @@ function SentButton({ done, label, onClick, variant = "default" }: { done: boole
   );
 }
 
-export function DebtsCard({ data }: { data: FinanceOverview }) {
+export function DebtsCard({ data, onRecord }: { data: FinanceOverview; onRecord: (studentId: string) => void }) {
   const [sent, setSent] = useState<string[]>([]);
   const ending = data.packages.filter((item) => item.ending);
   const keyOf = (kind: "debt" | "package", studentId: string) => `${kind}:${studentId}`;
@@ -51,7 +51,12 @@ export function DebtsCard({ data }: { data: FinanceOverview }) {
                 title={student.name}
                 note={<span className="font-bold text-destructive tabular-nums">{text.debtNote(formatRubles(item.amount), item.days, item.payer)}</span>}
               >
-                <SentButton done={sent.includes(key)} label={text.remind} onClick={() => mark([key])} />
+                <div className="flex flex-wrap gap-1.5">
+                  <Button size="sm" variant="primary" onClick={() => onRecord(item.studentId)}>
+                    {text.record}
+                  </Button>
+                  <SentButton done={sent.includes(key)} label={text.remind} onClick={() => mark([key])} />
+                </div>
               </ListRow>
             );
           })}
