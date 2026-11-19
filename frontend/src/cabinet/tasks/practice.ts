@@ -12,24 +12,12 @@ import type { ExamId, TaskItem } from "./types";
 export type PracticeMode = "weak" | "number" | "mistakes";
 export type PracticeEntry = { taskId: string; exam?: ExamId; number?: number; topic: string; correct: boolean; at: number };
 
-/** Рекорды (VIBE-10): лучшая серия, всего решено и решено за 7 дней — из них темп в день. */
-type PracticeState = {
-  log: PracticeEntry[];
-  mistakes: TaskItem[];
-  solvedToday: number;
-  streak: number;
-  bestStreak: number;
-  dailyGoal: number;
-  xp: number;
-  totalSolved: number;
-  weekSolved: number;
-};
+/** Мини-мониторинг (STUDENT-5): журнал ответов, очередь ошибок и сколько задач решено за 7 дней. Без опыта и серий. */
+type PracticeState = { log: PracticeEntry[]; mistakes: TaskItem[]; weekSolved: number };
 
-export const XP_RIGHT = 10;
-export const XP_TRY = 2;
 export const SESSION_LENGTH = 10;
 
-let state: PracticeState = { log: [], mistakes: [], solvedToday: 17, streak: 4, bestStreak: 9, dailyGoal: 20, xp: 340, totalSolved: 412, weekSolved: 96 };
+let state: PracticeState = { log: [], mistakes: [], weekSolved: 96 };
 const listeners = new Set<() => void>();
 
 function set(next: PracticeState) {
@@ -50,29 +38,17 @@ export function usePractice(): PracticeState {
   return useSyncExternalStore(subscribePractice, getPractice);
 }
 
-/** Ответ в тренажёре: журнал, счётчик дня, опыт и очередь ошибок. */
+/** Ответ в тренажёре: журнал, счётчик за неделю и очередь ошибок. */
 export function recordPractice(task: TaskItem, correct: boolean, at = Date.now()): void {
   const mistakes = correct ? state.mistakes.filter((item) => item.id !== task.id) : [task, ...state.mistakes.filter((item) => item.id !== task.id)];
   set({
     ...state,
     log: [...state.log, { taskId: task.id, exam: task.exam, number: task.number, topic: task.topic, correct, at }],
     mistakes,
-    solvedToday: state.solvedToday + 1,
-    totalSolved: state.totalSolved + 1,
     weekSolved: state.weekSolved + 1,
-    xp: state.xp + (correct ? XP_RIGHT : XP_TRY),
   });
 }
 
-/** Темп — сколько задач в среднем решено в день за последние 7 дней. */
-export function practicePace(practice: Pick<PracticeState, "weekSolved">): number {
-  return Math.round(practice.weekSolved / 7);
-}
-
-/** Опыт за задание или тест из кабинета. */
-export function addXp(value: number): void {
-  if (value > 0) set({ ...state, xp: state.xp + value });
-}
 
 /** Номера, по которым в тренажёре есть задачи с автопроверкой. */
 export function practiceNumbers(exam: ExamId): Set<number> {

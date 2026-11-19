@@ -1,4 +1,4 @@
-import { Check, Flag, Flame, Sparkles, Target, X, Zap } from "lucide-react";
+import { Check, CheckCheck, Flag, Target, TrendingUp, X, Zap } from "lucide-react";
 import { useState } from "react";
 import { navigate, useSearch } from "../../app/router";
 import { studentRoutes } from "../../config/routes";
@@ -6,7 +6,7 @@ import { demoStudentId } from "../mocks/student";
 import { examOf } from "../tasks/catalog";
 import { answerText, checkAnswer, emptyResponse, isAnswered } from "../tasks/check";
 import { goals, useStudentProgress } from "../tasks/learner";
-import { pickTask, practiceNumbers, recordPractice, SESSION_LENGTH, usePractice, XP_RIGHT, XP_TRY, type PracticeMode } from "../tasks/practice";
+import { pickTask, practiceNumbers, recordPractice, SESSION_LENGTH, usePractice, type PracticeMode } from "../tasks/practice";
 import type { AnswerResponse, TaskItem } from "../tasks/types";
 import { cx } from "../ui/cx";
 import { PageHead } from "../ui/PageHead";
@@ -15,20 +15,19 @@ import { ToggleGroup, ToggleGroupItem } from "@/shared/ui/kit/toggle-group";
 import { chunky } from "./learn/chunky";
 import styles from "./learn/learn.module.css";
 import { learnText } from "./learn/learn.ru";
-import { Ring } from "./learn/Ring";
 import { AnswerInput } from "./tasks/player/AnswerInput";
 
 const text = learnText.trainer;
 const levelTones = ["bg-[var(--cab-bad-soft)] text-destructive", "bg-[var(--cab-warn-soft)] text-[var(--cab-warn)]", "bg-[var(--cab-lime-soft)] text-foreground", "bg-[var(--cab-ok-soft)] text-success"];
 const modes: PracticeMode[] = ["weak", "number", "mistakes"];
 
-type Session = { index: number; right: number; combo: number; xp: number; recent: string[]; task: TaskItem | null; answer: AnswerResponse | null; result: boolean | null; done: boolean };
+type Session = { index: number; right: number; recent: string[]; task: TaskItem | null; answer: AnswerResponse | null; result: boolean | null; done: boolean };
 
 function newSession(): Session {
-  return { index: 0, right: 0, combo: 0, xp: 0, recent: [], task: null, answer: null, result: null, done: false };
+  return { index: 0, right: 0, recent: [], task: null, answer: null, result: null, done: false };
 }
 
-/** Тренажёр: бесконечные задачи с мгновенной проверкой, сессии по 10, комбо, опыт и цель дня (STUDENT-5). */
+/** Тренажёр: задачи с мгновенной проверкой, сессии по 10 и мини-мониторинг — без опыта и серий (STUDENT-5). */
 export function TrainerPage() {
   const params = new URLSearchParams(useSearch());
   const practice = usePractice();
@@ -53,7 +52,7 @@ export function TrainerPage() {
     if (!session.task || !session.answer || !isAnswered(session.answer)) return;
     const correct = checkAnswer(session.task.answer, session.answer) === true;
     recordPractice(session.task, correct);
-    setSession({ ...session, result: correct, right: session.right + Number(correct), combo: correct ? session.combo + 1 : 0, xp: session.xp + (correct ? XP_RIGHT : XP_TRY) });
+    setSession({ ...session, result: correct, right: session.right + Number(correct) });
   };
 
   const next = () => {
@@ -72,7 +71,6 @@ export function TrainerPage() {
     setSession(newSession());
   };
 
-  const goalPercent = Math.min(100, Math.round((practice.solvedToday / practice.dailyGoal) * 100));
   const running = session.task !== null && !session.done;
 
   return (
@@ -82,12 +80,11 @@ export function TrainerPage() {
         <section className="grid min-h-[420px] overflow-hidden rounded-3xl border-2 bg-card">
           {session.done ? (
             <div className="grid place-items-center gap-4 p-8 text-center">
-              <span className={cx("grid size-24 place-items-center rounded-full bg-highlight text-highlight-foreground", styles.pop, styles.burst)} aria-hidden="true">
-                <Sparkles size={40} />
+              <span className={cx("grid size-24 place-items-center rounded-full bg-[var(--cab-ok-soft)] text-success", styles.pop)} aria-hidden="true">
+                <CheckCheck size={40} />
               </span>
               <h2 className="m-0 font-[family-name:var(--font-display)] text-2xl font-black">{text.finishTitle}</h2>
               <p className="m-0 text-lg font-bold tabular-nums">{text.finishScore(session.right, SESSION_LENGTH)}</p>
-              <span className={cx("rounded-full bg-highlight px-4 py-1.5 text-base font-extrabold text-highlight-foreground tabular-nums", styles.pop)}>{text.xpGain(session.xp)}</span>
               <div className="flex flex-wrap justify-center gap-3">
                 <button type="button" className={chunky("primary")} onClick={start}>
                   {text.again}
@@ -106,12 +103,6 @@ export function TrainerPage() {
                 <div className={cx(styles.bar, "flex-1")} role="progressbar" aria-valuemin={0} aria-valuemax={SESSION_LENGTH} aria-valuenow={session.index} aria-label={text.session(session.index + 1, SESSION_LENGTH)}>
                   <div className={styles.barFill} style={{ width: `${((session.index + (session.result !== null ? 1 : 0)) / SESSION_LENGTH) * 100}%` }} />
                 </div>
-                {session.combo >= 2 && (
-                  <span key={session.combo} className={cx("inline-flex items-center gap-1 rounded-full bg-[#fff1e6] px-2.5 py-1 text-sm font-extrabold text-[#ea580c]", styles.pop)}>
-                    <Flame size={15} aria-hidden="true" />
-                    {text.combo(session.combo)}
-                  </span>
-                )}
               </div>
               <article key={`${session.task.id}-${session.result}`} className={cx("grid content-start gap-6 p-5 sm:p-8", session.result === false && styles.shake)}>
                 <span className="w-fit rounded-lg bg-accent px-2.5 py-1 text-xs font-extrabold text-accent-foreground">
@@ -140,7 +131,7 @@ export function TrainerPage() {
                     <b className={cx("font-[family-name:var(--font-display)] text-xl font-black", session.result ? "text-success" : "text-destructive")}>
                       {session.result ? text.right[session.index % text.right.length] : text.wrong}
                     </b>
-                    <span className="text-sm font-bold">{session.result ? text.xpGain(XP_RIGHT) : text.correctAnswer(answerText(session.task.answer))}</span>
+                    <span className="text-sm font-bold">{session.result ? text.rightNote : text.correctAnswer(answerText(session.task.answer))}</span>
                   </div>
                   <button type="button" className={chunky(session.result ? "good" : "bad", "max-[520px]:w-full")} onClick={next}>
                     {text.next}
@@ -171,28 +162,21 @@ export function TrainerPage() {
         </section>
 
         <aside className="grid gap-4">
-          <section className="grid grid-cols-3 gap-2 rounded-3xl border-2 bg-card p-4 text-center">
-            <div className="grid justify-items-center gap-1">
-              <Ring value={goalPercent} size={56} stroke={7} tone="var(--color-lime)" label={text.goalLabel}>
-                <Target size={18} className="text-muted-foreground" aria-hidden="true" />
-              </Ring>
-              <b className="text-sm font-extrabold tabular-nums">{text.goal(practice.solvedToday, practice.dailyGoal)}</b>
-              <span className="text-[11px] font-bold text-muted-foreground">{text.goalLabel}</span>
-            </div>
-            <div className="grid justify-items-center content-start gap-1">
-              <span className="grid size-14 place-items-center rounded-full bg-[#fff1e6] text-[#ea580c]" aria-hidden="true">
-                <Flame size={24} />
-              </span>
-              <b className="text-sm font-extrabold tabular-nums">{practice.streak}</b>
-              <span className="text-[11px] font-bold text-muted-foreground">{text.streakLabel}</span>
-            </div>
-            <div className="grid justify-items-center content-start gap-1">
-              <span className="grid size-14 place-items-center rounded-full bg-highlight text-highlight-foreground" aria-hidden="true">
-                <Sparkles size={22} />
-              </span>
-              <b className="text-sm font-extrabold tabular-nums">{practice.xp}</b>
-              <span className="text-[11px] font-bold text-muted-foreground">{text.xpLabel}</span>
-            </div>
+          {/* Мини-мониторинг: сколько решено за неделю, точность и готовность — без целей, серий и опыта. */}
+          <section className="grid grid-cols-3 gap-2 rounded-3xl border-2 bg-card p-4 text-center" aria-label={text.monitorLabel}>
+            {[
+              { icon: CheckCheck, value: String(practice.weekSolved), label: text.weekLabel },
+              { icon: Target, value: progress?.accuracy === null || progress?.accuracy === undefined ? "—" : `${progress.accuracy}%`, label: text.accuracyLabel },
+              { icon: TrendingUp, value: progress ? `${progress.readiness}%` : "—", label: text.readinessLabel },
+            ].map((item) => (
+              <div key={item.label} className="grid justify-items-center content-start gap-1">
+                <span className="grid size-11 place-items-center rounded-2xl bg-accent text-primary" aria-hidden="true">
+                  <item.icon size={20} />
+                </span>
+                <b className="text-base font-extrabold tabular-nums">{item.value}</b>
+                <span className="text-[11px] leading-tight font-bold text-muted-foreground">{item.label}</span>
+              </div>
+            ))}
           </section>
 
           <section className="grid gap-3 rounded-3xl border-2 bg-card p-4">

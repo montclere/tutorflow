@@ -55,7 +55,7 @@ export function ExtendedReview({ assignment, task, index }: { assignment: Assign
   };
 
   return (
-    <section className="grid gap-4 rounded-2xl border bg-card p-5">
+    <section className="grid gap-4 glass rounded-2xl p-5">
       <header className="grid gap-2">
         <span className="text-xs font-bold tracking-wide text-muted-foreground uppercase">{text.task.title(index, task.points)}</span>
         <p className="m-0 text-base leading-snug font-bold">

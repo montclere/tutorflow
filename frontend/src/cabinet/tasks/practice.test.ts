@@ -22,10 +22,10 @@ describe("тренажёр", () => {
     const task = pickTask("weak", { exam: "ege-math-profile", weak: [4], seed: 3, recent: [] });
     expect(task?.number).toBe(4);
     if (!task) return;
-    const before = getPractice().solvedToday;
+    const before = getPractice().weekSolved;
     recordPractice(task, false);
     expect(getPractice().mistakes[0]?.id).toBe(task.id);
-    expect(getPractice().solvedToday).toBe(before + 1);
+    expect(getPractice().weekSolved).toBe(before + 1);
     expect(pickTask("mistakes", { exam: "ege-math-profile", weak: [], seed: 1, recent: [] })?.id).toBe(task.id);
     expect(practiceEvidence("ege-math-profile")["n:4"]).toEqual({ correct: 0, total: 1 });
     recordPractice(task, true);

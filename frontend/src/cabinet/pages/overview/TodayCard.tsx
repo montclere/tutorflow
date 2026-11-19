@@ -50,7 +50,7 @@ function LessonLine({ lesson, mark, onOpen, onMark }: LineProps) {
 function NextLesson({ lesson, onOpen, onJoin }: { lesson: LessonRow; onOpen: (id: string) => void; onJoin: () => void }) {
   const student = getStudent(lesson.studentId);
   return (
-    <li className="my-2 rounded-2xl bg-primary p-5 text-primary-foreground">
+    <li className="glass-blue my-2 rounded-2xl p-5">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <span className="font-[family-name:var(--font-display)] text-3xl leading-none font-black tabular-nums">{lesson.time}</span>
         <span className="rounded-full bg-white/15 px-3 py-1 text-xs font-extrabold">{formatCountdown(lesson.minutes)}</span>

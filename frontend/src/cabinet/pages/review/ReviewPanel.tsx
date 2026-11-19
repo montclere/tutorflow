@@ -30,10 +30,10 @@ export function ReviewPanel({ kind, onKind, works, assignments, selectedId, onSe
     .sort((a, b) => Number(b.items.some((item) => item.status === "wait")) - Number(a.items.some((item) => item.status === "wait")));
 
   return (
-    <aside className="grid content-start gap-3 rounded-2xl border bg-card p-3" aria-label={text.panelLabel}>
-      <ToggleGroup type="single" spacing={1} value={kind} aria-label={text.panelLabel} className="w-full gap-1 rounded-lg bg-secondary p-1" onValueChange={(value) => value && onKind(value as WorkKind)}>
+    <aside className="grid min-w-0 grid-cols-[minmax(0,1fr)] content-start gap-3 glass rounded-2xl p-3" aria-label={text.panelLabel}>
+      <ToggleGroup type="single" spacing={1} value={kind} aria-label={text.panelLabel} className="grid w-full grid-cols-2 gap-1 rounded-lg bg-secondary p-1" onValueChange={(value) => value && onKind(value as WorkKind)}>
         {(["homework", "test"] as const).map((id) => (
-          <ToggleGroupItem key={id} value={id} className="flex-1 data-[state=on]:bg-card data-[state=on]:shadow-sm">
+          <ToggleGroupItem key={id} value={id} className="min-w-0 truncate data-[state=on]:bg-card data-[state=on]:shadow-sm">
             {text.tabLabel(text.tabs[id], waitingOf(id))}
           </ToggleGroupItem>
         ))}
@@ -44,7 +44,7 @@ export function ReviewPanel({ kind, onKind, works, assignments, selectedId, onSe
         groups.map(({ work, items }) => {
           const waiting = items.filter((item) => item.status === "wait").length;
           return (
-            <section key={work.id} className="grid gap-1">
+            <section key={work.id} className="grid min-w-0 grid-cols-[minmax(0,1fr)] gap-1">
               <header className="flex items-center gap-2 px-2 pt-2">
                 {work.kind === "test" ? <Zap size={14} className="text-muted-foreground" aria-hidden="true" /> : <ClipboardList size={14} className="text-muted-foreground" aria-hidden="true" />}
                 <b className="min-w-0 flex-1 truncate text-sm font-extrabold">{work.title}</b>

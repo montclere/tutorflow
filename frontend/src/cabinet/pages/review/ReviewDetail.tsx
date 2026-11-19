@@ -37,7 +37,7 @@ function AutoPart({ assignment, work }: { assignment: Assignment; work: Work }) 
   if (auto.length === 0) return null;
   const score = attemptScore(work.items, last.results);
   return (
-    <section className="grid gap-3 rounded-2xl border bg-card p-5">
+    <section className="grid gap-3 glass rounded-2xl p-5">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-3">
           <span className="grid size-9 place-items-center rounded-xl bg-[var(--cab-ok-soft)] text-success" aria-hidden="true">
@@ -106,7 +106,7 @@ export function ReviewDetail({ assignment, work }: { assignment: Assignment; wor
 
   return (
     <div className="grid content-start gap-4">
-      <header className="flex flex-wrap items-center gap-3 rounded-2xl border bg-card p-5">
+      <header className="flex flex-wrap items-center gap-3 glass rounded-2xl p-5">
         <Avatar initials={student.initials} color={student.color} large />
         <div className="grid min-w-0 flex-1 gap-0.5">
           <h2 className="m-0 font-[family-name:var(--font-display)] text-xl font-black">{student.name}</h2>
@@ -128,7 +128,7 @@ export function ReviewDetail({ assignment, work }: { assignment: Assignment; wor
             <ExtendedReview key={`${assignment.id}-${task.id}`} assignment={assignment} task={task} index={work.items.indexOf(task) + 1} />
           ))}
           {graded.map((task) => (
-            <section key={task.id} className="flex flex-wrap items-center gap-3 rounded-2xl border bg-card p-4 text-sm">
+            <section key={task.id} className="flex flex-wrap items-center gap-3 glass rounded-2xl p-4 text-sm">
               <Check size={16} className="text-success" aria-hidden="true" />
               <b>{text.task.title(work.items.indexOf(task) + 1, task.points)}</b>
               <span className="font-semibold text-muted-foreground">{text.grade.done(last.results[task.id]?.points ?? 0, task.points)}</span>

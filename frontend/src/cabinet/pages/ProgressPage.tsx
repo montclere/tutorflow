@@ -1,12 +1,11 @@
-import { CheckCircle2, Flame, Info, Target, TrendingUp, Trophy, Zap } from "lucide-react";
+import { Info, Target, TrendingUp, Trophy } from "lucide-react";
 import { navigate } from "../../app/router";
 import { studentRoutes } from "../../config/routes";
 import { demoStudentId } from "../mocks/student";
 import { goals, useStudentProgress } from "../tasks/learner";
-import { practiceNumbers, practicePace, usePractice } from "../tasks/practice";
+import { practiceNumbers } from "../tasks/practice";
 import { cx } from "../ui/cx";
 import { PageHead } from "../ui/PageHead";
-import { StatTile } from "../ui/StatTile";
 import { chunky } from "./learn/chunky";
 import styles from "./learn/learn.module.css";
 import { learnText } from "./learn/learn.ru";
@@ -14,7 +13,6 @@ import { Ring } from "./learn/Ring";
 import { ResultBars } from "./students/profile/ResultBars";
 
 const text = learnText.progress;
-const records = text.records;
 const levelTones = [
   "border-[color-mix(in_srgb,var(--color-error)_30%,transparent)] bg-[var(--cab-bad-soft)]",
   "border-[color-mix(in_srgb,var(--cab-warn)_30%,transparent)] bg-[var(--cab-warn-soft)]",
@@ -41,7 +39,6 @@ function Fact({ icon: Icon, label, value, note }: { icon: typeof Target; label: 
 /** Прогресс под цель ученика: экзамен — номера и прогноз баллов, программа — темы (STUDENT-1, STUDENT-6). */
 export function ProgressPage() {
   const progress = useStudentProgress(demoStudentId);
-  const practice = usePractice();
   if (!progress) return null;
   const exam = progress.mode === "exam";
   const goal = goals[demoStudentId];
@@ -72,16 +69,6 @@ export function ProgressPage() {
               <Fact icon={Target} label={text.accuracy} value={progress.accuracy === null ? "—" : `${progress.accuracy}%`} note={text.accuracyNote} />
               <Fact icon={TrendingUp} label={text.trendTitle} value={progress.trend.length > 0 ? `${progress.trend.at(-1)?.percent ?? 0}%` : "—"} note={progress.trend.at(-1)?.title ?? text.trendEmpty} />
             </div>
-          </div>
-        </section>
-
-        <section className={cx("grid gap-3", styles.rise)} style={{ "--delay": "40ms" } as React.CSSProperties} aria-label={records.title}>
-          <h2 className="m-0 font-[family-name:var(--font-display)] text-base font-extrabold">{records.title}</h2>
-          <div className="grid grid-cols-4 gap-3 max-[900px]:grid-cols-2">
-            <StatTile tone="orange" icon={Flame} label={records.streak} value={String(practice.streak)} note={records.streakNote} />
-            <StatTile tone="purple" icon={Trophy} label={records.best} value={String(practice.bestStreak)} note={records.bestNote(practice.bestStreak)} />
-            <StatTile tone="cyan" icon={Zap} label={records.pace} value={String(practicePace(practice))} note={records.paceNote} />
-            <StatTile tone="green" icon={CheckCircle2} label={records.total} value={String(practice.totalSolved)} note={records.totalNote} />
           </div>
         </section>
 

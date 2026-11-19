@@ -1,4 +1,4 @@
-import { Archive, CheckCheck, PauseCircle, Plus, Search, TriangleAlert, UserPlus } from "lucide-react";
+import { Archive, CheckCheck, List, PauseCircle, Plus, Search, Table2, TriangleAlert, UserPlus } from "lucide-react";
 import { useState } from "react";
 import { cabinet } from "../../content/cabinet.ru";
 import { getSchedule } from "../../data";
@@ -11,6 +11,8 @@ import { Tabs } from "../../ui/Tabs";
 import { Input } from "@/shared/ui/kit/input";
 import { Toggle } from "@/shared/ui/kit/toggle";
 import { StudentCards, StudentsTable } from "./StudentsTable";
+import { StudentsJournal } from "./StudentsJournal";
+import { ToggleGroup, ToggleGroupItem } from "@/shared/ui/kit/toggle-group";
 import { NewLessonSheet, type NewLessonSeed } from "../schedule/NewLessonSheet";
 import { NewStudentDialog } from "./NewStudentDialog";
 import { StudentProfile } from "./profile/StudentProfile";
@@ -26,6 +28,8 @@ export function StudentsPage() {
   const { status, studentId, go } = useStudentsUrl();
   const [query, setQuery] = useState("");
   const [debtorsOnly, setDebtorsOnly] = useState(false);
+  // Журнал — основной вид (STUDENTS-17); «Список» — прежняя таблица с расписанием и следующим уроком.
+  const [view, setView] = useState<"journal" | "list">("journal");
 
   const counts = countByStatus(students);
   const list = filterStudents(students, { status, query, debtorsOnly });
@@ -79,6 +83,16 @@ export function StudentsPage() {
           items={text.statusTabs.map((tab) => ({ id: tab.id, label: text.tabLabel(tab.label, counts[tab.id]), href: studentsHref(tab.id) }))}
         />
         <div className="flex flex-wrap items-center gap-2 max-[520px]:w-full">
+          <ToggleGroup type="single" spacing={1} value={view} aria-label={text.viewsLabel} className="gap-1 rounded-lg border bg-card p-1 max-[520px]:hidden" onValueChange={(value) => value && setView(value as "journal" | "list")}>
+            <ToggleGroupItem value="journal" className="h-7 gap-1.5 px-2.5 text-sm font-bold data-[state=on]:bg-accent data-[state=on]:text-accent-foreground">
+              <Table2 size={15} aria-hidden="true" />
+              {text.views.journal}
+            </ToggleGroupItem>
+            <ToggleGroupItem value="list" className="h-7 gap-1.5 px-2.5 text-sm font-bold data-[state=on]:bg-accent data-[state=on]:text-accent-foreground">
+              <List size={15} aria-hidden="true" />
+              {text.views.list}
+            </ToggleGroupItem>
+          </ToggleGroup>
           <div className="relative min-w-0 max-[520px]:flex-1">
             <Search size={16} className="pointer-events-none absolute top-1/2 left-3 -translate-y-1/2 text-muted-foreground" aria-hidden="true" />
             <Input
@@ -101,7 +115,11 @@ export function StudentsPage() {
         emptyState()
       ) : (
         <>
-          <StudentsTable students={list} today={today} selectedId={studentId} onOpen={(id) => go({ studentId: id })} />
+          {view === "journal" ? (
+            <StudentsJournal students={list} selectedId={studentId} onOpen={(id) => go({ studentId: id })} />
+          ) : (
+            <StudentsTable students={list} today={today} selectedId={studentId} onOpen={(id) => go({ studentId: id })} />
+          )}
           <StudentCards students={list} today={today} selectedId={studentId} onOpen={(id) => go({ studentId: id })} />
         </>
       )}

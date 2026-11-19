@@ -1,4 +1,4 @@
-import { CalendarClock, ChevronRight, ClipboardList, Flame, MessageSquareQuote, Sparkles, Zap } from "lucide-react";
+import { CalendarClock, ChevronRight, ClipboardList, MessageSquareQuote, Zap } from "lucide-react";
 import { navigate } from "../../app/router";
 import { studentRoutes } from "../../config/routes";
 import { getStudent, getStudentDetails } from "../data";
@@ -45,7 +45,7 @@ function Panel({ title, action, children, className, delay = 0, tone }: PanelPro
 
 const linkClass = "appearance-none border-0 bg-transparent p-0 text-sm font-extrabold text-primary [font-family:inherit] hover:underline";
 
-/** Главная ученика: серия и цель дня, урок, что в работе, прогресс под цель, слабые места, материалы (STUDENT-2). */
+/** Главная ученика: мини-мониторинг (за неделю, точность), урок, что в работе, прогресс под цель, слабые места, материалы (STUDENT-2). */
 export function StudentHomePage() {
   useStudents();
   const student = getStudent(demoStudentId);
@@ -54,8 +54,6 @@ export function StudentHomePage() {
   const { works, assignments } = useLibrary();
   const goal = goals[demoStudentId];
   const firstName = student.name.split(" ")[0] ?? student.name;
-  const goalPercent = Math.min(100, Math.round((practice.solvedToday / practice.dailyGoal) * 100));
-  const left = Math.max(0, practice.dailyGoal - practice.solvedToday);
   const now = assignments.filter((assignment) => assignment.studentId === demoStudentId && assignment.status !== "done").slice(0, 3);
   const materials = getStudentDetails(demoStudentId).materials.slice(0, 2);
   const trainable = practiceNumbers(goal?.kind === "exam" ? goal.exam : "ege-russian");
@@ -69,33 +67,21 @@ export function StudentHomePage() {
           <p className="m-0 text-base font-semibold text-primary-foreground/85">
             {goal?.kind === "exam" && progress ? text.examLine(progress.title, goal.daysLeft ?? 0) : goal?.kind === "topics" ? text.topicsLine(goal.title) : student.goal}
           </p>
-          <div className="flex flex-wrap gap-2">
-            <span className="inline-flex items-center gap-1.5 rounded-full bg-white/15 px-3 py-1.5 text-sm font-extrabold">
-              <Flame size={16} className="text-[#fb923c]" aria-hidden="true" />
-              {text.streak(practice.streak)}
-            </span>
-            <span className="inline-flex items-center gap-1.5 rounded-full bg-white/15 px-3 py-1.5 text-sm font-extrabold tabular-nums">
-              <Sparkles size={16} className="text-highlight" aria-hidden="true" />
-              {text.xp(practice.xp)}
-            </span>
-          </div>
         </div>
-        <div className="flex items-center gap-5">
-          <Ring value={goalPercent} size={112} stroke={12} tone="var(--color-lime)" track="rgba(255,255,255,0.18)" label={text.goalLabel(practice.solvedToday, practice.dailyGoal)}>
-            <span className="grid leading-tight">
-              <b className="font-[family-name:var(--font-display)] text-xl font-black tabular-nums">
-                {practice.solvedToday}/{practice.dailyGoal}
-              </b>
-              <span className="text-[11px] font-bold text-primary-foreground/80">цель дня</span>
-            </span>
-          </Ring>
-          <div className="grid gap-2">
-            <span className="text-sm font-bold text-primary-foreground/85">{left === 0 ? text.goalDone : text.goalLeft(left)}</span>
-            <button type="button" className={chunky("lime")} onClick={() => navigate(studentRoutes.trainer)}>
-              <Zap size={18} aria-hidden="true" />
-              {text.practice}
-            </button>
-          </div>
+        {/* Мини-мониторинг вместо целей и опыта: сколько решено за неделю и точность. */}
+        <div className="flex flex-wrap items-center gap-3">
+          <span className="grid min-w-28 gap-0.5 rounded-2xl bg-white/12 px-4 py-3">
+            <b className="font-[family-name:var(--font-display)] text-2xl leading-none font-black tabular-nums">{practice.weekSolved}</b>
+            <span className="text-xs font-bold text-primary-foreground/80">{text.weekLabel}</span>
+          </span>
+          <span className="grid min-w-28 gap-0.5 rounded-2xl bg-white/12 px-4 py-3">
+            <b className="font-[family-name:var(--font-display)] text-2xl leading-none font-black tabular-nums">{progress?.accuracy === null || progress?.accuracy === undefined ? "—" : `${progress.accuracy}%`}</b>
+            <span className="text-xs font-bold text-primary-foreground/80">{text.accuracy}</span>
+          </span>
+          <button type="button" className={chunky("lime")} onClick={() => navigate(studentRoutes.trainer)}>
+            <Zap size={18} aria-hidden="true" />
+            {text.practice}
+          </button>
         </div>
       </section>
 

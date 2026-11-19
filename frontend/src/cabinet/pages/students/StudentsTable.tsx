@@ -23,7 +23,7 @@ export function formatBalance(balance: number): string {
 }
 
 /** Ноль — тоже чип, нейтральный: колонка баланса выглядит ровно. */
-function balanceBadge(balance: number): string {
+export function balanceBadge(balance: number): string {
   if (balance < 0) return "bg-[var(--cab-bad-soft)] text-destructive";
   return balance > 0 ? "bg-[var(--cab-ok-soft)] text-success" : "bg-secondary text-muted-foreground";
 }

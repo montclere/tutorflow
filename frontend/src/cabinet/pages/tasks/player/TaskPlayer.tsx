@@ -1,4 +1,4 @@
-import { ArrowLeft, ArrowRight, Check, Clock, Flag, Sparkles, X } from "lucide-react";
+import { ArrowLeft, ArrowRight, Check, CheckCheck, Clock, Flag, Sparkles, X } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { navigate } from "../../../../app/router";
 import { studentRoutes } from "../../../../config/routes";
@@ -8,7 +8,6 @@ import { attemptScore, submitAttempt, type Assignment, type Attempt, type Work }
 import { tasksText } from "../../../tasks/tasks.ru";
 import type { AnswerResponse, TaskItem } from "../../../tasks/types";
 import { Button } from "../../../ui/Button";
-import { addXp, XP_RIGHT } from "../../../tasks/practice";
 import { chunky } from "../../learn/chunky";
 import learn from "../../learn/learn.module.css";
 import { cx } from "../../../ui/cx";
@@ -51,15 +50,14 @@ function Result({ work, assignment, attempt, onClose }: { work: Work; assignment
   return (
     <div className="mx-auto grid w-full max-w-2xl gap-6 p-5 sm:p-8">
       <div className="grid justify-items-center gap-2 text-center">
-        <span className={cx("grid size-20 place-items-center rounded-full bg-highlight text-highlight-foreground", learn.pop, learn.burst)} aria-hidden="true">
-          <Sparkles size={34} />
+        <span className={cx("grid size-20 place-items-center rounded-full bg-[var(--cab-ok-soft)] text-success", learn.pop)} aria-hidden="true">
+          <CheckCheck size={34} />
         </span>
         <h3 className="m-0 font-[family-name:var(--font-display)] text-2xl font-black">{text.resultTitle}</h3>
         {score.percent !== null && <b className="font-[family-name:var(--font-display)] text-6xl leading-none font-black tabular-nums">{score.percent}%</b>}
         <p className="m-0 text-base font-semibold text-muted-foreground tabular-nums">
           {[score.total > 0 ? text.resultScore(score.correct, score.total) : null, text.resultPoints(score.points, score.maxPoints), text.resultTime(minutes)].filter(Boolean).join(" · ")}
         </p>
-        {score.correct > 0 && <span className={cx("rounded-full bg-highlight px-3 py-1 text-sm font-extrabold text-highlight-foreground tabular-nums", learn.pop)}>+{score.correct * XP_RIGHT} XP</span>}
         {score.pending > 0 && <p className="m-0 rounded-full bg-accent px-3 py-1 text-sm font-bold text-accent-foreground">{text.resultPending(score.pending)}</p>}
       </div>
 
@@ -139,7 +137,6 @@ function Player({ work, assignment, startedAt, onClose }: { work: Work; assignme
     if (finishedRef.current) return;
     finishedRef.current = true;
     const submitted = submitAttempt(assignment.id, work.items, answers, startedAt, Date.now());
-    addXp(attemptScore(work.items, submitted.results).correct * XP_RIGHT);
     setAttempt(submitted);
     notify(timeUp ? text.timeUp : text.sent);
   };

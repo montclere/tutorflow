@@ -13,7 +13,7 @@ import { Button } from "../../ui/Button";
 import { CabinetLink } from "../../ui/CabinetLink";
 import { Card } from "../../ui/Card";
 import { EmptyState } from "../../ui/EmptyState";
-import { PageHead } from "../../ui/PageHead";
+import { Greeting } from "./Greeting";
 import { LiveLessonSheet } from "../schedule/live/LiveLessonSheet";
 import { livePeople } from "../schedule/live/livePeople";
 import { useLiveSchedule } from "../schedule/live/useLiveSchedule";
@@ -149,7 +149,7 @@ export function LiveOverviewPage() {
 
   return (
     <>
-      <PageHead title={text.greeting(firstName)} />
+      <Greeting name={firstName} today={today} now={now} summary={text.hello.summary(view.today.length, view.today[0]?.start ?? null, 0)} />
       {content()}
       <LiveLessonSheet
         lesson={selected}

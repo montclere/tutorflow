@@ -74,3 +74,27 @@
 [data-slot]:focus-visible {
   outline: none;
 }
+
+/*
+ * Матовое стекло кабинета (VIBE-13) — как карточки первого экрана сайта: полупрозрачный фон,
+ * светлая рамка, размытие того, что под ним. Цвет стекла задаётся переменной --glass-bg.
+ */
+@utility glass {
+  background: var(--glass-bg, rgb(255 255 255 / 0.62));
+  border: 1px solid rgb(255 255 255 / 0.8);
+  box-shadow: 0 14px 34px rgb(24 40 120 / 0.08), inset 0 1px 0 rgb(255 255 255 / 0.9);
+  -webkit-backdrop-filter: blur(18px) saturate(1.4);
+  backdrop-filter: blur(18px) saturate(1.4);
+}
+
+/* Синее стекло — акцентные карточки (ближайший урок): блик в углу, как у карточки «Александр» на сайте. */
+@utility glass-blue {
+  background:
+    radial-gradient(circle at 88% 18%, rgb(255 255 255 / 0.3), transparent 42%),
+    linear-gradient(135deg, rgb(56 90 242 / 0.92), rgb(30 62 224 / 0.84));
+  border: 1.5px solid var(--color-glass-border);
+  color: var(--color-paper);
+  box-shadow: var(--shadow-float);
+  -webkit-backdrop-filter: blur(18px);
+  backdrop-filter: blur(18px);
+}

@@ -53,7 +53,7 @@ export const cabinet = {
   nav: { teacher: teacherNav, student: studentNav } as Record<Role, NavItem[]>,
   promo: {
     teacher: { title: "ИИ-помощник", text: "Соберёт ДЗ по теме из банка ЕГЭ и ОГЭ за минуту." },
-    student: { title: "Цель дня — 20 задач", text: "Тренажёр засчитывает каждую решённую задачу." },
+    student: { title: "Тренажёр", text: "Задачи по слабым номерам — проверка сразу, прогресс обновляется сам." },
   } as Record<Role, { title: string; text: string }>,
   shell: {
     homeLabel: "На главную",
@@ -102,6 +102,17 @@ export const cabinet = {
   teacher: {
     overview: {
       greeting: (name: string) => `Добрый день, ${name}`,
+      // Приветствие (VIBE-14): обращение по времени суток и сводка дня.
+      hello: {
+        parts: { night: "Доброй ночи", morning: "Доброе утро", day: "Добрый день", evening: "Добрый вечер" },
+        summary: (lessons: number, next: string | null, waiting: number) =>
+          [
+            lessons === 0 ? "Сегодня уроков нет" : `Сегодня ${lessons} ${plural(lessons, lessonForms)}${next ? `, ближайший в ${next}` : ", все проведены"}`,
+            waiting > 0 ? `${waiting} ${plural(waiting, ["работа ждёт", "работы ждут", "работ ждут"])} проверки` : null,
+          ]
+            .filter(Boolean)
+            .join(" · "),
+      },
       // Плитки показателей дня (VIBE-5).
       stats: {
         today: "Уроков сегодня",
@@ -377,6 +388,23 @@ export const cabinet = {
         label: (state: string) => `Последнее ДЗ: ${state}`,
       },
       waiting: "не подключён",
+      // Журнал (STUDENTS-17): ученики × даты уроков.
+      views: { journal: "Журнал", list: "Список" },
+      viewsLabel: "Вид списка учеников",
+      journal: {
+        label: "Журнал учеников",
+        student: "Ученик",
+        attendance: "Посещ.",
+        average: "ДЗ, ср.",
+        balance: "Баланс",
+        missing: "н/с",
+        cancelled: "Урок отменён",
+        moved: "Урок перенесён",
+        done: (topic: string) => `Проведён: ${topic}`,
+        homework: (topic: string, title: string, result: string) => `${topic}. ДЗ «${title}»: ${result}`,
+        legendLabel: "Обозначения журнала",
+        legend: { homework: "ДЗ — решено из заданных", missing: "ДЗ не сдано", done: "урок проведён, ДЗ не задавали" },
+      },
       // Чип в строке ученика (VIBE-6): новичок.
       fresh: "Новый",
       freshHint: "Меньше трёх уроков — присмотритесь, как идёт",
