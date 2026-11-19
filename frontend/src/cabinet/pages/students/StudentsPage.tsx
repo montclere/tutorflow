@@ -117,7 +117,7 @@ export function StudentsPage() {
       ) : (
         <>
           {view === "journal" ? (
-            <StudentsJournal students={list} selectedId={studentId} onOpen={(id) => go({ studentId: id })} />
+            <StudentsJournal students={list} today={today} selectedId={studentId} onOpen={(id) => go({ studentId: id })} />
           ) : (
             <StudentsTable students={list} today={today} selectedId={studentId} onOpen={(id) => go({ studentId: id })} />
           )}

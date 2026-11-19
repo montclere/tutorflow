@@ -102,16 +102,9 @@ export const cabinet = {
   teacher: {
     overview: {
       greeting: (name: string) => `Добрый день, ${name}`,
-      // Приветствие (VIBE-14): обращение по времени суток и сводка дня.
+      // Приветствие (VIBE-14): обращение по времени суток.
       hello: {
         parts: { night: "Доброй ночи", morning: "Доброе утро", day: "Добрый день", evening: "Добрый вечер" },
-        summary: (lessons: number, next: string | null, waiting: number) =>
-          [
-            lessons === 0 ? "Сегодня уроков нет" : `Сегодня ${lessons} ${plural(lessons, lessonForms)}${next ? `, ближайший в ${next}` : ", все проведены"}`,
-            waiting > 0 ? `${waiting} ${plural(waiting, ["работа ждёт", "работы ждут", "работ ждут"])} проверки` : null,
-          ]
-            .filter(Boolean)
-            .join(" · "),
       },
       // Плитки показателей дня (VIBE-5).
       stats: {
@@ -324,6 +317,14 @@ export const cabinet = {
       },
       create: {
         title: "Новый урок",
+        description: "Урок появится в расписании и в кабинете ученика.",
+        // Блоки формы (VIBE-16): кто, когда, как проходит.
+        blocks: { who: "Кто", when: "Когда", how: "Как проходит" },
+        studentFacts: { goal: "Цель", usual: "Обычно", balance: "Баланс" },
+        quickDates: "Ближайшие дни",
+        dayLoad: (count: number) => (count === 0 ? "свободно" : `${count} ур.`),
+        freeTitle: "Свободное время в этот день",
+        usualTime: (time: string) => `Как обычно · ${time}`,
         student: "Ученик",
         chooseStudent: "Выберите ученика",
         searchStudent: "Найти ученика",
@@ -410,6 +411,10 @@ export const cabinet = {
         moved: "Урок перенесён",
         done: (topic: string) => `Проведён: ${topic}`,
         homework: (topic: string, title: string, result: string) => `${topic}. ДЗ «${title}»: ${result}`,
+        periodLabel: "Период журнала",
+        periods: { 14: "2 недели", 31: "Месяц" } as Record<number, string>,
+        counts: (students: number, days: number) => `${students} ${plural(students, ["ученик", "ученика", "учеников"])} · ${days} ${plural(days, ["день", "дня", "дней"])} с уроками`,
+        noDates: "За этот период уроков нет",
         legendLabel: "Обозначения журнала",
         legend: { homework: "ДЗ — решено из заданных", missing: "ДЗ не сдано", done: "урок проведён, ДЗ не задавали" },
       },

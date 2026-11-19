@@ -90,9 +90,9 @@
 /* Синее стекло — акцентные карточки (ближайший урок): блик в углу, как у карточки «Александр» на сайте. */
 @utility glass-blue {
   background:
-    radial-gradient(circle at 88% 18%, rgb(255 255 255 / 0.3), transparent 42%),
-    linear-gradient(135deg, rgb(56 90 242 / 0.92), rgb(30 62 224 / 0.84));
-  border: 1.5px solid var(--color-glass-border);
+    radial-gradient(circle at 92% 12%, rgb(255 255 255 / 0.2), transparent 30%),
+    linear-gradient(135deg, rgb(43 76 240), rgb(28 52 214));
+  border: 1.5px solid rgb(255 255 255 / 0.28);
   color: var(--color-paper);
   box-shadow: var(--shadow-float);
   -webkit-backdrop-filter: blur(18px);

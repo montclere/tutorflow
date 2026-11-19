@@ -149,7 +149,7 @@ export function LiveOverviewPage() {
 
   return (
     <>
-      <Greeting name={firstName} today={today} now={now} summary={text.hello.summary(view.today.length, view.today[0]?.start ?? null, 0)} />
+      <Greeting name={firstName} now={now} />
       {content()}
       <LiveLessonSheet
         lesson={selected}

@@ -18,15 +18,15 @@ type Props = { label: string; value: string; note?: string; tone: GradientTone; 
 export function StatTile({ label, value, note, tone, icon, className, onClick }: Props) {
   const body = (
     <>
-      <GradientIcon icon={icon} tone={tone} size={40} />
+      <GradientIcon icon={icon} tone={tone} size={48} />
       <span className="grid min-w-0 gap-0.5">
-        <span className="truncate text-xs font-bold text-muted-foreground">{label}</span>
-        <b className="font-[family-name:var(--font-display)] text-xl leading-tight font-black tabular-nums">{value}</b>
-        {note && <span className="truncate text-xs font-semibold text-muted-foreground">{note}</span>}
+        <span className="truncate text-sm font-bold text-muted-foreground">{label}</span>
+        <b className="font-[family-name:var(--font-display)] text-[26px] leading-tight font-black tabular-nums">{value}</b>
+        {note && <span className="truncate text-sm font-semibold text-muted-foreground">{note}</span>}
       </span>
     </>
   );
-  const classes = cx("glass flex min-w-0 items-center gap-3 rounded-2xl p-4 text-left text-foreground", pastel[tone], className);
+  const classes = cx("glass flex min-w-0 items-center gap-4 rounded-2xl p-5 text-left text-foreground", pastel[tone], className);
   return onClick ? (
     <button type="button" onClick={onClick} className={cx(classes, "appearance-none [font-family:inherit] transition-transform hover:-translate-y-0.5")}>
       {body}

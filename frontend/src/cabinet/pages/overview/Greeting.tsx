@@ -1,6 +1,4 @@
-import { CloudMoon, MoonStars, Sun, SunHorizon } from "@phosphor-icons/react";
 import { cabinet } from "../../content/cabinet.ru";
-import { formatLongDay } from "../../model/dates";
 import { toMinutes } from "../../model/time";
 
 const text = cabinet.teacher.overview.hello;
@@ -15,34 +13,20 @@ export function dayPart(time: string): DayPart {
   return "evening";
 }
 
-const icons = { night: MoonStars, morning: SunHorizon, day: Sun, evening: CloudMoon } as const;
-
-type Props = { name: string; today: string; now: string; summary: string };
-
 /**
- * Приветствие на обзоре (VIBE-14): обращение по времени суток, имя с салатовым «маркером», как на сайте,
- * дата и сводка дня одной строкой; справа — стеклянный значок солнца или луны.
+ * Приветствие на обзоре (VIBE-14): только обращение по времени суток и имя. Под всей фразой — небрежный
+ * салатовый мазок маркером: два неровных штриха, как от руки.
  */
-export function Greeting({ name, today, now, summary }: Props) {
-  const part = dayPart(now);
-  const Icon = icons[part];
+export function Greeting({ name, now }: { name: string; now: string }) {
   return (
-    <header className="mb-5 flex items-center justify-between gap-4">
-      <div className="grid min-w-0 gap-1.5">
-        <span className="text-sm font-bold text-muted-foreground">{formatLongDay(today)}</span>
-        <h1 className="m-0 font-[family-name:var(--font-display)] text-[32px] leading-tight font-black tracking-tight text-balance max-[520px]:text-2xl">
-          {text.parts[part]},{" "}
-          <span className="relative isolate inline-block whitespace-nowrap">
-            <span className="absolute inset-x-[-6px] bottom-[3px] -z-10 h-[42%] -rotate-1 rounded-md bg-[var(--color-lime)]" aria-hidden="true" />
-            {name}
-          </span>
-          !
-        </h1>
-        <p className="m-0 text-base font-semibold text-muted-foreground">{summary}</p>
-      </div>
-      <span className="glass grid size-16 flex-none place-items-center rounded-3xl [--glass-bg:color-mix(in_srgb,var(--vibe-peach)_70%,transparent)] max-[520px]:hidden" aria-hidden="true">
-        <Icon size={34} className={part === "night" || part === "evening" ? "text-[#7b4dff]" : "text-[#ff8a3d]"} />
-      </span>
+    <header className="mb-6">
+      <h1 className="relative isolate m-0 inline-block font-[family-name:var(--font-display)] text-[34px] leading-tight font-black tracking-tight max-[520px]:text-[26px]">
+        <svg className="absolute -right-3 bottom-[-2px] -left-2 -z-10 h-[58%] w-[calc(100%+20px)] overflow-visible" viewBox="0 0 400 40" preserveAspectRatio="none" aria-hidden="true">
+          <path d="M6 26 C 48 17, 96 31, 150 22 S 252 13, 300 23 S 368 18, 394 12" fill="none" stroke="var(--color-lime)" strokeWidth="17" strokeLinecap="round" strokeLinejoin="round" />
+          <path d="M14 33 C 90 25, 170 36, 246 28 S 350 26, 386 20" fill="none" stroke="var(--color-lime)" strokeWidth="7" strokeLinecap="round" opacity="0.75" />
+        </svg>
+        {text.parts[dayPart(now)]}, {name}!
+      </h1>
     </header>
   );
 }
