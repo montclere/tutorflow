@@ -48,7 +48,7 @@ export function PastLessonRow({ student, lesson, onOpenLesson, children }: { stu
   return (
     <button
       type="button"
-      className={`${rowClass} appearance-none border-0 bg-transparent text-inherit transition-colors [font:inherit] hover:bg-secondary`}
+      className={`${rowClass} appearance-none border-0 bg-transparent text-inherit transition-colors [font-family:inherit] hover:bg-secondary`}
       aria-label={sheet.openLesson(formatShortDate(lesson.date), lesson.topic)}
       onClick={() => onOpenLesson(scheduled)}
     >
@@ -62,7 +62,7 @@ export function UpcomingRow({ lesson, onOpenLesson }: { lesson: ScheduleLesson; 
     <button
       type="button"
       onClick={() => onOpenLesson(lesson)}
-      className={`${rowClass} appearance-none border-0 bg-transparent text-inherit transition-colors [font:inherit] hover:bg-secondary`}
+      className={`${rowClass} appearance-none border-0 bg-transparent text-inherit transition-colors [font-family:inherit] hover:bg-secondary`}
     >
       <span className="min-w-0 flex-1 text-base font-bold">{formatLongDay(lesson.date)}</span>
       <span className="text-sm font-bold text-muted-foreground tabular-nums">{lessonTime(lesson)}</span>

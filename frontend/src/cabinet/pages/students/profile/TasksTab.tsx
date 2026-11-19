@@ -80,7 +80,7 @@ function TaskItem({ task, id }: { task: AssignedTask; id: string }) {
         aria-expanded={open}
         aria-controls={id}
         onClick={() => setOpen((current) => !current)}
-        className="flex w-full cursor-pointer appearance-none items-center gap-3 rounded-lg border-0 bg-transparent px-0 py-3 text-left text-inherit [font:inherit] outline-none focus-visible:ring-[3px] focus-visible:ring-ring/40"
+        className="flex w-full cursor-pointer appearance-none items-center gap-3 rounded-lg border-0 bg-transparent px-0 py-3 text-left text-inherit [font-family:inherit] outline-none focus-visible:ring-[3px] focus-visible:ring-ring/40"
       >
         <span className="min-w-0 flex-1">
           <b className="block text-base font-extrabold">{task.title}</b>

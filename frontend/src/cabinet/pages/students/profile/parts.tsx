@@ -44,7 +44,7 @@ export function Kpi({ label, value, note, tone }: { label: string; value: string
 /** Ссылка-кнопка «Подробнее →» в шапке блока. */
 export function MoreButton({ children, onClick }: { children: string; onClick: () => void }) {
   return (
-    <button type="button" onClick={onClick} className="appearance-none border-0 bg-transparent p-0 text-sm font-bold text-primary [font:inherit] hover:underline">
+    <button type="button" onClick={onClick} className="appearance-none border-0 bg-transparent p-0 text-sm font-bold text-primary [font-family:inherit] hover:underline">
       {children}
     </button>
   );

@@ -122,7 +122,7 @@ function Form({ student, onClose }: { student: Student; onClose: () => void }) {
             </span>
             <p className="m-0 text-base font-bold">
               {text.drop}{" "}
-              <button type="button" className="appearance-none border-0 bg-transparent p-0 font-bold text-primary underline-offset-4 [font:inherit] hover:underline" onClick={() => inputRef.current?.click()}>
+              <button type="button" className="appearance-none border-0 bg-transparent p-0 font-bold text-primary underline-offset-4 [font-family:inherit] hover:underline" onClick={() => inputRef.current?.click()}>
                 {text.choose}
               </button>
             </p>
@@ -203,7 +203,7 @@ function Form({ student, onClose }: { student: Student; onClose: () => void }) {
           rows={2}
           maxLength={NOTE_MAX}
           placeholder={text.notePlaceholder}
-          className="w-full resize-y rounded-md border border-input bg-transparent px-3 py-2 text-base [font:inherit] outline-none placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
+          className="w-full resize-y rounded-md border border-input bg-transparent px-3 py-2 text-base [font-family:inherit] outline-none placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
           onChange={(event) => setNote(event.target.value)}
         />
       </div>

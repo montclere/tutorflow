@@ -752,8 +752,8 @@ export const cabinet = {
       tabsLabel: "Раздел заданий",
       subjectLabel: "Предмет",
       tabs: [
-        { label: "Создать с ИИ", path: teacherRoutes.tasksCreate },
-        { label: "Банк ЕГЭ и ОГЭ", path: teacherRoutes.tasksBank },
+        { label: "Собрать", path: teacherRoutes.tasksCreate },
+        { label: "Банк заданий", path: teacherRoutes.tasksBank },
         { label: "Мои задания", path: teacherRoutes.tasksMine },
       ],
       chat: {

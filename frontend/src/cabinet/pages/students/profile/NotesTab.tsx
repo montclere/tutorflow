@@ -40,7 +40,7 @@ export function NotesTab({ student }: { student: Student }) {
           maxLength={NOTE_MAX}
           placeholder={old.placeholder}
           aria-label={old.label}
-          className="w-full resize-y rounded-md border border-input bg-card px-3 py-2 text-base [font:inherit] outline-none placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
+          className="w-full resize-y rounded-md border border-input bg-card px-3 py-2 text-base [font-family:inherit] outline-none placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
           onChange={(event) => setValue(event.target.value)}
           onKeyDown={(event) => {
             if (event.key === "Enter" && (event.metaKey || event.ctrlKey)) submit();
