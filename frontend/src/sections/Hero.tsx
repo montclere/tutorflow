@@ -1,3 +1,4 @@
+import { Play } from "lucide-react";
 import { env } from "../config/env";
 import { routes } from "../config/routes";
 import { landing } from "../content/landing.ru";
@@ -36,8 +37,16 @@ export function Hero() {
       <div className={styles.sub}>
         <p className={styles.subtitle}>{text.subtitle}</p>
         <div className={styles.actions}>
-          <SignupCta id={HERO_CTA_ID} place="hero" label={text.cta} />
+          <span className={styles.ctaWrap}>
+            <SignupCta id={HERO_CTA_ID} place="hero" label={text.cta} />
+            <span className={styles.sticker} aria-hidden="true">
+              {text.sticker}
+            </span>
+          </span>
           <Button variant="ghost" href={env.demoUrl ?? routes.teacherCabinet}>
+            <span className={styles.play} aria-hidden="true">
+              <Play size={12} fill="currentColor" />
+            </span>
             {text.demo}
           </Button>
         </div>

@@ -220,3 +220,40 @@
     display: none;
   }
 }
+
+/* Стикер под главной кнопкой — наклонная плашка «0 ₽ на старте» (VIBE-2). */
+.ctaWrap { position: relative; display: inline-flex; }
+
+.sticker {
+  position: absolute;
+  left: 50%;
+  bottom: -26px;
+  padding: 4px 12px;
+  border-radius: 8px;
+  background: var(--vibe-pop);
+  box-shadow: 0 3px 0 var(--vibe-pop-shadow);
+  color: #fff;
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 12px;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  transform: translateX(-50%) rotate(-5deg);
+  pointer-events: none;
+}
+
+.play {
+  display: inline-grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  margin-right: 8px;
+  border-radius: 50%;
+  background: var(--color-lime);
+  color: var(--color-ink);
+}
+
+@media (max-width: 560px) {
+  .sticker { bottom: -22px; font-size: 11px; }
+}

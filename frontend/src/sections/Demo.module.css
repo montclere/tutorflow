@@ -8,6 +8,7 @@
   margin-top: 46px;
   padding: 34px;
   overflow: hidden;
+  isolation: isolate;
   border-radius: var(--radius-section);
   background: var(--color-ink);
   color: var(--color-paper);
@@ -37,13 +38,26 @@
   font-size: var(--fs-lg);
 }
 
+/* Скриншот в градиентной рамке со свечением — «товар на витрине» (VIBE-4). */
 .frame {
+  position: relative;
   margin: 0;
-  padding: 8px;
-  border-radius: var(--radius-lg);
-  background: var(--color-paper);
-  box-shadow: var(--shadow-card);
+  padding: 14px;
+  border-radius: calc(var(--radius-lg) + 6px);
+  background: var(--vibe-g-frame);
+  box-shadow: 0 30px 60px -20px rgb(67 232 149 / 0.45);
   transform: rotate(-2deg);
+}
+
+.frame::before {
+  content: "";
+  position: absolute;
+  inset: -60px -40px;
+  z-index: -1;
+  border-radius: 50%;
+  background: radial-gradient(closest-side, rgb(205 252 58 / 0.35), transparent 70%), radial-gradient(closest-side at 80% 30%, rgb(95 224 255 / 0.3), transparent 70%);
+  filter: blur(10px);
+  pointer-events: none;
 }
 
 .shot {

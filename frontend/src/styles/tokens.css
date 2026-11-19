@@ -106,6 +106,25 @@
 }
 
 :root {
+  /* Пастельные фоны и градиентные иконки — живые акценты поверх основной гаммы (VIBE-*). */
+  --vibe-pop: #ff4fb8;
+  --vibe-pop-shadow: #c92e86;
+  --vibe-mint: #e3fbef;
+  --vibe-peach: #fff2df;
+  --vibe-pink: #ffe9f5;
+  --vibe-lavender: #f0eaff;
+  --vibe-sky: #e2f4ff;
+  --vibe-lime: #f4ffd1;
+  --vibe-g-green: linear-gradient(135deg, #43e895, #12b76a);
+  --vibe-g-orange: linear-gradient(135deg, #ffc947, #ff8a3d);
+  --vibe-g-pink: linear-gradient(135deg, #ff86cc, #f0479d);
+  --vibe-g-purple: linear-gradient(135deg, #b893ff, #7b4dff);
+  --vibe-g-cyan: linear-gradient(135deg, #5fe0ff, #2a9bff);
+  --vibe-g-blue: linear-gradient(135deg, #6683ff, #2346e6);
+  --vibe-g-frame: linear-gradient(135deg, #cdfc3a, #43e895 55%, #5fe0ff);
+}
+
+:root {
   --cab-bg: #f4f6fb;
   --cab-blue-soft: #e8edff;
   --cab-lime-soft: #f3ffd0;

@@ -2,6 +2,7 @@ import { useEffect } from "react";
 import { focusSignupStart, LOGIN_HASH, scrollToSignup } from "../features/signup/ui/signupStart";
 import { useSignupWizard } from "../features/signup/ui/useSignupWizard";
 import { AiAssistant } from "../sections/AiAssistant";
+import { Benefits } from "../sections/Benefits";
 import { Demo } from "../sections/Demo";
 import { Features } from "../sections/Features";
 import { Faq } from "../sections/Faq";
@@ -12,6 +13,7 @@ import { Hero } from "../sections/Hero";
 import { HowItWorks } from "../sections/HowItWorks";
 import { MobileCta } from "../sections/MobileCta";
 import { Pricing } from "../sections/Pricing";
+import { RoleChooser } from "../sections/RoleChooser";
 import { SignupSection } from "../sections/SignupSection";
 import { Telegram } from "../sections/Telegram";
 import { Testimonials } from "../sections/Testimonials";
@@ -53,6 +55,7 @@ export function App() {
             <Ticker />
             <div className={styles.sheet}>
               <div className={`${styles.inner} ${styles.sheetInner}`}>
+                <Benefits />
                 <HowItWorks />
                 <AiAssistant />
                 <Features />
@@ -72,6 +75,7 @@ export function App() {
         </div>
       </div>
       <MobileCta />
+      <RoleChooser />
     </>
   );
 }
