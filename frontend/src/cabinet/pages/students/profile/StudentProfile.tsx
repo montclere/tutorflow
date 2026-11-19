@@ -12,6 +12,7 @@ import { Dialog, DialogClose, DialogContent, DialogDescription, DialogTitle } fr
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/shared/ui/kit/dropdown-menu";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/shared/ui/kit/tabs";
 import { LessonSheet } from "../../schedule/LessonSheet";
+import { AssignWorkDialog } from "../../tasks/AssignWorkDialog";
 import { NewLessonSheet, type NewLessonSeed } from "../../schedule/NewLessonSheet";
 import { PaymentDialog } from "../PaymentDialog";
 import { RemoveStudentDialog } from "../RemoveStudentDialog";
@@ -43,12 +44,13 @@ type Actions = {
   onLesson: (seed: NewLessonSeed) => void;
   onPayment: () => void;
   onMaterial: () => void;
+  onTask: () => void;
   onRemove: () => void;
   onOpenLesson: (lesson: ScheduleLesson) => void;
 };
 
 function Profile({ student, actions }: { student: Student; actions: Actions }) {
-  const { notify, notifySoon } = useNotifier();
+  const { notify } = useNotifier();
   const [tab, setTab] = useState<ProfileTab>("overview");
   const { today } = getSchedule();
 
@@ -84,7 +86,7 @@ function Profile({ student, actions }: { student: Student; actions: Actions }) {
           <Button icon={Plus} onClick={actions.onPayment}>
             {text.actions.payment}
           </Button>
-          <Button icon={Plus} onClick={() => notifySoon(text.actions.task)}>
+          <Button icon={Plus} onClick={actions.onTask}>
             {text.actions.task}
           </Button>
           <Button icon={Upload} onClick={actions.onMaterial}>
@@ -162,6 +164,7 @@ export function StudentProfile({ student, onClose, onCloseAutoFocus }: Props) {
   const [newLesson, setNewLesson] = useState<NewLessonSeed | null>(null);
   const [paymentFor, setPaymentFor] = useState<Student | null>(null);
   const [materialFor, setMaterialFor] = useState<Student | null>(null);
+  const [taskFor, setTaskFor] = useState<Student | null>(null);
   const [removing, setRemoving] = useState<Student | null>(null);
   const [lesson, setLesson] = useState<ScheduleLesson | null>(null);
 
@@ -188,6 +191,7 @@ export function StudentProfile({ student, onClose, onCloseAutoFocus }: Props) {
                 onLesson: setNewLesson,
                 onPayment: () => setPaymentFor(student),
                 onMaterial: () => setMaterialFor(student),
+                onTask: () => setTaskFor(student),
                 onRemove: () => setRemoving(student),
                 onOpenLesson: setLesson,
               }}
@@ -199,6 +203,8 @@ export function StudentProfile({ student, onClose, onCloseAutoFocus }: Props) {
       <NewLessonSheet seed={newLesson} onClose={() => setNewLesson(null)} />
       <PaymentDialog student={paymentFor} onClose={() => setPaymentFor(null)} />
       <MaterialDialog student={materialFor} onClose={() => setMaterialFor(null)} />
+      {/* «+ Задание» — выбор из «Моих заданий» и выдача сразу этому ученику (TASKS-6). */}
+      <AssignWorkDialog open={taskFor !== null} studentId={taskFor?.id} onClose={() => setTaskFor(null)} />
       <RemoveStudentDialog student={removing} onCancel={() => setRemoving(null)} onConfirm={confirmRemove} />
       <LessonSheet lesson={lesson} onClose={() => setLesson(null)} />
     </>

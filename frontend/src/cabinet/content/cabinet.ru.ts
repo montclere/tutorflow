@@ -776,28 +776,6 @@ export const cabinet = {
         actions: ["PDF", "В библиотеку", "В тренажёр"],
         scrollLabel: "Карточки черновика",
       },
-      assign: {
-        title: "Назначить задание",
-        description: (title: string) => `Черновик: ${title}`,
-        studentsLabel: "Ученики",
-        searchLabel: "Поиск по ученикам",
-        searchPlaceholder: "Найти ученика",
-        noStudents: "Никого не нашли",
-        dueLabel: "Срок",
-        modeLabel: "Режим",
-        modes: [
-          { id: "homework", label: "ДЗ" },
-          { id: "test", label: "Тест" },
-        ] as const,
-        revealLabel: "Показывать ответы",
-        reveals: [
-          { id: "now", label: "Сразу" },
-          { id: "afterDue", label: "После срока" },
-          { id: "afterCheck", label: "После проверки" },
-        ] as const,
-        submit: "Назначить",
-        done: (count: number) => `Назначено: ${count} ${plural(count, ["ученику", "ученикам", "ученикам"])}`,
-      },
       bank: {
         title: "ЕГЭ профиль · 2026",
         subtitle: "Номер задания в экзамене",

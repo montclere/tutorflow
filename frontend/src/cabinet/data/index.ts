@@ -11,6 +11,7 @@ import { deriveSchedule, LOW_PACKAGE_LEFT, nextLessonOf, templatesFromLessons } 
 import { lessonTemplates, scheduleNow, scheduleRange, scheduleToday, singleLessons, workHours } from "../mocks/schedule";
 import { exam, homework, progress, studentHome, trainer } from "../mocks/student";
 import { taskLab } from "../mocks/tasks";
+import { assignedTasksOf, subscribeLibrary } from "../tasks/library";
 import { finance, financeToday } from "../mocks/finance";
 import { overviewBase, review } from "../mocks/teacher";
 import type {
@@ -157,8 +158,13 @@ export function markMaterialOpened(materialId: string, date: string): void {
 
 const emptyDetails: StudentDetails = { payments: [], tasks: [], trainer: null, notes: [], materials: [] };
 
+// Выданные из «Моих заданий» задания и тесты — в мониторинг ученика (TASKS-6).
+subscribeLibrary(() => emitStudents());
+
 export function getStudentDetails(id: string): StudentDetails {
-  const base = studentDetails[id] ?? emptyDetails;
+  const stored = studentDetails[id] ?? emptyDetails;
+  const assigned = assignedTasksOf(id);
+  const base = assigned.length === 0 ? stored : { ...stored, tasks: [...assigned, ...stored.tasks] };
   const added = addedDetails[id];
   const materials = [...(added?.materials ?? []), ...base.materials]
     .filter((material) => !removedMaterials.has(material.id))
