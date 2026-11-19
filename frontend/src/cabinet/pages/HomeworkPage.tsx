@@ -14,6 +14,7 @@ import { Pill } from "../ui/Pill";
 import { RowList } from "../ui/RowList";
 import { Tabs } from "../ui/Tabs";
 import ui from "../ui/ui.module.css";
+import { StudentAssignments } from "./tasks/StudentAssignments";
 
 const text = cabinet.student.tasks;
 
@@ -27,6 +28,7 @@ export function HomeworkPage() {
   return (
     <>
       <PageHead title={text.title} subtitle={text.subtitle} />
+      <StudentAssignments onPrint={() => notifySoon(text.pdf)} />
       <Tabs label={text.tabsLabel} items={[...text.tabs]} selectedId={tab} onSelect={(id) => setTab(id as HomeworkTab)} />
 
       {tab === "todo" && (

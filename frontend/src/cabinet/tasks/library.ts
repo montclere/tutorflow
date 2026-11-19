@@ -40,7 +40,11 @@ let state: LibraryState = {
     { id: "w-2", kind: "test", title: "Вероятность: тренажёр", items: pickBank(["bank-4", "bank-5", "bank-23"]), createdAt: "2026-11-12", test: { mode: "training", timeLimitMin: null, attempts: null } },
     { id: "w-3", kind: "test", title: "Русский: ударения и корни", items: pickBank(["bank-25", "bank-27", "bank-28"]), createdAt: "2026-11-14", test: { mode: "control", timeLimitMin: 15, attempts: 1 } },
   ],
-  assignments: [],
+  // Демо: ученику из кабинета ученика уже выдано по одному заданию и тесту.
+  assignments: [
+    { id: "a-demo-1", workId: "w-2", studentId: "ivanov", assignedAt: "2026-11-15", due: "2026-11-22", reveal: "now", status: "todo", attempts: [] },
+    { id: "a-demo-2", workId: "w-1", studentId: "ivanov", assignedAt: "2026-11-14", due: "2026-11-21", reveal: "afterCheck", status: "todo", attempts: [] },
+  ],
 };
 let nextId = 1;
 const listeners = new Set<() => void>();

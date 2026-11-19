@@ -1,5 +1,36 @@
 import type { AnswerResponse, AnswerSpec, TaskItem } from "./types";
 
+export function emptyResponse(spec: AnswerSpec): AnswerResponse {
+  switch (spec.kind) {
+    case "number":
+      return { kind: "number", value: "" };
+    case "text":
+      return { kind: "text", value: "" };
+    case "choice":
+      return { kind: "choice", selected: [] };
+    case "match":
+      return { kind: "match", pairs: spec.left.map(() => null) };
+    case "extended":
+      return { kind: "extended", photos: [] };
+  }
+}
+
+/** Ответ дан: есть текст, выбран вариант, все пары соединены или приложено фото. */
+export function isAnswered(response: AnswerResponse | undefined): boolean {
+  if (!response) return false;
+  switch (response.kind) {
+    case "number":
+    case "text":
+      return response.value.trim() !== "";
+    case "choice":
+      return response.selected.length > 0;
+    case "match":
+      return response.pairs.every((pair) => pair !== null);
+    case "extended":
+      return response.photos.length > 0;
+  }
+}
+
 /** Число из ответа ученика: запятая или точка, разные минусы и пробелы — одно и то же. */
 export function parseNumber(value: string): number | null {
   const normalized = value.trim().replace(/\s+/g, "").replace(/[−–—]/g, "-").replace(",", ".");

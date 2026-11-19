@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { answerText, checkAnswer, estimateMinutes, isAutoChecked, normalizeText, parseNumber } from "./check";
+import { answerText, checkAnswer, emptyResponse, estimateMinutes, isAnswered, isAutoChecked, normalizeText, parseNumber } from "./check";
 
 describe("checkAnswer", () => {
   it("число: запятая, точка, разные минусы", () => {
@@ -33,5 +33,12 @@ describe("checkAnswer", () => {
   it("ответ строкой и время", () => {
     expect(answerText({ kind: "choice", options: [], correct: [0, 3] })).toBe("14");
     expect(estimateMinutes([{ answer: { kind: "number", value: "1" }, difficulty: 2 }, { answer: { kind: "extended", criteria: "" }, difficulty: 3 }])).toBe(16);
+  });
+
+  it("пустой ответ и «ответ дан»", () => {
+    const match = { kind: "match" as const, left: ["А", "Б"], right: ["1", "2"], pairs: [0, 1] };
+    expect(isAnswered(emptyResponse(match))).toBe(false);
+    expect(isAnswered({ kind: "match", pairs: [1, 0] })).toBe(true);
+    expect(isAnswered({ kind: "number", value: "  " })).toBe(false);
   });
 });
