@@ -1,5 +1,6 @@
 import { ArrowDown, ArrowLeftRight, ArrowUp, ArrowUpDown, Ban, Check } from "lucide-react";
 import { useState } from "react";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuLabel, DropdownMenuRadioGroup, DropdownMenuRadioItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/shared/ui/kit/dropdown-menu";
 import { ToggleGroup, ToggleGroupItem } from "@/shared/ui/kit/toggle-group";
 import { addDays } from "../../model/dates";
 import { cabinet } from "../../content/cabinet.ru";
@@ -106,27 +107,60 @@ const stickyAttendance = "sticky left-[240px] w-[84px] min-w-[84px]";
 const stickyAverage = "sticky left-[324px] w-[84px] min-w-[84px]";
 const stickyBalance = "sticky left-[408px] w-[116px] min-w-[116px]";
 
-function SortHead({ id, label, className, sort, onSort }: { id: JournalSort["key"]; label: string; className?: string; sort: JournalSort; onSort: (sort: JournalSort) => void }) {
+/** Заголовок итоговой колонки: стрелка показывает текущую сортировку, выбор — кнопкой «Сортировка». */
+function Head({ id, label, className, sort }: { id: JournalSort["key"]; label: string; className?: string; sort: JournalSort }) {
   const active = sort.key === id;
-  const Icon = !active ? ArrowUpDown : sort.dir === "asc" ? ArrowUp : ArrowDown;
+  const Icon = sort.dir === "asc" ? ArrowUp : ArrowDown;
   return (
-    <th scope="col" aria-sort={active ? (sort.dir === "asc" ? "ascending" : "descending") : "none"} className={cx(headCell, className)}>
-      <button
-        type="button"
-        onClick={() => onSort({ key: id, dir: active && sort.dir === "asc" ? "desc" : id === "name" || active ? "asc" : "desc" })}
-        className={cx("inline-flex items-center gap-1 border-0 bg-transparent p-0 text-xs font-bold tracking-wide uppercase [font-family:inherit]", active ? "text-foreground" : "text-muted-foreground hover:text-foreground")}
-      >
+    <th scope="col" aria-sort={active ? (sort.dir === "asc" ? "ascending" : "descending") : "none"} className={cx(headCell, className, active && "text-foreground")}>
+      <span className="inline-flex items-center gap-1">
         {label}
-        <Icon size={13} aria-hidden="true" />
-      </button>
+        {active && <Icon size={13} aria-hidden="true" />}
+      </span>
     </th>
+  );
+}
+
+const sortKeys: JournalSort["key"][] = ["name", "attendance", "average", "balance"];
+
+/** Сортировка отдельной кнопкой (STUDENTS-17): признак и порядок — в меню. */
+function SortMenu({ sort, onSort }: { sort: JournalSort; onSort: (sort: JournalSort) => void }) {
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <button type="button" className="inline-flex h-9 items-center gap-2 rounded-lg border bg-card px-3 text-sm font-bold [font-family:inherit] hover:bg-secondary data-[state=open]:bg-secondary">
+          <ArrowUpDown size={15} aria-hidden="true" />
+          {text.sort.button}: <span className="text-primary">{text.sort.keys[sort.key]}</span>
+          <span className="text-muted-foreground">{text.sort.dirs[sort.key][sort.dir]}</span>
+        </button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end" sideOffset={6} className="w-64 rounded-xl p-1.5">
+        <DropdownMenuLabel className="px-2 text-xs font-bold text-muted-foreground">{text.sort.by}</DropdownMenuLabel>
+        <DropdownMenuRadioGroup value={sort.key} onValueChange={(key) => onSort({ key: key as JournalSort["key"], dir: key === "name" ? "asc" : "desc" })}>
+          {sortKeys.map((key) => (
+            <DropdownMenuRadioItem key={key} value={key} className="rounded-lg py-2 text-sm font-bold">
+              {text.sort.keys[key]}
+            </DropdownMenuRadioItem>
+          ))}
+        </DropdownMenuRadioGroup>
+        <DropdownMenuSeparator />
+        <DropdownMenuLabel className="px-2 text-xs font-bold text-muted-foreground">{text.sort.order}</DropdownMenuLabel>
+        <DropdownMenuRadioGroup value={sort.dir} onValueChange={(dir) => onSort({ ...sort, dir: dir as JournalSort["dir"] })}>
+          {(["asc", "desc"] as const).map((dir) => (
+            <DropdownMenuRadioItem key={dir} value={dir} className="rounded-lg py-2 text-sm font-bold">
+              {text.sort.dirs[sort.key][dir]}
+            </DropdownMenuRadioItem>
+          ))}
+        </DropdownMenuRadioGroup>
+      </DropdownMenuContent>
+    </DropdownMenu>
   );
 }
 
 /**
  * Журнал учеников (STUDENTS-17): строки — ученики, колонки — даты уроков за период, от свежих к старым.
  * Слева закреплены имя и итоги (посещаемость, ДЗ, баланс), даты прокручиваются вбок; шапка закреплена,
- * длинный список прокручивается внутри. Сортировка — по клику на заголовок.
+ * длинный список прокручивается внутри. Сортировка — отдельной кнопкой с выбором признака и порядка.
  */
 export function StudentsJournal({ students, today, selectedId, onOpen }: Props) {
   const [period, setPeriod] = useState<JournalPeriod>(14);
@@ -145,16 +179,19 @@ export function StudentsJournal({ students, today, selectedId, onOpen }: Props) 
             </ToggleGroupItem>
           ))}
         </ToggleGroup>
-        <span className="text-sm font-semibold text-muted-foreground">{text.counts(rows.length, dates.length)}</span>
+        <div className="flex flex-wrap items-center gap-3">
+          <span className="text-sm font-semibold text-muted-foreground">{text.counts(rows.length, dates.length)}</span>
+          <SortMenu sort={sort} onSort={setSort} />
+        </div>
       </div>
       <div className="glass max-h-[calc(100vh-290px)] min-h-64 overflow-auto rounded-2xl">
         <table className="w-max min-w-full border-separate border-spacing-0 text-sm" aria-label={text.label}>
           <thead className="sticky top-0 z-20">
             <tr>
-              <SortHead sort={sort} onSort={setSort} id="name" label={text.student} className={cx(stickyName, "z-30")} />
-              <SortHead sort={sort} onSort={setSort} id="attendance" label={text.attendance} className={cx(stickyAttendance, "z-30 border-l")} />
-              <SortHead sort={sort} onSort={setSort} id="average" label={text.average} className={cx(stickyAverage, "z-30 border-l")} />
-              <SortHead sort={sort} onSort={setSort} id="balance" label={text.balance} className={cx(stickyBalance, "z-30 border-r-2 border-l border-r-border")} />
+              <Head sort={sort} id="name" label={text.student} className={cx(stickyName, "z-30")} />
+              <Head sort={sort} id="attendance" label={text.attendance} className={cx(stickyAttendance, "z-30 border-l")} />
+              <Head sort={sort} id="average" label={text.average} className={cx(stickyAverage, "z-30 border-l")} />
+              <Head sort={sort} id="balance" label={text.balance} className={cx(stickyBalance, "z-30 border-r-2 border-l border-r-border")} />
               {dates.map((date) => (
                 <th key={date} scope="col" className={cx(headCell, "min-w-16 border-l px-1 text-center normal-case", date === today && "text-primary")}>
                   <span className={cx("block font-[family-name:var(--font-display)] text-sm font-extrabold tabular-nums", date === today ? "text-primary" : "text-foreground")}>{day(date)}</span>

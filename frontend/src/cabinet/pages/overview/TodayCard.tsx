@@ -50,10 +50,14 @@ function LessonLine({ lesson, mark, onOpen, onMark }: LineProps) {
 function NextLesson({ lesson, onOpen, onJoin }: { lesson: LessonRow; onOpen: (id: string) => void; onJoin: () => void }) {
   const student = getStudent(lesson.studentId);
   return (
-    <li className="glass-blue my-2 rounded-2xl p-5">
+    <li className="glass-blue relative isolate my-2 overflow-hidden rounded-2xl p-5">
+      {/* Свечения под стеклом (VIBE-13): без них на белой карточке размывать нечего. */}
+      <span className="pointer-events-none absolute -top-16 -right-10 -z-10 size-52 rounded-full bg-[var(--color-lime)] opacity-25 blur-3xl" aria-hidden="true" />
+      <span className="pointer-events-none absolute -bottom-20 left-1/3 -z-10 size-60 rounded-full bg-[#5fe0ff] opacity-20 blur-3xl" aria-hidden="true" />
+      <span className="pointer-events-none absolute -top-10 left-1/4 -z-10 h-24 w-2/3 -rotate-6 rounded-full bg-white/10 blur-2xl" aria-hidden="true" />
       <div className="flex flex-wrap items-center justify-between gap-2">
         <span className="font-[family-name:var(--font-display)] text-3xl leading-none font-black tabular-nums">{lesson.time}</span>
-        <span className="rounded-full bg-white/15 px-3 py-1 text-xs font-extrabold">{formatCountdown(lesson.minutes)}</span>
+        <span className="rounded-full border border-white/30 bg-white/15 px-3 py-1 text-xs font-extrabold shadow-[inset_0_1px_0_rgb(255_255_255/0.35)] backdrop-blur-md">{formatCountdown(lesson.minutes)}</span>
       </div>
       <div className="mt-5 flex flex-wrap items-center gap-3">
         <button
