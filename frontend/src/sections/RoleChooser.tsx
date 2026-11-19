@@ -1,10 +1,13 @@
-import { X } from "lucide-react";
+import { Backpack, Eye, Presentation, Users, X, type LucideIcon } from "lucide-react";
 import { useEffect, useState } from "react";
 import { env } from "../config/env";
 import { routes } from "../config/routes";
 import { landing } from "../content/landing.ru";
 import { focusSignupStart, scrollToSignup } from "../features/signup/ui/signupStart";
 import styles from "./RoleChooser.module.css";
+
+/** Иконки ролей вместо эмодзи (VIBE-3). */
+const roleIcons: Record<string, LucideIcon> = { teacher: Presentation, student: Backpack, parent: Users, browse: Eye };
 
 const text = landing.roleChooser;
 type Role = (typeof text.roles)[number]["id"];
@@ -68,14 +71,17 @@ export function RoleChooser() {
         </button>
       ) : (
         <ul className={styles.roles}>
-          {text.roles.map((item) => (
-            <li key={item.id}>
-              <button type="button" className={styles.role} onClick={() => setRole(item.id)}>
-                <span aria-hidden="true">{item.emoji}</span>
-                {item.label}
-              </button>
-            </li>
-          ))}
+          {text.roles.map((item) => {
+            const Icon = roleIcons[item.id] ?? Eye;
+            return (
+              <li key={item.id}>
+                <button type="button" className={styles.role} onClick={() => setRole(item.id)}>
+                  <Icon size={16} aria-hidden="true" />
+                  {item.label}
+                </button>
+              </li>
+            );
+          })}
         </ul>
       )}
     </aside>

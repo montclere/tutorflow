@@ -1,3 +1,4 @@
+import { Star } from "lucide-react";
 import { useState } from "react";
 import type { Student } from "../../mocks/types";
 import { formatDayMonth } from "../../model/dates";
@@ -9,6 +10,9 @@ import { learnText } from "./learn.ru";
 
 const text = learnText.home.rate;
 const STARS: Stars[] = [1, 2, 3, 4, 5];
+
+/** Закрашенная звезда — янтарная, пустая — контур. */
+const starClass = (on: boolean) => (on ? "fill-[#f59e0b] text-[#f59e0b]" : "text-[color-mix(in_srgb,var(--color-ink)_22%,transparent)]");
 
 /**
  * Оценка последнего проведённого урока (VIBE-11): звёзды 1–5 и необязательный комментарий.
@@ -39,9 +43,7 @@ export function RateLesson({ student }: { student: Student }) {
       <div className="flex items-center gap-1" role={done ? undefined : "radiogroup"} aria-label={text.title} onMouseLeave={() => setHover(null)}>
         {STARS.map((value) =>
           done ? (
-            <span key={value} className={cx("text-3xl leading-none", value > shown && "opacity-25 grayscale")} aria-hidden="true">
-              ⭐
-            </span>
+            <Star key={value} size={30} className={starClass(value <= shown)} aria-hidden="true" />
           ) : (
             <button
               key={value}
@@ -54,11 +56,10 @@ export function RateLesson({ student }: { student: Student }) {
               onFocus={() => setHover(value)}
               onBlur={() => setHover(null)}
               className={cx(
-                "grid size-11 appearance-none place-items-center rounded-xl border-0 bg-transparent p-0 text-3xl leading-none transition-transform hover:scale-110 focus-visible:ring-[3px] focus-visible:ring-ring/40 focus-visible:outline-none motion-reduce:transition-none",
-                value > shown && "opacity-30 grayscale",
+                "grid size-11 appearance-none place-items-center rounded-xl border-0 bg-transparent p-0 transition-transform hover:scale-110 focus-visible:ring-[3px] focus-visible:ring-ring/40 focus-visible:outline-none motion-reduce:transition-none",
               )}
             >
-              <span aria-hidden="true">⭐</span>
+              <Star size={30} className={starClass(value <= shown)} aria-hidden="true" />
             </button>
           ),
         )}

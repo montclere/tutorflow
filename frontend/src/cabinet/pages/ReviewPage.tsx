@@ -1,3 +1,4 @@
+import { CheckCheck, MousePointerClick } from "lucide-react";
 import { useState } from "react";
 import { cabinet } from "../content/cabinet.ru";
 import { useLibrary, type WorkKind } from "../tasks/library";
@@ -35,7 +36,7 @@ export function ReviewPage() {
         {selected && work ? (
           <ReviewDetail key={selected.id} assignment={selected} work={work} />
         ) : (
-          <EmptyState emoji={firstWaiting === undefined && kind === "homework" ? "🎉" : "👈"} title={firstWaiting === undefined && kind === "homework" ? text.allDone : text.emptyDetail} />
+          <EmptyState icon={firstWaiting === undefined && kind === "homework" ? CheckCheck : MousePointerClick} title={firstWaiting === undefined && kind === "homework" ? text.allDone : text.emptyDetail} />
         )}
       </div>
     </>

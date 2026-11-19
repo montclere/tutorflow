@@ -191,10 +191,10 @@ export const landing = {
     close: "Закрыть",
     open: "Задать вопрос",
     roles: [
-      { id: "teacher", emoji: "👩‍🏫", label: "Я репетитор" },
-      { id: "student", emoji: "🎒", label: "Я ученик" },
-      { id: "parent", emoji: "👪", label: "Я родитель" },
-      { id: "browse", emoji: "👀", label: "Просто смотрю" },
+      { id: "teacher", label: "Я репетитор" },
+      { id: "student", label: "Я ученик" },
+      { id: "parent", label: "Я родитель" },
+      { id: "browse", label: "Просто смотрю" },
     ] as const,
     answers: {
       teacher: { text: "Отлично! Кабинет создаётся за минуту, до 3 учеников — бесплатно.", action: "Создать кабинет" },

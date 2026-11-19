@@ -1,4 +1,4 @@
-import { AlertTriangle, CalendarX, CheckCircle2, ClipboardCheck, MessageCircle, Wallet } from "lucide-react";
+import { AlertTriangle, BookOpen, CalendarX, CheckCircle2, ClipboardCheck, MessageCircle, MessageSquareQuote, Presentation, Star, Wallet } from "lucide-react";
 import { cabinet } from "../../../content/cabinet.ru";
 import { getStudentDetails } from "../../../data";
 import type { ScheduleLesson, Student, StudentDetails } from "../../../mocks/types";
@@ -51,18 +51,18 @@ function StudentTiles({ student, details }: { student: Student; details: Student
   return (
     <div className="grid gap-3">
       <div className="grid grid-cols-4 gap-3 max-[900px]:grid-cols-2">
-        <StatTile tone="cyan" emoji="👩‍🏫" label={tiles.done} value={String(student.lessonsCount)} note={tiles.doneNote(student.lessonsCount)} />
-        <StatTile tone="pink" emoji="🚫" label={tiles.missed} value={String(missed)} note={tiles.missedNote(student.recentLessons.length)} />
-        <StatTile tone="orange" emoji="⭐" label={tiles.rating} value={rating ? `${rating.average.toFixed(1)} / 5` : "—"} note={rating ? tiles.ratingNote(rating.count) : tiles.ratingNone} />
-        <StatTile tone="green" emoji="📚" label={tiles.materials} value={String(opened)} note={tiles.materialsNote(details.materials.length)} />
+        <StatTile tone="cyan" icon={Presentation} label={tiles.done} value={String(student.lessonsCount)} note={tiles.doneNote(student.lessonsCount)} />
+        <StatTile tone="pink" icon={CalendarX} label={tiles.missed} value={String(missed)} note={tiles.missedNote(student.recentLessons.length)} />
+        <StatTile tone="orange" icon={Star} label={tiles.rating} value={rating ? `${rating.average.toFixed(1)} / 5` : "—"} note={rating ? tiles.ratingNote(rating.count) : tiles.ratingNone} />
+        <StatTile tone="green" icon={BookOpen} label={tiles.materials} value={String(opened)} note={tiles.materialsNote(details.materials.length)} />
       </div>
       {quote && (
         <figure className="m-0 flex items-start gap-3 rounded-2xl bg-[var(--vibe-peach)] px-4 py-3">
-          <span className="text-xl leading-none" aria-hidden="true">💬</span>
+          <MessageSquareQuote size={20} className="mt-0.5 flex-none text-[var(--cab-warn)]" aria-hidden="true" />
           <span className="grid gap-0.5">
             <blockquote className="m-0 text-base font-bold">«{quote.comment}»</blockquote>
             <figcaption className="text-xs font-semibold text-muted-foreground">
-              {tiles.quote(formatDayMonth(quote.date), quote.topic)} · {"⭐".repeat(quote.stars)}
+              {tiles.quote(formatDayMonth(quote.date), quote.topic)} · {tiles.stars(quote.stars)}
             </figcaption>
           </span>
         </figure>

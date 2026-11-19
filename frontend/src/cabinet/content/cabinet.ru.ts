@@ -47,9 +47,9 @@ const studentNav: NavItem[] = [
 export const cabinet = {
   weekdays: ["Пн", "Вт", "Ср", "Чт", "Пт", "Сб", "Вс"],
   roles: [
-    { id: "teacher", label: "Репетитор", path: routes.teacherCabinet },
-    { id: "student", label: "Ученик", path: routes.studentCabinet },
-  ] as { id: Role; label: string; path: string }[],
+    { id: "teacher", label: "Репетитор", title: "Кабинет репетитора", path: routes.teacherCabinet },
+    { id: "student", label: "Ученик", title: "Кабинет ученика", path: routes.studentCabinet },
+  ] as { id: Role; label: string; title: string; path: string }[],
   nav: { teacher: teacherNav, student: studentNav } as Record<Role, NavItem[]>,
   promo: {
     teacher: { title: "ИИ-помощник", text: "Соберёт ДЗ по теме или аналоги заданий ЕГЭ за минуту." },
@@ -57,11 +57,16 @@ export const cabinet = {
   } as Record<Role, { title: string; text: string }>,
   shell: {
     homeLabel: "На главную",
-    roleGroupLabel: "Кабинет",
     menuLabel: "Меню",
     openMenu: "Открыть меню",
     closeMenu: "Закрыть меню",
-    notificationsLabel: "Уведомления",
+    // Верхняя панель (VIBE-12): логотип, меню кабинетов, помощь, тариф и аккаунт.
+    apps: "Кабинеты и сайт",
+    site: "Сайт TutorFlow",
+    help: "Помощь",
+    plan: "30 дней",
+    planLabel: "Тариф «Про»: осталось 30 дней",
+    account: (name: string) => `Аккаунт: ${name}`,
     skip: "К содержимому",
     logout: "Выйти",
     teacherRole: "Репетитор",
@@ -494,6 +499,7 @@ export const cabinet = {
             materials: "Материалы открыты",
             materialsNote: (sent: number) => `из ${sent} отправленных`,
             quote: (date: string, topic: string) => `Отзыв ${date} · ${topic}`,
+            stars: (stars: number) => `${stars} из 5`,
           },
           average: "Средний результат",
           details: "Подробнее →",

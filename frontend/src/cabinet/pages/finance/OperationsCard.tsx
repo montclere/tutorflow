@@ -1,4 +1,4 @@
-import { ChevronDown, ChevronUp, Search } from "lucide-react";
+import { ChevronDown, ChevronUp, ReceiptText, Search } from "lucide-react";
 import { useLayoutEffect, useRef, useState, type ReactNode } from "react";
 import { cabinet } from "../../content/cabinet.ru";
 import { getStudent } from "../../data";
@@ -112,7 +112,7 @@ export function OperationsCard({ operations }: { operations: FinanceOperation[] 
         </div>
 
         {filtered.length === 0 ? (
-          <EmptyState emoji={operations.length === 0 ? "🧾" : "🔍"} title={operations.length === 0 ? text.emptyMonth : text.emptySearch} />
+          <EmptyState icon={operations.length === 0 ? ReceiptText : Search} title={operations.length === 0 ? text.emptyMonth : text.emptySearch} />
         ) : (
           <>
             <div className="max-[520px]:hidden">

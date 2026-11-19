@@ -1,4 +1,4 @@
-import { Info, Target, TrendingUp, Trophy } from "lucide-react";
+import { CheckCircle2, Flame, Info, Target, TrendingUp, Trophy, Zap } from "lucide-react";
 import { navigate } from "../../app/router";
 import { studentRoutes } from "../../config/routes";
 import { demoStudentId } from "../mocks/student";
@@ -78,10 +78,10 @@ export function ProgressPage() {
         <section className={cx("grid gap-3", styles.rise)} style={{ "--delay": "40ms" } as React.CSSProperties} aria-label={records.title}>
           <h2 className="m-0 font-[family-name:var(--font-display)] text-base font-extrabold">{records.title}</h2>
           <div className="grid grid-cols-4 gap-3 max-[900px]:grid-cols-2">
-            <StatTile tone="orange" emoji="🔥" label={records.streak} value={String(practice.streak)} note={records.streakNote} />
-            <StatTile tone="purple" emoji="🏆" label={records.best} value={String(practice.bestStreak)} note={records.bestNote(practice.bestStreak)} />
-            <StatTile tone="cyan" emoji="⚡" label={records.pace} value={String(practicePace(practice))} note={records.paceNote} />
-            <StatTile tone="green" emoji="✅" label={records.total} value={String(practice.totalSolved)} note={records.totalNote} />
+            <StatTile tone="orange" icon={Flame} label={records.streak} value={String(practice.streak)} note={records.streakNote} />
+            <StatTile tone="purple" icon={Trophy} label={records.best} value={String(practice.bestStreak)} note={records.bestNote(practice.bestStreak)} />
+            <StatTile tone="cyan" icon={Zap} label={records.pace} value={String(practicePace(practice))} note={records.paceNote} />
+            <StatTile tone="green" icon={CheckCircle2} label={records.total} value={String(practice.totalSolved)} note={records.totalNote} />
           </div>
         </section>
 

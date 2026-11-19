@@ -1,14 +1,15 @@
+import type { LucideIcon } from "lucide-react";
 import type { ReactNode } from "react";
 
-type Props = { title: string; text?: string; action?: ReactNode; emoji?: string };
+type Props = { title: string; text?: string; action?: ReactNode; icon?: LucideIcon };
 
-/** Пустой экран: крупный эмодзи на пастельном круге задаёт настроение — «всё сделано», «ничего не найдено» (VIBE-9). */
-export function EmptyState({ title, text, action, emoji }: Props) {
+/** Пустой экран: иконка на пастельном круге задаёт настроение — «всё сделано», «ничего не найдено» (VIBE-9). */
+export function EmptyState({ title, text, action, icon: Icon }: Props) {
   return (
     <div className="flex flex-col items-center gap-2 rounded-xl border border-dashed bg-card px-6 py-12 text-center">
-      {emoji && (
-        <span className="mb-1 grid size-16 place-items-center rounded-full bg-[var(--vibe-lavender)] text-[32px] leading-none" aria-hidden="true">
-          {emoji}
+      {Icon && (
+        <span className="mb-1 grid size-14 place-items-center rounded-full bg-[var(--vibe-lavender)] text-[var(--color-blue)]" aria-hidden="true">
+          <Icon size={26} strokeWidth={2.2} />
         </span>
       )}
       <p className="m-0 font-[family-name:var(--font-display)] text-base font-extrabold">{title}</p>

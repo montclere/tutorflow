@@ -1,3 +1,4 @@
+import { CloudOff } from "lucide-react";
 import { useMemo, useState } from "react";
 import { toScheduleLesson, type LiveLesson } from "../../api/lessons";
 import { teacherRoutes } from "../../../config/routes";
@@ -82,7 +83,7 @@ export function LiveOverviewPage() {
         </p>
       );
     }
-    if (state.kind === "failed") return <EmptyState emoji="😕" title={cabinet.teacher.schedule.live.failed} action={<Button onClick={retry}>{cabinet.teacher.schedule.live.retry}</Button>} />;
+    if (state.kind === "failed") return <EmptyState icon={CloudOff} title={cabinet.teacher.schedule.live.failed} action={<Button onClick={retry}>{cabinet.teacher.schedule.live.retry}</Button>} />;
     if (state.cards.length === 0) {
       return (
         <EmptyState

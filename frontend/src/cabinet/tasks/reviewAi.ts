@@ -37,7 +37,7 @@ const reviews: Record<string, Omit<AiReview, "max">> = {
 };
 
 export function solutionOf(studentId: string, taskId: string, photos: string[]): Solution {
-  return solutions[`${studentId}:${taskId}`] ?? { lines: photos.map((photo) => `📷 ${photo}`) };
+  return solutions[`${studentId}:${taskId}`] ?? { lines: photos.map((photo) => `Фото: ${photo}`) };
 }
 
 /** Разбор ИИ: если для решения нет уверенной оценки — честно просит проверить вручную (score = −1). */

@@ -11,19 +11,13 @@ const pastel: Record<GradientTone, string> = {
   blue: "bg-[var(--cab-blue-soft)]",
 };
 
-type Props = { label: string; value: string; note?: string; tone: GradientTone; icon?: LucideIcon; emoji?: string; className?: string; onClick?: () => void };
+type Props = { label: string; value: string; note?: string; tone: GradientTone; icon: LucideIcon; className?: string; onClick?: () => void };
 
-/** Плитка-показатель на пастельном фоне: градиентная иконка или эмодзи, число и подпись (VIBE-1). */
-export function StatTile({ label, value, note, tone, icon, emoji, className, onClick }: Props) {
+/** Плитка-показатель на пастельном фоне: градиентная иконка, число и подпись (VIBE-1). */
+export function StatTile({ label, value, note, tone, icon, className, onClick }: Props) {
   const body = (
     <>
-      {icon ? (
-        <GradientIcon icon={icon} tone={tone} size={40} />
-      ) : (
-        <span className="grid size-10 flex-none place-items-center rounded-xl bg-card/80 text-[22px] leading-none" aria-hidden="true">
-          {emoji}
-        </span>
-      )}
+      <GradientIcon icon={icon} tone={tone} size={40} />
       <span className="grid min-w-0 gap-0.5">
         <span className="truncate text-xs font-bold text-muted-foreground">{label}</span>
         <b className="font-[family-name:var(--font-display)] text-xl leading-tight font-black tabular-nums">{value}</b>

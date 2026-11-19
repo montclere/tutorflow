@@ -1,4 +1,4 @@
-import { Plus } from "lucide-react";
+import { CloudOff, Plus } from "lucide-react";
 import { useMemo, useState } from "react";
 import { toScheduleLesson, type LiveLesson } from "../../../api/lessons";
 import { cabinet } from "../../../content/cabinet.ru";
@@ -80,7 +80,7 @@ export function LiveSchedulePage() {
         </p>
       );
     }
-    if (state.kind === "failed") return <EmptyState emoji="😕" title={text.live.failed} action={<Button onClick={retry}>{text.live.retry}</Button>} />;
+    if (state.kind === "failed") return <EmptyState icon={CloudOff} title={text.live.failed} action={<Button onClick={retry}>{text.live.retry}</Button>} />;
     const open = (lesson: { id: string }) => setSelectedId(lesson.id);
     return (
       <>

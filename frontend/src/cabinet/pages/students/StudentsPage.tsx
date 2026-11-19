@@ -1,4 +1,4 @@
-import { Plus, Search, TriangleAlert } from "lucide-react";
+import { Archive, CheckCheck, PauseCircle, Plus, Search, TriangleAlert, UserPlus } from "lucide-react";
 import { useState } from "react";
 import { cabinet } from "../../content/cabinet.ru";
 import { getSchedule } from "../../data";
@@ -32,12 +32,12 @@ export function StudentsPage() {
   const selected = students.find((student) => student.id === studentId) ?? null;
 
   const emptyState = () => {
-    if (query.trim() !== "") return <EmptyState emoji="🔍" title={text.empty.search} />;
-    if (debtorsOnly) return <EmptyState emoji="🎉" title={text.empty.debtors} />;
+    if (query.trim() !== "") return <EmptyState icon={Search} title={text.empty.search} />;
+    if (debtorsOnly) return <EmptyState icon={CheckCheck} title={text.empty.debtors} />;
     if (status === "active") {
       return (
         <EmptyState
-          emoji="👋"
+          icon={UserPlus}
           title={text.empty.first.title}
           text={text.empty.first.text}
           action={
@@ -48,7 +48,7 @@ export function StudentsPage() {
         />
       );
     }
-    return <EmptyState emoji={status === "pause" ? "⏸️" : "🗂️"} title={status === "pause" ? text.empty.pause : text.empty.archive} />;
+    return <EmptyState icon={status === "pause" ? PauseCircle : Archive} title={status === "pause" ? text.empty.pause : text.empty.archive} />;
   };
 
   const restoreFocus = (event: Event) => {

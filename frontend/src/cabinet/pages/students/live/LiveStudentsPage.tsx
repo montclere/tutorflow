@@ -1,4 +1,4 @@
-import { Search, UserPlus, Users } from "lucide-react";
+import { Archive, CloudOff, Mail, Search, UserPlus, Users } from "lucide-react";
 import { useState } from "react";
 import { studentsApi, studentsErrorCode, type Invitation, type InvitationPurpose, type TeacherCard } from "../../../api/students";
 import { cabinet } from "../../../content/cabinet.ru";
@@ -77,12 +77,12 @@ export function LiveStudentsPage() {
         </p>
       );
     }
-    if (state.kind === "failed") return <EmptyState emoji="😕" title={text.failed} action={<Button onClick={retry}>{text.retry}</Button>} />;
+    if (state.kind === "failed") return <EmptyState icon={CloudOff} title={text.failed} action={<Button onClick={retry}>{text.retry}</Button>} />;
 
     const { data } = state;
     if (tab === "invitations") {
       return data.invitations.length === 0 ? (
-        <EmptyState emoji="✉️" title={text.empty.invitations} />
+        <EmptyState icon={Mail} title={text.empty.invitations} />
       ) : (
         <InvitationsList invitations={data.invitations} timezone={timezone} busyId={revoking} onRevoke={(invitation) => void revoke(invitation)} />
       );
@@ -90,9 +90,9 @@ export function LiveStudentsPage() {
 
     const cards = data[tab].filter((card) => matchesQuery(card, query));
     if (cards.length === 0) {
-      if (query.trim() !== "") return <EmptyState emoji="🔍" title={text.empty.search} />;
-      if (tab === "archived") return <EmptyState emoji="🗂️" title={text.empty.archived} />;
-      return <EmptyState emoji="👋" title={text.empty.first.title} text={text.empty.first.text} action={<div className="flex flex-wrap justify-center gap-2">{invite}</div>} />;
+      if (query.trim() !== "") return <EmptyState icon={Search} title={text.empty.search} />;
+      if (tab === "archived") return <EmptyState icon={Archive} title={text.empty.archived} />;
+      return <EmptyState icon={UserPlus} title={text.empty.first.title} text={text.empty.first.text} action={<div className="flex flex-wrap justify-center gap-2">{invite}</div>} />;
     }
     return (
       <>

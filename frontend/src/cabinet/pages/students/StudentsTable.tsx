@@ -1,4 +1,4 @@
-import { ChevronRight } from "lucide-react";
+import { ChevronRight, Star } from "lucide-react";
 import { cabinet } from "../../content/cabinet.ru";
 import type { Student } from "../../mocks/types";
 import { formatRubles, formatTimesPerWeek } from "../../model/format";
@@ -117,7 +117,7 @@ function GoalLine({ student }: { student: Student }) {
           aria-label={text.rating(rating.average, rating.count)}
           className="inline-flex flex-none items-center gap-0.5 rounded-full bg-[var(--vibe-peach)] px-2 py-0.5 text-xs font-extrabold whitespace-nowrap tabular-nums"
         >
-          <span aria-hidden="true">⭐</span>
+          <Star size={12} className="fill-current text-[#f59e0b]" aria-hidden="true" />
           {rating.average.toFixed(1)}
         </span>
       )}

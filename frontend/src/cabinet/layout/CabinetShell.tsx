@@ -17,9 +17,9 @@ export function CabinetShell({ pathname, children }: { pathname: string; childre
         <a className={styles.skip} href="#cabinet-main">
           {cabinet.shell.skip}
         </a>
+        <Topbar role={role} menuOpen={menuOpen} onToggleMenu={() => setMenuOpen((value) => !value)} />
         <Sidebar role={role} pathname={pathname} open={menuOpen} onClose={() => setMenuOpen(false)} />
         <div className={styles.main}>
-          <Topbar role={role} menuOpen={menuOpen} onToggleMenu={() => setMenuOpen((value) => !value)} />
           <main id="cabinet-main" tabIndex={-1}>
             {children}
           </main>
