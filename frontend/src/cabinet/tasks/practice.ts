@@ -12,13 +12,24 @@ import type { ExamId, TaskItem } from "./types";
 export type PracticeMode = "weak" | "number" | "mistakes";
 export type PracticeEntry = { taskId: string; exam?: ExamId; number?: number; topic: string; correct: boolean; at: number };
 
-type PracticeState = { log: PracticeEntry[]; mistakes: TaskItem[]; solvedToday: number; streak: number; dailyGoal: number; xp: number };
+/** Рекорды (VIBE-10): лучшая серия, всего решено и решено за 7 дней — из них темп в день. */
+type PracticeState = {
+  log: PracticeEntry[];
+  mistakes: TaskItem[];
+  solvedToday: number;
+  streak: number;
+  bestStreak: number;
+  dailyGoal: number;
+  xp: number;
+  totalSolved: number;
+  weekSolved: number;
+};
 
 export const XP_RIGHT = 10;
 export const XP_TRY = 2;
 export const SESSION_LENGTH = 10;
 
-let state: PracticeState = { log: [], mistakes: [], solvedToday: 17, streak: 4, dailyGoal: 20, xp: 340 };
+let state: PracticeState = { log: [], mistakes: [], solvedToday: 17, streak: 4, bestStreak: 9, dailyGoal: 20, xp: 340, totalSolved: 412, weekSolved: 96 };
 const listeners = new Set<() => void>();
 
 function set(next: PracticeState) {
@@ -47,8 +58,15 @@ export function recordPractice(task: TaskItem, correct: boolean, at = Date.now()
     log: [...state.log, { taskId: task.id, exam: task.exam, number: task.number, topic: task.topic, correct, at }],
     mistakes,
     solvedToday: state.solvedToday + 1,
+    totalSolved: state.totalSolved + 1,
+    weekSolved: state.weekSolved + 1,
     xp: state.xp + (correct ? XP_RIGHT : XP_TRY),
   });
+}
+
+/** Темп — сколько задач в среднем решено в день за последние 7 дней. */
+export function practicePace(practice: Pick<PracticeState, "weekSolved">): number {
+  return Math.round(practice.weekSolved / 7);
 }
 
 /** Опыт за задание или тест из кабинета. */

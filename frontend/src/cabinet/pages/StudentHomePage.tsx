@@ -14,13 +14,27 @@ import { MaterialIcon } from "../ui/MaterialIcon";
 import { chunky } from "./learn/chunky";
 import styles from "./learn/learn.module.css";
 import { learnText } from "./learn/learn.ru";
+import { RateLesson } from "./learn/RateLesson";
 import { Ring } from "./learn/Ring";
 
 const text = learnText.home;
 
-function Panel({ title, action, children, className, delay = 0 }: { title: string; action?: React.ReactNode; children: React.ReactNode; className?: string; delay?: number }) {
+type PanelTone = "sky" | "lavender" | "pink" | "mint" | "peach";
+
+/** Пастельные фоны блоков главной (VIBE-10): каждый блок узнаётся по цвету, карточки внутри — белые. */
+const panelTones: Record<PanelTone, string> = {
+  sky: "bg-[var(--vibe-sky)]",
+  lavender: "bg-[var(--vibe-lavender)]",
+  pink: "bg-[var(--vibe-pink)]",
+  mint: "bg-[var(--vibe-mint)]",
+  peach: "bg-[var(--vibe-peach)]",
+};
+
+type PanelProps = { title: string; action?: React.ReactNode; children: React.ReactNode; className?: string; delay?: number; tone?: PanelTone };
+
+function Panel({ title, action, children, className, delay = 0, tone }: PanelProps) {
   return (
-    <section className={cx("grid content-start gap-4 rounded-3xl border-2 bg-card p-5", styles.rise, className)} style={{ "--delay": `${delay}ms` } as React.CSSProperties}>
+    <section className={cx("grid content-start gap-4 rounded-3xl p-5", tone ? panelTones[tone] : "border-2 bg-card", styles.rise, className)} style={{ "--delay": `${delay}ms` } as React.CSSProperties}>
       <header className="flex items-center justify-between gap-3">
         <h2 className="m-0 font-[family-name:var(--font-display)] text-base font-extrabold">{title}</h2>
         {action}
@@ -87,9 +101,9 @@ export function StudentHomePage() {
       </section>
 
       <div className="grid grid-cols-[minmax(0,1fr)] gap-4 min-[1101px]:grid-cols-3">
-        <Panel title={text.lessonTitle} delay={80}>
+        <Panel title={text.lessonTitle} delay={80} tone="sky">
           <div className="flex items-center gap-4">
-            <span className="grid size-14 place-items-center rounded-2xl bg-accent text-primary" aria-hidden="true">
+            <span className="grid size-14 place-items-center rounded-2xl bg-card text-primary" aria-hidden="true">
               <CalendarClock size={26} />
             </span>
             <div className="grid">
@@ -102,6 +116,7 @@ export function StudentHomePage() {
         <Panel
           title={text.nowTitle}
           delay={160}
+          tone="peach"
           action={
             <button type="button" className={linkClass} onClick={() => navigate(studentRoutes.tasks)}>
               {text.allTasks}
@@ -120,7 +135,7 @@ export function StudentHomePage() {
                     <button
                       type="button"
                       onClick={() => navigate(studentRoutes.tasks)}
-                      className="flex w-full appearance-none items-center gap-3 rounded-2xl border-2 border-border bg-card p-2.5 text-left text-foreground [font-family:inherit] transition-colors hover:border-primary"
+                      className="flex w-full appearance-none items-center gap-3 rounded-2xl border-2 border-transparent bg-card p-2.5 text-left text-foreground [font-family:inherit] transition-colors hover:border-primary"
                     >
                       <span className={cx("grid size-10 flex-none place-items-center rounded-xl", work.kind === "test" ? "bg-highlight text-highlight-foreground" : "bg-accent text-primary")} aria-hidden="true">
                         {work.kind === "test" ? <Zap size={18} /> : <ClipboardList size={18} />}
@@ -143,6 +158,7 @@ export function StudentHomePage() {
         <Panel
           title={text.progressTitle}
           delay={240}
+          tone="lavender"
           action={
             <button type="button" className={linkClass} onClick={() => navigate(studentRoutes.progress)}>
               {text.allProgress}
@@ -205,6 +221,7 @@ export function StudentHomePage() {
           <Panel
             title={text.materialsTitle}
             delay={400}
+            tone="mint"
             action={
               <button type="button" className={linkClass} onClick={() => navigate(studentRoutes.materials)}>
                 {text.allMaterials}
@@ -224,7 +241,8 @@ export function StudentHomePage() {
               ))}
             </ul>
           </Panel>
-          <Panel title={text.feedbackTitle} delay={480}>
+          <RateLesson student={student} />
+          <Panel title={text.feedbackTitle} delay={520}>
             <div className="flex gap-3">
               <MessageSquareQuote size={22} className="flex-none text-primary" aria-hidden="true" />
               <p className="m-0 text-sm font-semibold">{feedback?.feedback ? Object.values(feedback.feedback).join(" ") : studentFeedback}</p>

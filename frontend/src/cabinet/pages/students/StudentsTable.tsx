@@ -3,6 +3,7 @@ import { cabinet } from "../../content/cabinet.ru";
 import type { Student } from "../../mocks/types";
 import { formatRubles, formatTimesPerWeek } from "../../model/format";
 import { lessonsAhead } from "../../model/finance";
+import { satisfaction, useRatings } from "../../model/ratings";
 import { debtLessons, formatNextLesson, lastHomework, paymentStatus } from "../../model/students";
 import { Avatar } from "../../ui/Avatar";
 import { cx } from "../../ui/cx";
@@ -90,9 +91,38 @@ function Homework({ student }: { student: Student }) {
   );
 }
 
+const FRESH_LESSONS = 3;
+
 function Waiting({ student }: { student: Student }) {
   if (student.telegramConnected) return null;
   return <span className="inline-flex rounded-full bg-[var(--cab-warn-soft)] px-2 py-0.5 text-xs font-bold whitespace-nowrap text-[var(--cab-warn)]">{text.waiting}</span>;
+}
+
+/** Строка под именем: цель и чипы — новичок, средняя оценка уроков учеником (VIBE-6). */
+function GoalLine({ student }: { student: Student }) {
+  const rating = satisfaction(useRatings(), student.id);
+  const fresh = student.status === "active" && student.lessonsCount < FRESH_LESSONS;
+  if (!student.goal && !fresh && !rating) return null;
+  return (
+    <span className="flex min-w-0 items-center gap-1.5">
+      {student.goal && <TruncatedText text={student.goal} className="min-w-0 text-sm font-semibold text-muted-foreground" />}
+      {fresh && (
+        <span title={text.freshHint} className="inline-flex flex-none rounded-full bg-[var(--vibe-pop)] px-2 py-0.5 text-[11px] font-extrabold tracking-wide whitespace-nowrap text-white uppercase">
+          {text.fresh}
+        </span>
+      )}
+      {rating && (
+        <span
+          title={text.rating(rating.average, rating.count)}
+          aria-label={text.rating(rating.average, rating.count)}
+          className="inline-flex flex-none items-center gap-0.5 rounded-full bg-[var(--vibe-peach)] px-2 py-0.5 text-xs font-extrabold whitespace-nowrap tabular-nums"
+        >
+          <span aria-hidden="true">⭐</span>
+          {rating.average.toFixed(1)}
+        </span>
+      )}
+    </span>
+  );
 }
 
 function NextLesson({ student, today }: { student: Student; today: string }) {
@@ -147,7 +177,7 @@ export function StudentsTable({ students, today, selectedId, onOpen }: Props) {
                         </button>
                         <Waiting student={student} />
                       </span>
-                      {student.goal && <TruncatedText text={student.goal} className="text-sm font-semibold text-muted-foreground" />}
+                      <GoalLine student={student} />
                     </div>
                   </div>
                 </TableCell>
@@ -197,7 +227,7 @@ export function StudentCards({ students, today, selectedId, onOpen }: Props) {
                 <b className="truncate text-base font-extrabold">{student.name}</b>
                 <Waiting student={student} />
               </span>
-              {student.goal && <span className="block truncate text-sm font-semibold text-muted-foreground">{student.goal}</span>}
+              <GoalLine student={student} />
               <NextLesson student={student} today={today} />
               <Balance student={student} inline />
             </span>

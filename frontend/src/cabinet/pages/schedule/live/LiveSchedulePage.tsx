@@ -80,7 +80,7 @@ export function LiveSchedulePage() {
         </p>
       );
     }
-    if (state.kind === "failed") return <EmptyState title={text.live.failed} action={<Button onClick={retry}>{text.live.retry}</Button>} />;
+    if (state.kind === "failed") return <EmptyState emoji="😕" title={text.live.failed} action={<Button onClick={retry}>{text.live.retry}</Button>} />;
     const open = (lesson: { id: string }) => setSelectedId(lesson.id);
     return (
       <>

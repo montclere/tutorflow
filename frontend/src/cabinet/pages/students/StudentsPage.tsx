@@ -32,11 +32,12 @@ export function StudentsPage() {
   const selected = students.find((student) => student.id === studentId) ?? null;
 
   const emptyState = () => {
-    if (query.trim() !== "") return <EmptyState title={text.empty.search} />;
-    if (debtorsOnly) return <EmptyState title={text.empty.debtors} />;
+    if (query.trim() !== "") return <EmptyState emoji="🔍" title={text.empty.search} />;
+    if (debtorsOnly) return <EmptyState emoji="🎉" title={text.empty.debtors} />;
     if (status === "active") {
       return (
         <EmptyState
+          emoji="👋"
           title={text.empty.first.title}
           text={text.empty.first.text}
           action={
@@ -47,7 +48,7 @@ export function StudentsPage() {
         />
       );
     }
-    return <EmptyState title={status === "pause" ? text.empty.pause : text.empty.archive} />;
+    return <EmptyState emoji={status === "pause" ? "⏸️" : "🗂️"} title={status === "pause" ? text.empty.pause : text.empty.archive} />;
   };
 
   const restoreFocus = (event: Event) => {

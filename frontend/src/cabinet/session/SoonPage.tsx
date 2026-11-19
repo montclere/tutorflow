@@ -8,5 +8,5 @@ type Section = "finance" | "tasks" | "review" | "student";
 
 /** Раздел без маршрутов API в рабочей сборке — честное «скоро» вместо тестовых данных. */
 export function SoonPage({ section }: { section: Section }) {
-  return <EmptyState title={text.title} text={`${text[section]}${env.demoUrl ? ` ${text.demo}` : ""}`} />;
+  return <EmptyState emoji="🚧" title={text.title} text={`${text[section]}${env.demoUrl ? ` ${text.demo}` : ""}`} />;
 }

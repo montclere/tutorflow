@@ -112,7 +112,7 @@ export function OperationsCard({ operations }: { operations: FinanceOperation[] 
         </div>
 
         {filtered.length === 0 ? (
-          <EmptyState title={operations.length === 0 ? text.emptyMonth : text.emptySearch} />
+          <EmptyState emoji={operations.length === 0 ? "🧾" : "🔍"} title={operations.length === 0 ? text.emptyMonth : text.emptySearch} />
         ) : (
           <>
             <div className="max-[520px]:hidden">

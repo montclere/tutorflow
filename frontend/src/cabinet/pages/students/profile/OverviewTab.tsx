@@ -1,12 +1,14 @@
 import { AlertTriangle, CalendarX, CheckCircle2, ClipboardCheck, MessageCircle, Wallet } from "lucide-react";
 import { cabinet } from "../../../content/cabinet.ru";
 import { getStudentDetails } from "../../../data";
-import type { ScheduleLesson, Student } from "../../../mocks/types";
+import type { ScheduleLesson, Student, StudentDetails } from "../../../mocks/types";
 import { formatDayMonth } from "../../../model/dates";
 import { formatRubles } from "../../../model/format";
 import { studentAlerts, type StudentAlert } from "../../../model/studentAlerts";
 import { homeworkTimeline, taskStats } from "../../../model/studentTasks";
+import { satisfaction, useRatings } from "../../../model/ratings";
 import { cx } from "../../../ui/cx";
+import { StatTile } from "../../../ui/StatTile";
 import { HomeworkPill, PastLessonRow, UpcomingRow, upcomingLessons } from "./LessonsTab";
 import { MaterialRow } from "./MaterialsTab";
 import { Empty, MoreButton, Panel } from "./parts";
@@ -36,6 +38,37 @@ function alertView(alert: StudentAlert): { label: string; icon: typeof Wallet; t
     case "noSchedule":
       return { label: a.noSchedule, icon: CalendarX, tone: "bg-secondary text-muted-foreground" };
   }
+}
+
+/** Четыре эмодзи-плитки и последний отзыв ученика об уроке (VIBE-7). */
+function StudentTiles({ student, details }: { student: Student; details: StudentDetails }) {
+  const ratings = useRatings();
+  const rating = satisfaction(ratings, student.id);
+  const quote = ratings.filter((item) => item.studentId === student.id && item.comment).sort((a, b) => b.date.localeCompare(a.date))[0];
+  const missed = student.recentLessons.filter((lesson) => lesson.status !== "done").length;
+  const opened = details.materials.filter((material) => material.openedAt).length;
+  const tiles = text.tiles;
+  return (
+    <div className="grid gap-3">
+      <div className="grid grid-cols-4 gap-3 max-[900px]:grid-cols-2">
+        <StatTile tone="cyan" emoji="👩‍🏫" label={tiles.done} value={String(student.lessonsCount)} note={tiles.doneNote(student.lessonsCount)} />
+        <StatTile tone="pink" emoji="🚫" label={tiles.missed} value={String(missed)} note={tiles.missedNote(student.recentLessons.length)} />
+        <StatTile tone="orange" emoji="⭐" label={tiles.rating} value={rating ? `${rating.average.toFixed(1)} / 5` : "—"} note={rating ? tiles.ratingNote(rating.count) : tiles.ratingNone} />
+        <StatTile tone="green" emoji="📚" label={tiles.materials} value={String(opened)} note={tiles.materialsNote(details.materials.length)} />
+      </div>
+      {quote && (
+        <figure className="m-0 flex items-start gap-3 rounded-2xl bg-[var(--vibe-peach)] px-4 py-3">
+          <span className="text-xl leading-none" aria-hidden="true">💬</span>
+          <span className="grid gap-0.5">
+            <blockquote className="m-0 text-base font-bold">«{quote.comment}»</blockquote>
+            <figcaption className="text-xs font-semibold text-muted-foreground">
+              {tiles.quote(formatDayMonth(quote.date), quote.topic)} · {"⭐".repeat(quote.stars)}
+            </figcaption>
+          </span>
+        </figure>
+      )}
+    </div>
+  );
 }
 
 type Props = { student: Student; today: string; onOpenLesson: (lesson: ScheduleLesson) => void; onTab: (tab: ProfileTab) => void };
@@ -70,6 +103,8 @@ export function OverviewTab({ student, today, onOpenLesson, onTab }: Props) {
           })
         )}
       </section>
+
+      <StudentTiles student={student} details={details} />
 
       <div className="grid grid-cols-[minmax(0,1fr)] gap-4 xl:grid-cols-2">
         <Panel title={text.upcoming} action={<MoreButton onClick={() => onTab("lessons")}>{text.details}</MoreButton>}>

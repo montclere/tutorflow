@@ -31,6 +31,7 @@ export function IncomeChart({ history, month, currentMonth, expected, onPick }: 
   const top = step * Math.max(1, Math.ceil(Math.max(...totals) / step));
   const average = history.reduce((sum, item) => sum + item.received, 0) / Math.max(history.length, 1);
   const best = [...history].sort((a, b) => b.received - a.received)[0];
+  const picked = history.find((item) => item.month === month);
   const grid = Array.from({ length: Math.round(top / step) + 1 }, (_, index) => index * step);
 
   return (
@@ -101,18 +102,31 @@ export function IncomeChart({ history, month, currentMonth, expected, onPick }: 
             </li>
           ))}
         </ol>
-        <dl className="m-0 mt-3 grid grid-cols-3 gap-3 border-t pt-4">
+        <dl className="m-0 mt-3 grid grid-cols-4 gap-3 border-t pt-4 max-[700px]:grid-cols-2">
           <div className="grid gap-0.5">
             <dt className="text-xs font-bold text-muted-foreground">{text.average}</dt>
             <dd className="m-0 font-[family-name:var(--font-display)] text-lg font-extrabold tabular-nums">{formatRubles(Math.round(average / 100) * 100)}</dd>
           </div>
           <div className="grid gap-0.5">
             <dt className="text-xs font-bold text-muted-foreground">{text.best}</dt>
-            <dd className="m-0 font-[family-name:var(--font-display)] text-lg font-extrabold">{best ? `${short[monthIndex(best.month)]} · ${formatRubles(best.received)}` : "—"}</dd>
+            <dd className="m-0 font-[family-name:var(--font-display)] text-lg font-extrabold">
+              {best ? (
+                <>
+                  {short[monthIndex(best.month)]} <span className="font-sans text-sm font-bold text-muted-foreground tabular-nums">{formatRubles(best.received)}</span>
+                </>
+              ) : (
+                "—"
+              )}
+            </dd>
           </div>
           <div className="grid gap-0.5">
             <dt className="text-xs font-bold text-muted-foreground">{text.lessons(monthNames[monthIndex(month)] ?? month)}</dt>
-            <dd className="m-0 font-[family-name:var(--font-display)] text-lg font-extrabold tabular-nums">{history.find((item) => item.month === month)?.lessons ?? 0}</dd>
+            <dd className="m-0 font-[family-name:var(--font-display)] text-lg font-extrabold tabular-nums">{picked?.lessons ?? 0}</dd>
+          </div>
+          {/* Средний чек — получено за месяц, делённое на число оплат (VIBE-8). */}
+          <div className="grid gap-0.5">
+            <dt className="text-xs font-bold text-muted-foreground">{text.check}</dt>
+            <dd className="m-0 font-[family-name:var(--font-display)] text-lg font-extrabold tabular-nums">{picked && picked.payments > 0 ? formatRubles(Math.round(picked.received / picked.payments / 100) * 100) : "—"}</dd>
           </div>
         </dl>
       </div>

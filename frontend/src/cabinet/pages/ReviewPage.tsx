@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { cabinet } from "../content/cabinet.ru";
 import { useLibrary, type WorkKind } from "../tasks/library";
+import { EmptyState } from "../ui/EmptyState";
 import { PageHead } from "../ui/PageHead";
 import { ReviewDetail } from "./review/ReviewDetail";
 import { ReviewPanel } from "./review/ReviewPanel";
@@ -34,7 +35,7 @@ export function ReviewPage() {
         {selected && work ? (
           <ReviewDetail key={selected.id} assignment={selected} work={work} />
         ) : (
-          <p className="m-0 rounded-2xl border border-dashed bg-card p-10 text-center text-sm font-semibold text-muted-foreground">{firstWaiting === undefined && kind === "homework" ? text.allDone : text.emptyDetail}</p>
+          <EmptyState emoji={firstWaiting === undefined && kind === "homework" ? "🎉" : "👈"} title={firstWaiting === undefined && kind === "homework" ? text.allDone : text.emptyDetail} />
         )}
       </div>
     </>

@@ -97,6 +97,17 @@ export const cabinet = {
   teacher: {
     overview: {
       greeting: (name: string) => `Добрый день, ${name}`,
+      // Плитки показателей дня (VIBE-5).
+      stats: {
+        today: "Уроков сегодня",
+        todayNote: (left: number) => `осталось ${left}`,
+        review: "Ждут проверки",
+        reviewNote: "работы учеников",
+        debt: "Должны",
+        debtNote: (count: number) => (count === 0 ? "долгов нет" : `${count} ${plural(count, studentForms)}`),
+        windows: "Свободных окон",
+        windowsNote: "на этой неделе",
+      },
       // Рабочая сборка: обзор из уроков API (OVERVIEW-9).
       live: {
         today: "Сегодня",
@@ -361,6 +372,10 @@ export const cabinet = {
         label: (state: string) => `Последнее ДЗ: ${state}`,
       },
       waiting: "не подключён",
+      // Чипы в строке ученика (VIBE-6): новичок и средняя оценка уроков.
+      fresh: "Новый",
+      freshHint: "Меньше трёх уроков — присмотритесь, как идёт",
+      rating: (average: number, count: number) => `Оценка уроков ${average.toFixed(1)} из 5, оценок: ${count}`,
       packageLow: (left: number) => `в пакете ${left} ${plural(left, lessonForms)}`,
       listLabel: "Список учеников",
       openCard: (name: string) => `Открыть карточку: ${name}`,
@@ -467,6 +482,19 @@ export const cabinet = {
           recent: "Последние уроки",
           progress: "Успеваемость",
           progressEmpty: "Проверенных домашек пока нет",
+          // Плитки-показатели ученика (VIBE-7): эмодзи на пастели, оценка — из отзывов ученика после урока.
+          tiles: {
+            done: "Проведено",
+            doneNote: (count: number) => plural(count, lessonForms),
+            missed: "Отмены и переносы",
+            missedNote: (total: number) => `из последних ${total}`,
+            rating: "Оценка уроков",
+            ratingNote: (count: number) => `${count} ${plural(count, ["оценка", "оценки", "оценок"])}`,
+            ratingNone: "ещё не оценивал",
+            materials: "Материалы открыты",
+            materialsNote: (sent: number) => `из ${sent} отправленных`,
+            quote: (date: string, topic: string) => `Отзыв ${date} · ${topic}`,
+          },
           average: "Средний результат",
           details: "Подробнее →",
           materials: "Материалы",
@@ -851,6 +879,7 @@ export const cabinet = {
         thousands: (value: number) => (value === 0 ? "0" : `${value} тыс`),
         average: "Средний месяц",
         best: "Лучший месяц",
+        check: "Средний чек",
         lessons: (month: string) => `Уроков за ${month}`,
       },
       byStudent: {

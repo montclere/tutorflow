@@ -69,7 +69,7 @@ export function SessionGate({ children }: { children: ReactNode }) {
   if (state.kind === "failed") {
     return (
       <Centered>
-        <EmptyState title={text.failed} action={<Button onClick={() => void load()}>{text.retry}</Button>} />
+        <EmptyState emoji="😕" title={text.failed} action={<Button onClick={() => void load()}>{text.retry}</Button>} />
       </Centered>
     );
   }
