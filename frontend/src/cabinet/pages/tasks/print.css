@@ -1,0 +1,53 @@
+/*
+ * Печатный лист заданий (TASKS-9). На экране скрыт; при печати виден только он.
+ * Стили — файлом сборки: CSP не пускает встроенные <style>.
+ */
+.print-root { display: none; }
+
+@media print {
+  @page {
+    size: A4;
+    margin: 14mm 14mm 18mm;
+    @bottom-center {
+      content: counter(page) " / " counter(pages);
+      font: 600 9pt "Manrope", system-ui, sans-serif;
+      color: #6b7280;
+    }
+  }
+  html, body { background: #fff !important; }
+  body > *:not(.print-root) { display: none !important; }
+  .print-root { display: block; color: #111827; font: 500 11pt/1.45 "Manrope", system-ui, sans-serif; }
+}
+
+.pr-head { display: grid; gap: 6pt; padding-bottom: 8pt; border-bottom: 1.5pt solid #111827; }
+.pr-brand { display: flex; justify-content: space-between; align-items: baseline; font-size: 9pt; font-weight: 700; color: #4b5563; }
+.pr-brand b { font-family: "Unbounded", "Manrope", sans-serif; font-weight: 800; letter-spacing: 0.02em; color: #111827; }
+.pr-title { margin: 0; font-family: "Unbounded", "Manrope", sans-serif; font-size: 16pt; font-weight: 800; line-height: 1.2; }
+.pr-meta { margin: 0; font-size: 9.5pt; color: #4b5563; font-weight: 600; }
+.pr-fields { display: grid; grid-template-columns: 1fr 34mm 24mm; gap: 6mm; margin-top: 4pt; font-size: 9.5pt; font-weight: 600; }
+.pr-field { display: flex; gap: 2mm; align-items: flex-end; }
+.pr-field span { flex: 1; border-bottom: 0.75pt solid #111827; min-height: 13pt; font-weight: 700; }
+.pr-instruction { margin: 8pt 0 0; padding: 6pt 8pt; border: 0.75pt solid #d1d5db; border-radius: 4pt; font-size: 9pt; color: #374151; }
+
+.pr-tasks { list-style: none; margin: 10pt 0 0; padding: 0; display: grid; gap: 11pt; }
+.pr-task { break-inside: avoid; display: grid; grid-template-columns: 9mm 1fr; column-gap: 2mm; }
+.pr-num { font-family: "Unbounded", "Manrope", sans-serif; font-weight: 800; font-size: 11pt; }
+.pr-body { display: grid; gap: 5pt; min-width: 0; }
+.pr-place { font-size: 8pt; font-weight: 700; color: #6b7280; text-transform: uppercase; letter-spacing: 0.04em; }
+.pr-statement { margin: 0; font-weight: 600; }
+.pr-options { margin: 0; padding-left: 5mm; display: grid; gap: 1pt; font-size: 10pt; }
+.pr-match { display: grid; grid-template-columns: 1fr 1fr; gap: 3mm; font-size: 10pt; }
+.pr-match ol { margin: 0; padding-left: 5mm; }
+.pr-answer { display: flex; align-items: center; gap: 2mm; font-size: 9pt; font-weight: 700; }
+.pr-cells { display: flex; }
+.pr-cells i { width: 6mm; height: 7mm; border: 0.75pt solid #111827; margin-left: -0.75pt; }
+.pr-lines { display: grid; gap: 0; }
+.pr-lines i { height: 8mm; border-bottom: 0.5pt solid #9ca3af; }
+.pr-key { font-size: 9.5pt; font-weight: 700; color: #047857; }
+.pr-criteria { font-size: 9pt; color: #374151; }
+
+.pr-blank { margin-top: 10pt; display: grid; grid-template-columns: repeat(2, 1fr); gap: 4pt 10mm; }
+.pr-blank-row { display: flex; align-items: center; gap: 3mm; break-inside: avoid; font-weight: 800; }
+.pr-blank-row b { width: 7mm; text-align: right; }
+
+.pr-foot { margin-top: 14pt; padding-top: 6pt; border-top: 0.75pt solid #d1d5db; font-size: 8.5pt; color: #6b7280; font-weight: 600; }

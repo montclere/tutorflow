@@ -14,6 +14,7 @@ import { Pill } from "../ui/Pill";
 import { RowList } from "../ui/RowList";
 import { Tabs } from "../ui/Tabs";
 import ui from "../ui/ui.module.css";
+import { PrintDialog, type PrintSource } from "./tasks/PrintDialog";
 import { StudentAssignments } from "./tasks/StudentAssignments";
 
 const text = cabinet.student.tasks;
@@ -24,11 +25,13 @@ export function HomeworkPage() {
   const { notifySoon } = useNotifier();
   const data = getHomework();
   const [tab, setTab] = useState<HomeworkTab>("todo");
+  const [printing, setPrinting] = useState<PrintSource | null>(null);
 
   return (
     <>
       <PageHead title={text.title} subtitle={text.subtitle} />
-      <StudentAssignments onPrint={() => notifySoon(text.pdf)} />
+      <StudentAssignments onPrint={(work, assignment) => setPrinting({ title: work.title, items: work.items, due: assignment.due, variants: ["student", "blank"] })} />
+      <PrintDialog source={printing} onClose={() => setPrinting(null)} />
       <Tabs label={text.tabsLabel} items={[...text.tabs]} selectedId={tab} onSelect={(id) => setTab(id as HomeworkTab)} />
 
       {tab === "todo" && (

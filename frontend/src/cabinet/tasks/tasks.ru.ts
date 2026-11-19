@@ -232,5 +232,37 @@ export const tasksText = {
     done: "Готово",
     sent: "Решение отправлено репетитору",
   },
+  print: {
+    title: "PDF для печати",
+    description: "Откроется печать браузера — выберите «Сохранить как PDF» или принтер.",
+    variant: "Вариант",
+    variants: {
+      student: { label: "Для ученика", hint: "Условия и клетки для ответов, без ответов" },
+      answers: { label: "С ответами", hint: "Для вас: ответы и критерии к каждой задаче" },
+      blank: { label: "Бланк ответов", hint: "Только номера задач и клетки — к распечатанным условиям" },
+    },
+    student: "Ученик",
+    studentNone: "Без имени — впишет сам",
+    print: "Печать / PDF",
+    cancel: "Отмена",
+    // Тексты самого листа.
+    sheet: {
+      brand: "TutorFlow",
+      name: "Фамилия, имя",
+      date: "Дата",
+      variant: "Вариант",
+      due: (date: string) => `Сдать до ${date}`,
+      meta: (count: string, points: string, minutes: string) => `${count} · ${points} · ${minutes}`,
+      instruction: "Ответы к заданиям с кратким ответом запишите в клетки — по одному символу в клетку, дробь через запятую. Решения заданий с развёрнутым ответом запишите полностью.",
+      answer: "Ответ",
+      solution: "Решение",
+      answersTitle: "Ответы",
+      criteria: "Критерии",
+      blankTitle: "Бланк ответов",
+      separateSheet: "Решение — на отдельном листе",
+      footer: "Сдать онлайн: кабинет ученика TutorFlow → «Задания»",
+      points: (count: number) => `${count} б.`,
+    },
+  },
 };
 

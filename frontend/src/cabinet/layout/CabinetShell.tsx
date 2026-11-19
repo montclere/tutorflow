@@ -1,5 +1,6 @@
 import { useState, type ReactNode } from "react";
 import { cabinet } from "../content/cabinet.ru";
+import { PrintHost } from "../pages/tasks/PrintSheet";
 import { NotificationsProvider } from "../ui/Notifications";
 import { roleOfPath } from "./roleOfPath";
 import { Sidebar } from "./Sidebar";
@@ -24,6 +25,7 @@ export function CabinetShell({ pathname, children }: { pathname: string; childre
           </main>
         </div>
       </div>
+      <PrintHost />
     </NotificationsProvider>
   );
 }
