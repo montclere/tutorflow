@@ -62,6 +62,14 @@ export function StudentAssignments({ onPrint }: Props) {
                     <Pill tone={assignment.status === "wait" ? "blue" : assignment.status === "done" ? "ok" : "warn"}>{text.status[assignment.status]}</Pill>
                   )}
                 </div>
+                {assignment.status === "todo" && assignment.returned && (
+                  <p className="m-0 rounded-xl bg-[var(--cab-warn-soft)] px-3 py-2 text-sm font-semibold">{text.returned(assignment.returned)}</p>
+                )}
+                {assignment.status === "done" && assignment.feedback && Object.values(assignment.feedback).length > 0 && (
+                  <p className="m-0 rounded-xl bg-[var(--cab-lime-soft)] px-3 py-2 text-sm font-semibold">
+                    <b>{text.feedback}:</b> {Object.values(assignment.feedback).join(" ")}
+                  </p>
+                )}
                 <div className="flex flex-wrap gap-2">
                   {startable && (
                     <Button variant="primary" icon={work.kind === "test" ? Zap : undefined} onClick={() => setOpen(assignment)}>

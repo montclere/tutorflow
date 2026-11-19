@@ -12,14 +12,13 @@ import { exam, homework, progress, studentHome, trainer } from "../mocks/student
 import { taskLab } from "../mocks/tasks";
 import { assignedTasksOf, subscribeLibrary } from "../tasks/library";
 import { finance, financeToday } from "../mocks/finance";
-import { overviewBase, review } from "../mocks/teacher";
+import { overviewBase } from "../mocks/teacher";
 import type {
   ExamData,
   FinanceOperation,
   FinanceOverview,
   Homework,
   Progress,
-  Review,
   ScheduleData,
   PaymentMove,
   ScheduleLesson,
@@ -221,9 +220,6 @@ export function getTaskLab(): TaskLab {
   return taskLab;
 }
 
-export function getReview(): Review {
-  return review;
-}
 
 export function getCurrentMonth(): string {
   return monthKeyOf(financeToday);

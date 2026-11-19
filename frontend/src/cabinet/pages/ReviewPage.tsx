@@ -1,71 +1,41 @@
 import { useState } from "react";
 import { cabinet } from "../content/cabinet.ru";
-import { getReview, getStudent } from "../data";
-import { nextReviewIndex } from "../model/reviewQueue";
-import { Avatar } from "../ui/Avatar";
-import { Button } from "../ui/Button";
-import { Card } from "../ui/Card";
-import { useNotifier } from "../ui/Notifications";
+import { useLibrary, type WorkKind } from "../tasks/library";
 import { PageHead } from "../ui/PageHead";
-import { Pill } from "../ui/Pill";
-import styles from "./pages.module.css";
+import { ReviewDetail } from "./review/ReviewDetail";
+import { ReviewPanel } from "./review/ReviewPanel";
 
 const text = cabinet.teacher.review;
 
+/** Проверка: слева работы (задания и тесты) с учениками, справа — окно проверки выбранной работы (REVIEW-*). */
 export function ReviewPage() {
-  const { notify, notifySoon } = useNotifier();
-  const { queue, solution } = getReview();
-  const [index, setIndex] = useState(0);
-  const item = queue[index];
-
-  if (!item) return null;
-  const student = getStudent(item.studentId);
-
-  const advance = (message: string) => {
-    notify(message);
-    setIndex(nextReviewIndex(index, queue.length));
-  };
+  const { works, assignments } = useLibrary();
+  const [kind, setKind] = useState<WorkKind>("homework");
+  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const firstWaiting = assignments.find((assignment) => assignment.status === "wait" && works.find((work) => work.id === assignment.workId)?.kind === kind);
+  const selected = assignments.find((assignment) => assignment.id === selectedId) ?? firstWaiting ?? null;
+  const work = selected ? works.find((item) => item.id === selected.workId) : undefined;
 
   return (
     <>
       <PageHead title={text.title} subtitle={text.subtitle} />
-      <div className={styles.review}>
-        <Card compact>
-          <div role="group" aria-label={text.queueLabel}>
-            {queue.map((entry, entryIndex) => {
-              const owner = getStudent(entry.studentId);
-              return (
-                <button key={entry.title} type="button" className={styles.qitem} aria-pressed={entryIndex === index} onClick={() => setIndex(entryIndex)}>
-                  <Avatar initials={owner.initials} color={owner.color} />
-                  <span>
-                    <b>{owner.name}</b>
-                    <small>{entry.title}</small>
-                  </span>
-                </button>
-              );
-            })}
-          </div>
-        </Card>
-
-        <Card title={student.name} subtitle={`${item.title} · ${item.when}`} action={<Pill tone="grey">{text.photo}</Pill>}>
-          <div className={styles.photo}>
-            {solution.lines.map((line) => (
-              <div key={line}>{line}</div>
-            ))}
-            <mark>{solution.mistake}</mark>
-          </div>
-          <div className={styles.aibox}>
-            <b>{text.aiSuggests(item.aiScore)}</b>
-            <p>{item.note}</p>
-          </div>
-          <div className={styles.actions}>
-            <Button variant="primary" onClick={() => advance(text.accepted)}>
-              {text.accept(item.aiScore)}
-            </Button>
-            <Button onClick={() => notifySoon(text.change)}>{text.change}</Button>
-            <Button onClick={() => advance(text.reworked)}>{text.rework}</Button>
-          </div>
-        </Card>
+      <div className="grid grid-cols-[minmax(0,1fr)] items-start gap-4 min-[1001px]:grid-cols-[300px_minmax(0,1fr)]">
+        <ReviewPanel
+          kind={kind}
+          onKind={(next) => {
+            setKind(next);
+            setSelectedId(null);
+          }}
+          works={works}
+          assignments={assignments}
+          selectedId={selected?.id ?? null}
+          onSelect={setSelectedId}
+        />
+        {selected && work ? (
+          <ReviewDetail key={selected.id} assignment={selected} work={work} />
+        ) : (
+          <p className="m-0 rounded-2xl border border-dashed bg-card p-10 text-center text-sm font-semibold text-muted-foreground">{firstWaiting === undefined && kind === "homework" ? text.allDone : text.emptyDetail}</p>
+        )}
       </div>
     </>
   );

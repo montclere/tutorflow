@@ -185,6 +185,8 @@ export const tasksText = {
     attemptsLeft: (count: number) => `попыток осталось: ${count}`,
     print: "Распечатать",
     photos: "Сдать фото решения",
+    returned: (comment: string) => `Вернули на доработку: «${comment}»`,
+    feedback: "Комментарий репетитора",
   },
   player: {
     close: "Закрыть",

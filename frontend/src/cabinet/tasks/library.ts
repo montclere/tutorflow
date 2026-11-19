@@ -28,7 +28,20 @@ export type Attempt = {
 
 export type AssignmentStatus = "todo" | "wait" | "done";
 
-export type Assignment = { id: string; workId: string; studentId: string; assignedAt: string; due: string; reveal: RevealMode; status: AssignmentStatus; attempts: Attempt[] };
+export type Assignment = {
+  id: string;
+  workId: string;
+  studentId: string;
+  assignedAt: string;
+  due: string;
+  reveal: RevealMode;
+  status: AssignmentStatus;
+  attempts: Attempt[];
+  /** Комментарии репетитора к задачам после проверки. */
+  feedback?: Record<string, string>;
+  /** Возвращено на доработку — ученик сдаёт заново. */
+  returned?: string;
+};
 
 type LibraryState = { works: Work[]; assignments: Assignment[] };
 
@@ -40,13 +53,24 @@ let state: LibraryState = {
     { id: "w-2", kind: "test", title: "Вероятность: тренажёр", items: pickBank(["bank-4", "bank-5", "bank-23"]), createdAt: "2026-11-12", test: { mode: "training", timeLimitMin: null, attempts: null } },
     { id: "w-3", kind: "test", title: "Русский: ударения и корни", items: pickBank(["bank-25", "bank-27", "bank-28"]), createdAt: "2026-11-14", test: { mode: "control", timeLimitMin: 15, attempts: 1 } },
   ],
-  // Демо: ученику из кабинета ученика уже выдано по одному заданию и тесту.
+  // Демо: ученику из кабинета ученика уже выдано по одному заданию и тесту; две работы ждут проверки.
   assignments: [
+    submitted("a-demo-3", "w-1", "orlova", { "bank-6": "4", "bank-8": "13", "bank-10": "5", "bank-12": "6" }, ["orlova-13-1.jpg", "orlova-13-2.jpg"], "2026-11-16T10:40:00Z", 34),
+    submitted("a-demo-4", "w-1", "volkova", { "bank-6": "4", "bank-8": "12", "bank-10": "5", "bank-12": "6" }, ["volkova-13.jpg"], "2026-11-16T17:05:00Z", 41),
     { id: "a-demo-1", workId: "w-2", studentId: "ivanov", assignedAt: "2026-11-15", due: "2026-11-22", reveal: "now", status: "todo", attempts: [] },
     { id: "a-demo-2", workId: "w-1", studentId: "ivanov", assignedAt: "2026-11-14", due: "2026-11-21", reveal: "afterCheck", status: "todo", attempts: [] },
   ],
 };
 let nextId = 1;
+
+/** Демо-работа, уже сданная учеником: краткие ответы проверены, развёрнутый (№13) ждёт репетитора. */
+function submitted(id: string, workId: string, studentId: string, numbers: Record<string, string>, photos: string[], finishedIso: string, minutes: number): Assignment {
+  const items = pickBank(["bank-6", "bank-8", "bank-10", "bank-12", "bank-19"]);
+  const answers: Record<string, AnswerResponse> = Object.fromEntries(Object.entries(numbers).map(([taskId, value]) => [taskId, { kind: "number" as const, value }]));
+  answers["bank-19"] = { kind: "extended", photos };
+  const finishedAt = Date.parse(finishedIso);
+  return { id, workId, studentId, assignedAt: "2026-11-14", due: "2026-11-21", reveal: "afterCheck", status: "wait", attempts: [{ startedAt: finishedAt - minutes * 60_000, finishedAt, answers, results: gradeAttempt(items, answers) }] };
+}
 const listeners = new Set<() => void>();
 
 function set(next: LibraryState) {
@@ -132,13 +156,41 @@ export function submitAttempt(assignmentId: string, items: TaskItem[], answers: 
   return attempt;
 }
 
+/** Оценка развёрнутой задачи репетитором; когда непроверенных не осталось — работа «Сделано». */
+export function gradeTask(assignmentId: string, taskId: string, points: number, maxPoints: number, comment: string): void {
+  set({
+    ...state,
+    assignments: state.assignments.map((assignment) => {
+      if (assignment.id !== assignmentId) return assignment;
+      const last = assignment.attempts.at(-1);
+      if (!last) return assignment;
+      const results = { ...last.results, [taskId]: { correct: points >= maxPoints, points } };
+      const pending = Object.values(results).some((result) => result.correct === null);
+      const feedback = comment.trim() ? { ...assignment.feedback, [taskId]: comment.trim() } : assignment.feedback;
+      return { ...assignment, attempts: [...assignment.attempts.slice(0, -1), { ...last, results }], status: pending ? "wait" : "done", feedback };
+    }),
+  });
+}
+
+/** Вернуть на доработку: ученик видит комментарий и сдаёт заново. */
+export function returnAssignment(assignmentId: string, comment: string): void {
+  set({ ...state, assignments: state.assignments.map((assignment) => (assignment.id === assignmentId ? { ...assignment, status: "todo", returned: comment.trim() } : assignment)) });
+}
+
+/** Развёрнутые задачи последней попытки, которые ждут проверки. */
+export function pendingTasks(assignment: Assignment, work: Work): TaskItem[] {
+  const last = assignment.attempts.at(-1);
+  if (!last) return [];
+  return work.items.filter((task) => last.results[task.id]?.correct === null);
+}
+
 export function workOf(id: string): Work | undefined {
   return state.works.find((work) => work.id === id);
 }
 
 /** Можно ли начать ещё одну попытку теста. */
 export function canStart(assignment: Assignment, work: Work): boolean {
-  if (work.kind === "homework") return assignment.attempts.length === 0;
+  if (work.kind === "homework") return assignment.attempts.length === 0 || (assignment.status === "todo" && assignment.returned !== undefined);
   const limit = work.test?.attempts ?? null;
   return limit === null || assignment.attempts.length < limit;
 }

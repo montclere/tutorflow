@@ -5,7 +5,8 @@ import { CabinetLink } from "../ui/CabinetLink";
 import { cx } from "../ui/cx";
 import { NavIcon } from "../ui/Icon";
 import { navigate } from "../../app/router";
-import { routes } from "../../config/routes";
+import { routes, teacherRoutes } from "../../config/routes";
+import { useLibrary } from "../tasks/library";
 import styles from "./layout.module.css";
 
 type Props = { role: Role; pathname: string; open: boolean; onClose: () => void };
@@ -15,6 +16,8 @@ function isActive(pathname: string, path: string, prefix?: string) {
 }
 
 export function Sidebar({ role, pathname, open, onClose }: Props) {
+  // Сколько работ ждут проверки — число у «Проверки» (REVIEW-1).
+  const waiting = useLibrary().assignments.filter((assignment) => assignment.status === "wait").length;
   const promo = cabinet.promo[role];
 
   return (
@@ -45,7 +48,7 @@ export function Sidebar({ role, pathname, open, onClose }: Props) {
           >
             <NavIcon name={item.icon} />
             {item.label}
-            {env.demo && item.badge && <span className={styles.count}>{item.badge}</span>}
+            {env.demo && (item.path === teacherRoutes.review ? waiting > 0 : item.badge) && <span className={styles.count}>{item.path === teacherRoutes.review ? waiting : item.badge}</span>}
           </CabinetLink>
         ))}
       </nav>

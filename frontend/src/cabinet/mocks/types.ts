@@ -191,9 +191,6 @@ export type TaskLab = {
   aiReply: (request: string) => string;
 };
 
-export type ReviewItem = { studentId: string; title: string; when: string; aiScore: string; note: string };
-export type ReviewSolution = { lines: string[]; mistake: string };
-export type Review = { queue: ReviewItem[]; solution: ReviewSolution };
 
 export type StudentHome = {
   greeting: string;

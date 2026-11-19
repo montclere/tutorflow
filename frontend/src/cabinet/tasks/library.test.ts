@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { bankTasks } from "./bank";
-import { assignedTasksOf, assignWork, attemptScore, canStart, getLibrary, gradeAttempt, notForTest, saveWork, submitAttempt, workAverage } from "./library";
+import { assignedTasksOf, assignWork, attemptScore, canStart, getLibrary, gradeAttempt, gradeTask, notForTest, pendingTasks, returnAssignment, saveWork, submitAttempt, workAverage, workOf, type Work } from "./library";
 import type { TaskItem } from "./types";
 
 const task = (id: string) => bankTasks.find((item) => item.id === id) as TaskItem;
@@ -26,5 +26,18 @@ describe("библиотека заданий", () => {
     expect(updated && canStart(updated, work)).toBe(false);
     expect(assignedTasksOf("petrov")[0]).toMatchObject({ status: "done", score: { correct: 1, total: 2 }, timeMin: 6, mistakes: [{ number: "6", answer: "1", correct: "13" }] });
     expect(workAverage(work.id)).toBe(50);
+  });
+
+  it("проверка развёрнутой задачи закрывает работу; возврат на доработку даёт новую попытку", () => {
+    const assignment = getLibrary().assignments.find((item) => item.id === "a-demo-3");
+    const work = workOf("w-1") as Work;
+    expect(assignment?.status).toBe("wait");
+    expect(pendingTasks(assignment ?? getLibrary().assignments[0]!, work).map((task) => task.id)).toEqual(["bank-19"]);
+    gradeTask("a-demo-3", "bank-19", 2, 2, "Отлично");
+    const graded = getLibrary().assignments.find((item) => item.id === "a-demo-3");
+    expect(graded).toMatchObject({ status: "done", feedback: { "bank-19": "Отлично" } });
+    returnAssignment("a-demo-4", "Допиши отбор корней");
+    const returned = getLibrary().assignments.find((item) => item.id === "a-demo-4");
+    expect(returned && canStart(returned, work)).toBe(true);
   });
 });
