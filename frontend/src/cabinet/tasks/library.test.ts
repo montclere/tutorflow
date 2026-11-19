@@ -30,14 +30,14 @@ describe("библиотека заданий", () => {
 
   it("проверка развёрнутой задачи закрывает работу; возврат на доработку даёт новую попытку", () => {
     const assignment = getLibrary().assignments.find((item) => item.id === "a-demo-3");
-    const work = workOf("w-1") as Work;
+    const work = workOf("w-4") as Work;
     expect(assignment?.status).toBe("wait");
-    expect(pendingTasks(assignment ?? getLibrary().assignments[0]!, work).map((task) => task.id)).toEqual(["bank-19"]);
-    gradeTask("a-demo-3", "bank-19", 2, 2, "Отлично");
+    expect(pendingTasks(assignment ?? getLibrary().assignments[0]!, work).map((task) => task.id)).toEqual(["ru-oge-9-1"]);
+    gradeTask("a-demo-3", "ru-oge-9-1", 6, 6, "Отлично");
     const graded = getLibrary().assignments.find((item) => item.id === "a-demo-3");
-    expect(graded).toMatchObject({ status: "done", feedback: { "bank-19": "Отлично" } });
-    returnAssignment("a-demo-4", "Допиши отбор корней");
+    expect(graded).toMatchObject({ status: "done", feedback: { "ru-oge-9-1": "Отлично" } });
+    returnAssignment("a-demo-4", "Допиши комментарий к проблеме");
     const returned = getLibrary().assignments.find((item) => item.id === "a-demo-4");
-    expect(returned && canStart(returned, work)).toBe(true);
+    expect(returned && canStart(returned, workOf("w-1") as Work)).toBe(true);
   });
 });

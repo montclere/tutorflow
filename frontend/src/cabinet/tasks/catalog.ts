@@ -1,10 +1,11 @@
 import type { ExamInfo, SubjectId, SubjectInfo } from "./types";
 
+// Демо-репетитор ведёт русский язык — он первым в списке (банк и ИИ открываются на нём).
 export const subjects: SubjectInfo[] = [
+  { id: "russian", label: "Русский язык", computable: false },
   { id: "math", label: "Математика", computable: true },
   { id: "physics", label: "Физика", computable: true },
   { id: "informatics", label: "Информатика", computable: true },
-  { id: "russian", label: "Русский язык", computable: false },
   { id: "social", label: "Обществознание", computable: false },
   { id: "english", label: "Английский язык", computable: false },
 ];
@@ -54,12 +55,48 @@ export const exams: ExamInfo[] = [
     subject: "russian",
     label: "ЕГЭ",
     numbers: n([
+      [1, "Средства связи"],
+      [2, "Значение слова"],
+      [3, "Стили речи"],
       [4, "Ударения"],
       [5, "Паронимы"],
+      [6, "Лексические нормы"],
+      [7, "Формы слов"],
+      [8, "Грамматические нормы"],
       [9, "Корни"],
       [10, "Приставки"],
-      [16, "Пунктуация"],
+      [11, "Суффиксы"],
+      [12, "Глаголы и причастия"],
+      [13, "НЕ с частями речи"],
+      [14, "Слитно, раздельно, дефис"],
+      [15, "Н и НН"],
+      [16, "Однородные и ССП"],
+      [17, "Обособление"],
+      [18, "Вводные слова"],
+      [19, "Сложноподчинённые"],
+      [20, "Разные виды связи"],
+      [21, "Пунктуационный анализ"],
+      [22, "Смысл текста"],
+      [23, "Типы речи"],
+      [24, "Лексика текста"],
+      [25, "Связь предложений"],
+      [26, "Выразительность"],
       [27, "Сочинение"],
+    ]),
+  },
+  {
+    id: "oge-russian",
+    subject: "russian",
+    label: "ОГЭ",
+    numbers: n([
+      [2, "Синтаксический анализ"],
+      [3, "Пунктуация"],
+      [4, "Словосочетания"],
+      [5, "Орфография"],
+      [6, "Понимание текста"],
+      [7, "Выразительность"],
+      [8, "Лексика"],
+      [9, "Сочинение"],
     ]),
   },
   {
@@ -120,7 +157,7 @@ export function examsOf(subject: SubjectId): ExamInfo[] {
   return exams.filter((exam) => exam.subject === subject);
 }
 
-/** «Математика · ЕГЭ профиль · №6». */
+/** «Русский язык · ЕГЭ · №9». */
 export function taskPlace(task: { subject: SubjectId; exam?: string; number?: number }): string {
   const exam = examOf(task.exam);
   return [subjectOf(task.subject).label, exam?.label, task.number !== undefined ? `№${task.number}` : null].filter(Boolean).join(" · ");

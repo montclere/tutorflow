@@ -7,20 +7,21 @@ import { mergeEvidence, studentProgress, unitKey, type Evidence, type StudentGoa
 
 /** Цели учеников (в рабочей версии — из карточки ученика): экзамен или темы программы. */
 export const goals: Record<string, StudentGoal> = {
-  ivanov: { kind: "exam", exam: "ege-math-profile", daysLeft: 191 },
-  smirnova: { kind: "exam", exam: "oge-math", daysLeft: 197 },
-  orlova: { kind: "exam", exam: "oge-math", daysLeft: 197 },
-  volkova: { kind: "exam", exam: "ege-math-profile", daysLeft: 191 },
-  petrov: { kind: "topics", subject: "math", title: "Алгебра · 10 класс", topics: ["Тождества", "Радианы", "Тригонометрия", "Уравнения", "Степени"] },
-  sokolov: { kind: "exam", exam: "oge-math", daysLeft: 197 },
+  ivanov: { kind: "exam", exam: "ege-russian", daysLeft: 191 },
+  smirnova: { kind: "exam", exam: "oge-russian", daysLeft: 197 },
+  orlova: { kind: "exam", exam: "oge-russian", daysLeft: 197 },
+  volkova: { kind: "exam", exam: "ege-russian", daysLeft: 191 },
+  petrov: { kind: "topics", subject: "russian", title: "Русский · 7 класс", topics: ["Причастия", "Деепричастия", "Н и НН", "Наречия", "НЕ с частями речи"] },
+  sokolov: { kind: "exam", exam: "oge-russian", daysLeft: 197 },
 };
 
 const tally = (level: number) => [{ correct: 3, total: 10 }, { correct: 5, total: 10 }, { correct: 7, total: 10 }, { correct: 9, total: 10 }][level] ?? { correct: 0, total: 0 };
 
 /** Стартовые данные — история до подключения TutorFlow (в рабочей версии — с сервера). */
 const baseEvidence: Record<string, Evidence> = {
-  ivanov: Object.fromEntries([3, 3, 3, 3, 3, 3, 3, 2, 2, 2, 1, 1, 0, 0, 0, 0].map((level, index) => [`n:${index + 1}`, tally(level)])),
-  petrov: { "t:Тождества": tally(1), "t:Радианы": tally(2), "t:Тригонометрия": tally(0), "t:Степени": tally(3) },
+  // Иванов, ЕГЭ: №1–27 — уверенно в лексике и орфоэпии, слабее в Н/НН и пунктуации, сочинение — средне.
+  ivanov: Object.fromEntries([3, 3, 2, 3, 3, 3, 2, 2, 2, 3, 2, 2, 3, 2, 0, 0, 1, 2, 1, 1, 1, 3, 3, 2, 2, 1, 1].map((level, index) => [`n:${index + 1}`, tally(level)])),
+  petrov: { "t:Причастия": tally(2), "t:Деепричастия": tally(0), "t:Н и НН": tally(1), "t:Наречия": tally(3) },
 };
 
 /** Проверенные ответы в заданиях и тестах — тоже данные прогресса. */

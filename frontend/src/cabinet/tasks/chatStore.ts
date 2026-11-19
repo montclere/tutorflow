@@ -24,7 +24,7 @@ const THINKING_MS = 450;
 
 let state: ChatState = {
   messages: [],
-  params: { subject: "math", exam: "ege-math-profile", difficulty: null, count: 5 },
+  params: { subject: "russian", exam: "ege-russian", difficulty: null, count: 5 },
   thinking: false,
 };
 let nextId = 1;

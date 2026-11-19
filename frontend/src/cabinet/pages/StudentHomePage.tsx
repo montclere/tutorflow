@@ -58,7 +58,7 @@ export function StudentHomePage() {
   const left = Math.max(0, practice.dailyGoal - practice.solvedToday);
   const now = assignments.filter((assignment) => assignment.studentId === demoStudentId && assignment.status !== "done").slice(0, 3);
   const materials = getStudentDetails(demoStudentId).materials.slice(0, 2);
-  const trainable = practiceNumbers(goal?.kind === "exam" ? goal.exam : "ege-math-profile");
+  const trainable = practiceNumbers(goal?.kind === "exam" ? goal.exam : "ege-russian");
   const feedback = assignments.find((assignment) => assignment.studentId === demoStudentId && assignment.feedback && Object.keys(assignment.feedback).length > 0);
 
   return (

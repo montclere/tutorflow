@@ -8,8 +8,8 @@ export type Draft = { title: string; items: TaskItem[] };
 
 export const DRAFT_LIMIT = 30;
 
-const initialIds = ["bank-6", "bank-8", "bank-10", "bank-19"];
-let draft: Draft = { title: "Уравнения: показательные и логарифмические", items: bankTasks.filter((task) => initialIds.includes(task.id)) };
+const initialIds = ["ru-9-1", "ru-10-1", "ru-11-1", "ru-12-1"];
+let draft: Draft = { title: "Орфография: корни, приставки, суффиксы", items: bankTasks.filter((task) => initialIds.includes(task.id)) };
 const listeners = new Set<() => void>();
 
 function set(next: Draft) {

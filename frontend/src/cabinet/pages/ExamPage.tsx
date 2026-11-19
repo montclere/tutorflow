@@ -75,7 +75,7 @@ export function ExamPage() {
             <RichText parts={current.question} />
           </div>
           <div className={styles.answer}>
-            <input inputMode="decimal" placeholder={cabinet.placeholders.answer} aria-label={text.answerLabel(current.number)} />
+            <input inputMode="text" placeholder={cabinet.placeholders.answer} aria-label={text.answerLabel(current.number)} />
             <Button onClick={() => notify(text.saved)}>{text.save}</Button>
           </div>
           <div className={styles.examNav}>

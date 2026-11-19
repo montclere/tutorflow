@@ -47,6 +47,8 @@ export function levelOf(tally: Tally | undefined): Level | null {
 /** Баллы номера в первичной шкале: короткие ответы — 1, развёрнутые — по шкале экзамена. */
 const examPoints: Record<string, Record<number, number>> = {
   "ege-math-profile": { 13: 2, 15: 2, 16: 2 },
+  "ege-russian": { 27: 22 },
+  "oge-russian": { 9: 6 },
 };
 
 export function unitKey(goal: StudentGoal, task: Pick<TaskItem, "exam" | "number" | "topic">): string | null {

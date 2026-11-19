@@ -34,7 +34,7 @@ export function TrainerPage() {
   const practice = usePractice();
   const progress = useStudentProgress(demoStudentId);
   const goal = goals[demoStudentId];
-  const exam = goal?.kind === "exam" ? goal.exam : "ege-math-profile";
+  const exam = goal?.kind === "exam" ? goal.exam : "ege-russian";
   const available = practiceNumbers(exam);
   const [mode, setMode] = useState<PracticeMode>(() => (modes.find((item) => item === params.get("mode")) ?? "weak"));
   const [number, setNumber] = useState<number | undefined>(() => (params.get("number") ? Number(params.get("number")) : [...available][0]));

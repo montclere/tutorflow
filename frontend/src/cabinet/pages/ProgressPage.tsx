@@ -45,7 +45,7 @@ export function ProgressPage() {
   if (!progress) return null;
   const exam = progress.mode === "exam";
   const goal = goals[demoStudentId];
-  const trainable = practiceNumbers(goal?.kind === "exam" ? goal.exam : "ege-math-profile");
+  const trainable = practiceNumbers(goal?.kind === "exam" ? goal.exam : "ege-russian");
 
   return (
     <>

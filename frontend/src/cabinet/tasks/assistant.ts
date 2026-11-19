@@ -99,7 +99,7 @@ const EDU_WORDS = /задач|задани|тест|вариант|егэ|огэ
 export function respond(request: string, context: AssistantContext): AssistantReply {
   const { params, draft, seed } = context;
   const text = wordsOf(request.trim());
-  if (!text) return { kind: "info", text: "Опишите, что собрать: например, «10 задач на вероятность, как №4»." };
+  if (!text) return { kind: "info", text: "Опишите, что собрать: например, «5 заданий на ударения, как №4»." };
   if (!EDU_WORDS.test(text)) {
     return { kind: "refused", text: "Я помогаю только с заданиями: подобрать задачи из банка, сделать аналоги, поправить черновик, собрать работу над ошибками. С остальным, к сожалению, не помогу." };
   }

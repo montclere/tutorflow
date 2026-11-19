@@ -25,8 +25,8 @@ const ALL = "all";
 export function TasksBank() {
   const { notify } = useNotifier();
   const draft = useDraft();
-  const [subject, setSubject] = useState<SubjectId>("math");
-  const [examId, setExamId] = useState("ege-math-profile");
+  const [subject, setSubject] = useState<SubjectId>("russian");
+  const [examId, setExamId] = useState("ege-russian");
   const exam = examOf(examId);
   const counts = countByNumber(examId);
   const firstNumber = exam?.numbers.find((item) => (counts.get(item.number) ?? 0) > 0)?.number ?? exam?.numbers[0]?.number ?? 1;

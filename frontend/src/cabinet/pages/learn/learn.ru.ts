@@ -19,7 +19,7 @@ export const learnText = {
     xp: (value: number) => `${value} XP`,
     lessonTitle: "Ближайший урок",
     lessonValue: "Сегодня в 15:00",
-    lessonNote: "Математика · Анна Кузнецова",
+    lessonNote: "Русский язык · Анна Кузнецова",
     nowTitle: "Сейчас в работе",
     nowEmpty: "Всё сдано — можно потренироваться",
     allTasks: "Все задания →",

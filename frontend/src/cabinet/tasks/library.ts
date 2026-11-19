@@ -45,29 +45,35 @@ export type Assignment = {
 
 type LibraryState = { works: Work[]; assignments: Assignment[] };
 
-const pickBank = (ids: string[]) => bankTasks.filter((task) => ids.includes(task.id));
+const pickBank = (ids: string[]) => ids.map((id) => bankTasks.find((task) => task.id === id)).filter((task): task is TaskItem => task !== undefined);
+const text = (value: string): AnswerResponse => ({ kind: "text", value });
+const picked = (...selected: number[]): AnswerResponse => ({ kind: "choice", selected });
+
+/** Демо-домашки по русскому: ЕГЭ — орфография, пунктуация и сочинение №27; ОГЭ — задания 4–7 и сочинение 9.2. */
+const EGE_HOMEWORK = ["ru-9-1", "ru-10-1", "ru-15-1", "ru-16-1", "ru-27-1"];
+const OGE_HOMEWORK = ["ru-oge-4-1", "ru-oge-5-1", "ru-oge-7-1", "ru-oge-9-1"];
 
 let state: LibraryState = {
   works: [
-    { id: "w-1", kind: "homework", title: "Уравнения: повторение", items: pickBank(["bank-6", "bank-8", "bank-10", "bank-12", "bank-19"]), createdAt: "2026-11-10", format: "online" },
-    { id: "w-2", kind: "test", title: "Вероятность: тренажёр", items: pickBank(["bank-4", "bank-5", "bank-23"]), createdAt: "2026-11-12", test: { mode: "training", timeLimitMin: null, attempts: null } },
-    { id: "w-3", kind: "test", title: "Русский: ударения и корни", items: pickBank(["bank-25", "bank-27", "bank-28"]), createdAt: "2026-11-14", test: { mode: "control", timeLimitMin: 15, attempts: 1 } },
+    { id: "w-1", kind: "homework", title: "ЕГЭ: орфография и сочинение", items: pickBank(EGE_HOMEWORK), createdAt: "2026-11-10", format: "online" },
+    { id: "w-2", kind: "test", title: "Ударения и паронимы: тренажёр", items: pickBank(["ru-4-1", "ru-4-2", "ru-5-1", "ru-5-2"]), createdAt: "2026-11-12", test: { mode: "training", timeLimitMin: null, attempts: null } },
+    { id: "w-3", kind: "test", title: "Н и НН: контрольная", items: pickBank(["ru-15-1", "ru-15-2", "ru-13-1"]), createdAt: "2026-11-14", test: { mode: "control", timeLimitMin: 15, attempts: 1 } },
+    { id: "w-4", kind: "homework", title: "ОГЭ: сочинение 9.2", items: pickBank(OGE_HOMEWORK), createdAt: "2026-11-11", format: "online" },
   ],
-  // Демо: ученику из кабинета ученика уже выдано по одному заданию и тесту; две работы ждут проверки.
+  // Демо: ученику из кабинета ученика уже выдано по одному заданию и тесту; две работы с сочинением ждут проверки.
   assignments: [
-    submitted("a-demo-3", "w-1", "orlova", { "bank-6": "4", "bank-8": "13", "bank-10": "5", "bank-12": "6" }, ["orlova-13-1.jpg", "orlova-13-2.jpg"], "2026-11-16T10:40:00Z", 34),
-    submitted("a-demo-4", "w-1", "volkova", { "bank-6": "4", "bank-8": "12", "bank-10": "5", "bank-12": "6" }, ["volkova-13.jpg"], "2026-11-16T17:05:00Z", 41),
+    submitted("a-demo-3", "w-4", "orlova", OGE_HOMEWORK, { "ru-oge-4-1": text("болт из стали"), "ru-oge-5-1": text("преобразовать"), "ru-oge-7-1": picked(1) }, "ru-oge-9-1", ["orlova-9-2-1.jpg", "orlova-9-2-2.jpg"], "2026-11-16T10:40:00Z", 34),
+    submitted("a-demo-4", "w-1", "volkova", EGE_HOMEWORK, { "ru-9-1": picked(0, 1, 2), "ru-10-1": text("привокзальный"), "ru-15-1": text("деревянный"), "ru-16-1": picked(1, 2) }, "ru-27-1", ["volkova-27.jpg"], "2026-11-16T17:05:00Z", 41),
     { id: "a-demo-1", workId: "w-2", studentId: "ivanov", assignedAt: "2026-11-15", due: "2026-11-22", reveal: "now", status: "todo", attempts: [] },
     { id: "a-demo-2", workId: "w-1", studentId: "ivanov", assignedAt: "2026-11-14", due: "2026-11-21", reveal: "afterCheck", status: "todo", attempts: [] },
   ],
 };
 let nextId = 1;
 
-/** Демо-работа, уже сданная учеником: краткие ответы проверены, развёрнутый (№13) ждёт репетитора. */
-function submitted(id: string, workId: string, studentId: string, numbers: Record<string, string>, photos: string[], finishedIso: string, minutes: number): Assignment {
-  const items = pickBank(["bank-6", "bank-8", "bank-10", "bank-12", "bank-19"]);
-  const answers: Record<string, AnswerResponse> = Object.fromEntries(Object.entries(numbers).map(([taskId, value]) => [taskId, { kind: "number" as const, value }]));
-  answers["bank-19"] = { kind: "extended", photos };
+/** Демо-работа, уже сданная учеником: краткие ответы проверены, сочинение ждёт репетитора. */
+function submitted(id: string, workId: string, studentId: string, ids: string[], short: Record<string, AnswerResponse>, essayId: string, photos: string[], finishedIso: string, minutes: number): Assignment {
+  const items = pickBank(ids);
+  const answers: Record<string, AnswerResponse> = { ...short, [essayId]: { kind: "extended", photos } };
   const finishedAt = Date.parse(finishedIso);
   return { id, workId, studentId, assignedAt: "2026-11-14", due: "2026-11-21", reveal: "afterCheck", status: "wait", attempts: [{ startedAt: finishedAt - minutes * 60_000, finishedAt, answers, results: gradeAttempt(items, answers) }] };
 }

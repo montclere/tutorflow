@@ -145,7 +145,7 @@ export function ExtendedReview({ assignment, task, index }: { assignment: Assign
             spacing={1}
             value={points === null ? "" : String(points)}
             aria-label={text.grade.label}
-            className="w-fit gap-1 rounded-lg border bg-card p-1"
+            className="w-fit max-w-full flex-wrap gap-1 rounded-lg border bg-card p-1"
             onValueChange={(value) => value !== "" && setPoints(Number(value))}
           >
             {Array.from({ length: task.points + 1 }, (_, value) => (
