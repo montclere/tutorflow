@@ -9,9 +9,11 @@ export type LiveDraft = {
   durationMin: number;
   repeat: boolean;
   count: number;
+  /** Урок уже прошёл — записать сразу проведённым с фактическим временем (LES-43). */
+  recorded?: boolean;
 };
 
-export type LiveDraftError = "student" | "topic" | "past" | "duration" | "count";
+export type LiveDraftError = "student" | "topic" | "past" | "future" | "duration" | "count";
 
 export const MIN_SERIES_COUNT = 2;
 export const MAX_SERIES_COUNT = 26;
@@ -21,9 +23,12 @@ export function liveDraftErrors(draft: LiveDraft, today: string, now: string): L
   const errors: LiveDraftError[] = [];
   if (!draft.cardId) errors.push("student");
   if (draft.title.trim() === "") errors.push("topic");
-  if (draft.date < today || (draft.date === today && draft.start <= now)) errors.push("past");
+  const inPast = draft.date < today || (draft.date === today && draft.start <= now);
+  if (draft.recorded) {
+    if (!inPast) errors.push("future");
+  } else if (inPast) errors.push("past");
   if (!Number.isInteger(draft.durationMin) || draft.durationMin < MIN_DURATION_MIN || draft.durationMin > MAX_DURATION_MIN) errors.push("duration");
-  if (draft.repeat && (!Number.isInteger(draft.count) || draft.count < MIN_SERIES_COUNT || draft.count > MAX_SERIES_COUNT)) errors.push("count");
+  if (draft.repeat && !draft.recorded && (!Number.isInteger(draft.count) || draft.count < MIN_SERIES_COUNT || draft.count > MAX_SERIES_COUNT)) errors.push("count");
   return errors;
 }
 

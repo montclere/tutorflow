@@ -11,6 +11,7 @@ import { Button } from "../cabinet/ui/Button";
 import { cardPath } from "./InvitePage";
 import { Heading, Panel } from "./LearnerFrame";
 import { learner } from "./learner.ru";
+import { LearnerSchedule } from "./LearnerSchedule";
 
 const text = learner.cards;
 
@@ -95,7 +96,7 @@ function CardDetail({ role, id }: { role: CabinetRole; id: string }) {
   );
 }
 
-function CardList({ role }: { role: CabinetRole }) {
+function CardList({ role, timezone }: { role: CabinetRole; timezone: string }) {
   const { state, retry } = useLoad(() => studentsApi.myCards(role), role);
   return (
     <>
@@ -131,12 +132,13 @@ function CardList({ role }: { role: CabinetRole }) {
           ))}
         </ul>
       )}
+      {state.kind === "ready" && state.value.length > 0 && <LearnerSchedule role={role} cards={state.value} timezone={timezone} />}
     </>
   );
 }
 
 /** Кабинет ученика или родителя: карточки у репетиторов; ?card= — одна карточка. */
-export function MyCardsPage({ role }: { role: CabinetRole }) {
+export function MyCardsPage({ role, timezone }: { role: CabinetRole; timezone: string }) {
   const id = new URLSearchParams(useSearch()).get("card");
-  return id ? <CardDetail role={role} id={id} /> : <CardList role={role} />;
+  return id ? <CardDetail role={role} id={id} /> : <CardList role={role} timezone={timezone} />;
 }

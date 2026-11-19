@@ -28,3 +28,12 @@ describe("attemptKey", () => {
     expect(attemptKey(first, "b", next).key).toBe("k2");
   });
 });
+
+describe("проведённый задним числом (LES-43)", () => {
+  const base = { cardId: "c1", title: "Тема", date: "2026-11-10", start: "10:00", durationMin: 60, repeat: false, count: 8 };
+  it("прошедшее время допустимо только для записи проведённого урока", () => {
+    expect(liveDraftErrors({ ...base, recorded: true }, "2026-11-17", "14:00")).toEqual([]);
+    expect(liveDraftErrors(base, "2026-11-17", "14:00")).toEqual(["past"]);
+    expect(liveDraftErrors({ ...base, recorded: true, date: "2026-11-20" }, "2026-11-17", "14:00")).toEqual(["future"]);
+  });
+});

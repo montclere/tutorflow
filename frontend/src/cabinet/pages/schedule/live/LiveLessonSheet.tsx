@@ -3,6 +3,7 @@ import { useState } from "react";
 import { lessonsApi, lessonsErrorCode, toScheduleLesson, type LiveLesson } from "../../../api/lessons";
 import type { TeacherCard } from "../../../api/students";
 import { cabinet } from "../../../content/cabinet.ru";
+import { lessonsText } from "../../../content/lessons.ru";
 import { cardColor } from "../../../model/cardColor";
 import { formatLongDay } from "../../../model/dates";
 import { lessonPhase } from "../../../model/lessons";
@@ -17,6 +18,7 @@ import { Separator } from "@/shared/ui/kit/separator";
 import { Sheet, SheetContent, SheetDescription, SheetFooter, SheetHeader, SheetTitle } from "@/shared/ui/kit/sheet";
 import { liveStudentsHref } from "../../students/live/useLiveStudentsUrl";
 import { lessonTime } from "../LessonMeta";
+import { LessonPanels } from "./LessonPanels";
 
 const schedule = cabinet.teacher.schedule;
 const text = schedule.live;
@@ -107,6 +109,7 @@ export function LiveLessonSheet({ lesson, card, timeZone, onClose, onChanged, on
             <Separator />
             <dl className="m-0 grid gap-4 p-4">
               <Fact label={text.facts.title} value={`${lesson.title} · ${schedule.lesson.duration(lesson.durationMinutes)}`} />
+              {lesson.description && <Fact label={lessonsText.edit.description} value={lesson.description} />}
               {lesson.preparation && <Fact label={text.facts.preparation} value={lesson.preparation} />}
               {lesson.privateNote && <Fact label={text.facts.note} value={lesson.privateNote} />}
               {lesson.outcomeReason && <Fact label={text.facts.reason} value={lesson.outcomeReason} />}
@@ -133,7 +136,7 @@ export function LiveLessonSheet({ lesson, card, timeZone, onClose, onChanged, on
               </label>
             )}
 
-            <SheetFooter className="grid grid-cols-2 gap-2">
+            <SheetFooter className="mt-0 grid grid-cols-2 gap-2">
               {lesson.status === "scheduled" && phase === "upcoming" && !asking && (
                 <Button className="col-span-2" onClick={() => setAsking("cancel")}>
                   {text.sheet.cancel}
@@ -169,12 +172,15 @@ export function LiveLessonSheet({ lesson, card, timeZone, onClose, onChanged, on
                   {text.sheet.reset}
                 </Button>
               )}
-              {lesson.status === "cancelled" && (
+              {lesson.status === "cancelled" && phase === "upcoming" && (
                 <Button variant="primary" className="col-span-2" disabled={busy} onClick={() => void run(() => lessonsApi.restore(lesson))}>
                   {text.sheet.restore}
                 </Button>
               )}
             </SheetFooter>
+            <div className="pb-6">
+              <LessonPanels lesson={lesson} timeZone={timeZone} upcoming={phase === "upcoming"} onChanged={onChanged} onReload={onConflict} onClose={close} />
+            </div>
           </>
         )}
       </SheetContent>

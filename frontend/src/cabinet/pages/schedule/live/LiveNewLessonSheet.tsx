@@ -100,7 +100,16 @@ function Form({ seed, cards, timeZone, onClose, onCreated }: Props & { seed: Liv
     setBusy(true);
     setFailure(null);
     try {
-      const created = draft.repeat
+      const single = {
+        cardId: draft.cardId ?? "",
+        startsAt: zonedToUtc(draft.date, draft.start, timeZone),
+        durationMinutes: draft.durationMin,
+        title: draft.title.trim(),
+        clientRequestId: next.key,
+      };
+      const created = draft.recorded
+        ? [await lessonsApi.recordCompleted(single)]
+        : draft.repeat
         ? await lessonsApi.createSeries({ ...seriesInput(), title: draft.title.trim(), clientRequestId: next.key })
         : [
             await lessonsApi.create({
@@ -111,7 +120,7 @@ function Form({ seed, cards, timeZone, onClose, onCreated }: Props & { seed: Liv
               clientRequestId: next.key,
             }),
           ];
-      notify(draft.repeat ? text.createdSeries(created.length) : text.created);
+      notify(draft.recorded ? text.createdRecorded : draft.repeat ? text.createdSeries(created.length) : text.created);
       onCreated(created);
     } catch (error) {
       setFailure(errorsText[lessonsErrorCode(error)]);
@@ -162,8 +171,15 @@ function Form({ seed, cards, timeZone, onClose, onCreated }: Props & { seed: Liv
         </Field>
 
         <div className="grid grid-cols-2 gap-3">
-          <Field label={text.date} error={errorOf("past")}>
-            <Input type="date" value={draft.date} min={today} aria-invalid={Boolean(errorOf("past"))} onChange={(event) => update({ date: event.target.value })} />
+          <Field label={text.date} error={errorOf("past") ?? errorOf("future")}>
+            <Input
+              type="date"
+              value={draft.date}
+              min={draft.recorded ? undefined : today}
+              max={draft.recorded ? today : undefined}
+              aria-invalid={Boolean(errorOf("past") ?? errorOf("future"))}
+              onChange={(event) => update({ date: event.target.value })}
+            />
           </Field>
           <Field label={text.time}>
             <Input type="time" step={TIME_STEP_MIN * 60} value={draft.start} onChange={(event) => update({ start: event.target.value })} />
@@ -183,12 +199,22 @@ function Form({ seed, cards, timeZone, onClose, onCreated }: Props & { seed: Liv
           />
         </Field>
 
-        <label className="flex items-center gap-2.5 text-sm font-bold">
-          <input type="checkbox" className="size-4 accent-[var(--color-blue)]" checked={draft.repeat} onChange={(event) => update({ repeat: event.target.checked })} />
-          {text.repeat}
+        <label className="grid gap-1 text-sm font-bold">
+          <span className="flex items-center gap-2.5">
+            <input type="checkbox" className="size-4 accent-[var(--color-blue)]" checked={draft.recorded ?? false} onChange={(event) => update({ recorded: event.target.checked, repeat: event.target.checked ? false : draft.repeat })} />
+            {text.recorded}
+          </span>
+          {draft.recorded && <span className="pl-6.5 text-xs font-semibold text-muted-foreground">{text.recordedHint}</span>}
         </label>
 
-        {draft.repeat && (
+        {!draft.recorded && (
+          <label className="flex items-center gap-2.5 text-sm font-bold">
+            <input type="checkbox" className="size-4 accent-[var(--color-blue)]" checked={draft.repeat} onChange={(event) => update({ repeat: event.target.checked })} />
+            {text.repeat}
+          </label>
+        )}
+
+        {draft.repeat && !draft.recorded && (
           <div className="grid gap-3 rounded-xl border bg-secondary/40 p-3">
             <Field label={text.count} hint={text.countHint(MAX_SERIES_COUNT)} error={errorOf("count")}>
               <Input
@@ -227,7 +253,7 @@ function Form({ seed, cards, timeZone, onClose, onCreated }: Props & { seed: Liv
           {text.cancel}
         </Button>
         <Button type="submit" variant="primary" disabled={busy || linked.length === 0}>
-          {draft.repeat ? text.submitSeries(draft.count) : text.submit}
+          {draft.recorded ? text.submitRecorded : draft.repeat ? text.submitSeries(draft.count) : text.submit}
         </Button>
       </SheetFooter>
     </form>

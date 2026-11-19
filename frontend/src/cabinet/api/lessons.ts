@@ -12,10 +12,14 @@ export type LiveLesson = {
   durationMinutes: number;
   status: LessonOutcome;
   title: string;
+  description: string | null;
   preparation: string | null;
   privateNote: string | null;
   outcomeReason: string | null;
   seriesId: string | null;
+  seriesPosition: number | null;
+  isSeriesException: boolean;
+  usesSeriesContent: boolean;
   version: number;
 };
 
@@ -27,10 +31,14 @@ type TeacherLessonView = {
   duration_minutes: number;
   status: LessonOutcome;
   title: string;
+  description?: string | null;
   preparation: string | null;
   private_note: string | null;
   outcome_reason: string | null;
   series_id: string | null;
+  series_position?: number | null;
+  is_series_exception?: boolean;
+  uses_series_content?: boolean;
   version: number;
 };
 
@@ -42,12 +50,59 @@ const toLesson = (view: TeacherLessonView): LiveLesson => ({
   durationMinutes: view.duration_minutes,
   status: view.status,
   title: view.title,
+  description: view.description ?? null,
   preparation: view.preparation,
   privateNote: view.private_note,
   outcomeReason: view.outcome_reason,
   seriesId: view.series_id,
+  seriesPosition: view.series_position ?? null,
+  isSeriesException: view.is_series_exception ?? false,
+  usesSeriesContent: view.uses_series_content ?? false,
   version: view.version,
 });
+
+/** Серия: шаблон содержания и уроки по позициям (docs/api/lessons.md, «Команды для серии»). */
+export type LiveSeries = { id: string; timezone: string; version: number; template: LessonContent; lessons: LiveLesson[] };
+type TeacherSeriesView = { series_id: string; timezone: string; version: number; content_template: Partial<LessonContentView>; lessons: TeacherLessonView[] };
+
+/** Содержание урока: тема, описание, подготовка для ученика и закрытая заметка репетитора. */
+export type LessonContent = { title: string; description: string | null; preparation: string | null; privateNote: string | null };
+type LessonContentView = { title: string; description: string | null; preparation: string | null; private_note: string | null };
+
+const contentBody = (changes: Partial<LessonContent>) => ({
+  ...(changes.title !== undefined ? { title: changes.title } : {}),
+  ...(changes.description !== undefined ? { description: changes.description } : {}),
+  ...(changes.preparation !== undefined ? { preparation: changes.preparation } : {}),
+  ...(changes.privateNote !== undefined ? { private_note: changes.privateNote } : {}),
+});
+
+const toSeries = (view: TeacherSeriesView): LiveSeries => ({
+  id: view.series_id,
+  timezone: view.timezone,
+  version: view.version,
+  template: {
+    title: view.content_template.title ?? "",
+    description: view.content_template.description ?? null,
+    preparation: view.content_template.preparation ?? null,
+    privateNote: view.content_template.private_note ?? null,
+  },
+  lessons: view.lessons.map(toLesson),
+});
+
+/** Запись истории урока для репетитора (LessonChange): событие, когда, что было и что стало. */
+export type LessonChange = {
+  version: number;
+  event: string;
+  occurredAt: string;
+  before: { starts_at?: string; status?: string } | null;
+  after: { starts_at?: string; status?: string } | null;
+  changedFields: string[];
+  reason: string | null;
+};
+type LessonChangeView = { version: number; event: string; occurred_at: string; before: LessonChange["before"]; after: (LessonChange["after"] & { changed_fields?: string[]; reason?: string | null }) | null; changed_fields?: string[]; reason?: string | null };
+
+/** Предпросмотр переноса серии: даты «этот и следующие», занятые интервалы и сохраняемые уроки. */
+export type ReschedulePlan = { occurrences: SeriesOccurrence[]; preserved: number };
 
 /** Урок API — урок календаря на часах зоны профиля. */
 export function toScheduleLesson(lesson: LiveLesson, timeZone: string): ScheduleLesson {
@@ -120,9 +175,86 @@ export const lessonsApi = {
   resetAttendance: async (lesson: LiveLesson) => toLesson(await request<TeacherLessonView>(`${lessonPath(lesson.id)}/attendance/reset`, "POST", { expected_version: lesson.version })),
 
   restore: async (lesson: LiveLesson) => toLesson(await request<TeacherLessonView>(`${lessonPath(lesson.id)}/restore`, "POST", { expected_version: lesson.version })),
+
+  get: async (id: string) => toLesson(await request<TeacherLessonView>(lessonPath(id))),
+
+  /** Урок, который уже прошёл: запись сразу в состоянии «проведён» с фактическим временем (LES-43). */
+  recordCompleted: async (input: NewLessonInput) =>
+    toLesson(
+      await request<TeacherLessonView>("/teacher/lessons/record-completed", "POST", {
+        student_card_id: input.cardId,
+        starts_at: input.startsAt,
+        duration_minutes: input.durationMinutes,
+        title: input.title,
+        client_request_id: input.clientRequestId,
+      }),
+    ),
+
+  /** Правка содержания одного урока (LES-48); null очищает необязательный текст. */
+  update: async (lesson: LiveLesson, changes: Partial<LessonContent>) =>
+    toLesson(await request<TeacherLessonView>(lessonPath(lesson.id), "PATCH", { ...contentBody(changes), expected_version: lesson.version })),
+
+  /** Удаление — с сильным ETag версии в If-Match, как в решении бэкенда. */
+  remove: async (lesson: LiveLesson) => request<void>(lessonPath(lesson.id), "DELETE", undefined, { headers: { "If-Match": `"${lesson.version}"` } }),
+
+  history: async (id: string): Promise<LessonChange[]> =>
+    (await requestAll<LessonChangeView>(`${lessonPath(id)}/history`)).map((item) => ({
+      version: item.version,
+      event: item.event,
+      occurredAt: item.occurred_at,
+      before: item.before,
+      after: item.after,
+      changedFields: item.changed_fields ?? item.after?.changed_fields ?? [],
+      reason: item.reason ?? item.after?.reason ?? null,
+    })),
+
+  /** Предложить перенос одного урока: ученик или родитель принимает или отклоняет (LES-34). */
+  propose: async (lesson: LiveLesson, startsAt: string, durationMinutes: number, reason: string) =>
+    request<unknown>(`${lessonPath(lesson.id)}/reschedule-requests`, "POST", {
+      proposed_starts_at: startsAt,
+      duration_minutes: durationMinutes,
+      expected_version: lesson.version,
+      ...(reason.trim() ? { reason: reason.trim() } : {}),
+    }),
+
+  series: async (id: string) => toSeries(await request<TeacherSeriesView>(`/teacher/lesson-series/${encodeURIComponent(id)}`)),
+
+  /** Правка шаблона серии — меняет будущие уроки, которые от него зависят (LES-54). */
+  updateSeriesContent: async (series: LiveSeries, changes: Partial<LessonContent>) =>
+    toSeries(await request<TeacherSeriesView>(`/teacher/lesson-series/${encodeURIComponent(series.id)}/content`, "PATCH", { ...contentBody(changes), expected_version: series.version })),
+
+  /** Отмена будущих дат серии: все будущие или «этот и следующие» (LES-24, LES-55). */
+  cancelSeries: async (series: LiveSeries, scope: "all_future" | "following", fromLessonId: string | null, reason: string) =>
+    toSeries(
+      await request<TeacherSeriesView>(`/teacher/lesson-series/${encodeURIComponent(series.id)}/cancel`, "POST", {
+        scope,
+        expected_version: series.version,
+        ...(scope === "following" && fromLessonId ? { from_lesson_id: fromLessonId } : {}),
+        ...(reason.trim() ? { reason: reason.trim() } : {}),
+      }),
+    ),
+
+  /** Предпросмотр переноса «этот и следующие» — сервер считает даты и конфликты (LES-20). */
+  previewSeriesMove: async (series: LiveSeries, fromLessonId: string, firstLocalStart: string, durationMinutes: number): Promise<ReschedulePlan> => {
+    const plan = await request<{ occurrences: { series_position: number; starts_at: string; conflicts: boolean }[]; preserved_lesson_ids?: string[] }>(
+      `/teacher/lesson-series/${encodeURIComponent(series.id)}/reschedule/preview`,
+      "POST",
+      { from_lesson_id: fromLessonId, first_local_start: firstLocalStart, duration_minutes: durationMinutes, expected_version: series.version },
+    );
+    return { occurrences: plan.occurrences.map((item) => ({ position: item.series_position, startsAt: item.starts_at, conflicts: item.conflicts })), preserved: plan.preserved_lesson_ids?.length ?? 0 };
+  },
+
+  proposeSeriesMove: async (series: LiveSeries, fromLessonId: string, firstLocalStart: string, durationMinutes: number, reason: string) =>
+    request<unknown>(`/teacher/lesson-series/${encodeURIComponent(series.id)}/reschedule-requests`, "POST", {
+      from_lesson_id: fromLessonId,
+      first_local_start: firstLocalStart,
+      duration_minutes: durationMinutes,
+      expected_version: series.version,
+      ...(reason.trim() ? { reason: reason.trim() } : {}),
+    }),
 };
 
-export type LessonsErrorCode = "timeConflict" | "notLinked" | "stateConflict" | "versionConflict" | "createConflict" | "validation" | "notFound" | "tooManyRequests" | "unavailable";
+export type LessonsErrorCode = "timeConflict" | "notLinked" | "stateConflict" | "versionConflict" | "createConflict" | "reschedulePending" | "absencePending" | "precondition" | "validation" | "notFound" | "tooManyRequests" | "unavailable";
 
 export function lessonsErrorCode(error: unknown): LessonsErrorCode {
   if (!(error instanceof ApiError)) return "unavailable";
@@ -137,6 +269,13 @@ export function lessonsErrorCode(error: unknown): LessonsErrorCode {
       return "versionConflict";
     case "lesson_create_conflict":
       return "createConflict";
+    case "lesson_reschedule_pending":
+      return "reschedulePending";
+    case "lesson_absence_notice_pending":
+      return "absencePending";
+    case "precondition_failed":
+    case "precondition_required":
+      return "precondition";
     case "validation_failed":
       return "validation";
     case "resource_not_found":

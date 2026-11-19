@@ -7,6 +7,7 @@ import { learner } from "./learner.ru";
 import { MyCardsPage } from "./MyCardsPage";
 import { useAccount } from "./useAccount";
 import { Button } from "../cabinet/ui/Button";
+import { NotificationsProvider } from "../cabinet/ui/Notifications";
 
 type Page = "invite" | "parentInvite" | "student" | "parent";
 
@@ -60,12 +61,14 @@ export function LearnerApp({ pathname, page }: { pathname: string; page: Page })
         </p>
       );
     }
-    return <MyCardsPage role={page} />;
+    return <MyCardsPage role={page} timezone={state.account.profile.timezone} />;
   };
 
   return (
-    <LearnerFrame account={account} pathname={pathname}>
-      {content()}
-    </LearnerFrame>
+    <NotificationsProvider>
+      <LearnerFrame account={account} pathname={pathname}>
+        {content()}
+      </LearnerFrame>
+    </NotificationsProvider>
   );
 }
