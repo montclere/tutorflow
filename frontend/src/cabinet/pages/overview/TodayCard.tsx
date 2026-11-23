@@ -1,4 +1,4 @@
-import { Check } from "lucide-react";
+import { ArrowRight, Check } from "lucide-react";
 import { useState } from "react";
 import { cabinet } from "../../content/cabinet.ru";
 import { getStudent } from "../../data";
@@ -8,10 +8,11 @@ import { lessonMark, type LessonMark } from "../../model/overview";
 import { Avatar } from "../../ui/Avatar";
 import { Button } from "../../ui/Button";
 import { CabinetLink } from "../../ui/CabinetLink";
-import { Card } from "../../ui/Card";
+import { OverviewSection } from "./OverviewSection";
+import { addDays, formatDayMonth } from "../../model/dates";
 import { cx } from "../../ui/cx";
 import { useNotifier } from "../../ui/Notifications";
-import { Pill } from "../../ui/Pill";
+import styles from "./overview.module.css";
 import { scheduleHref } from "../schedule/useScheduleUrl";
 
 const text = cabinet.teacher.overview.today;
@@ -21,63 +22,27 @@ type LineProps = { lesson: LessonRow; mark: LessonMark; onOpen: (id: string) => 
 
 function LessonLine({ lesson, mark, onOpen, onMark }: LineProps) {
   const student = getStudent(lesson.studentId);
-  return (
-    <li className={cx("flex items-center gap-3", mark === "marked" && "opacity-60")}>
-      <button
-        type="button"
-        className="appearance-none border-0 bg-transparent text-inherit [font:inherit] -mx-2 flex min-w-0 flex-1 items-center gap-3 rounded-xl px-2 py-3 text-left transition-colors hover:bg-secondary"
-        aria-label={text.openLesson(student.name, lesson.time)}
-        onClick={() => onOpen(lesson.id)}
-      >
-        <span className="w-14 flex-none font-[family-name:var(--font-display)] text-base font-extrabold tabular-nums">{lesson.time}</span>
-        <Avatar initials={student.initials} color={student.color} />
-        <span className="min-w-0 flex-1">
-          <b className="block truncate text-base font-extrabold">{student.name}</b>
-          <span className="block truncate text-sm font-semibold text-muted-foreground">{lesson.goal}</span>
-        </span>
-      </button>
-      {lesson.status === "debt" && <Pill tone="bad">{text.debt}</Pill>}
-      {mark === "toMark" && (
-        <Button size="sm" onClick={() => onMark(lesson.id)}>
-          {text.mark}
-        </Button>
-      )}
-      {mark === "marked" && <Check size={16} className="flex-none text-muted-foreground" aria-label={text.doneLabel} />}
-    </li>
-  );
+  return <li className={cx(styles.line, mark === "marked" && "opacity-60")}>
+    <button type="button" className={styles.lessonButton} aria-label={text.openLesson(student.name, lesson.time)} onClick={() => onOpen(lesson.id)}>
+      <span className={styles.lessonTime}>{lesson.time}</span>
+      <Avatar initials={student.initials} color={student.color} />
+      <span className={styles.person}><b>{student.name}</b><small>{lesson.goal}</small></span>
+    </button>
+    {mark === "toMark" && <Button size="sm" onClick={() => onMark(lesson.id)}>{text.mark}</Button>}
+    {mark === "marked" && <Check size={16} className="flex-none text-muted-foreground" aria-label={text.doneLabel} />}
+  </li>;
 }
 
 function NextLesson({ lesson, onOpen, onJoin }: { lesson: LessonRow; onOpen: (id: string) => void; onJoin: () => void }) {
   const student = getStudent(lesson.studentId);
-  return (
-    <li className="glass-blue relative isolate my-2 overflow-hidden rounded-2xl p-5">
-      {/* Свечения под стеклом (VIBE-13): без них на белой карточке размывать нечего. */}
-      <span className="pointer-events-none absolute -top-16 -right-10 -z-10 size-52 rounded-full bg-[var(--color-lime)] opacity-25 blur-3xl" aria-hidden="true" />
-      <span className="pointer-events-none absolute -bottom-20 left-1/3 -z-10 size-60 rounded-full bg-[#5fe0ff] opacity-20 blur-3xl" aria-hidden="true" />
-      <span className="pointer-events-none absolute -top-10 left-1/4 -z-10 h-24 w-2/3 -rotate-6 rounded-full bg-white/10 blur-2xl" aria-hidden="true" />
-      <div className="flex flex-wrap items-center justify-between gap-2">
-        <span className="font-[family-name:var(--font-display)] text-3xl leading-none font-black tabular-nums">{lesson.time}</span>
-        <span className="rounded-full border border-white/30 bg-white/15 px-3 py-1 text-xs font-extrabold shadow-[inset_0_1px_0_rgb(255_255_255/0.35)] backdrop-blur-md">{formatCountdown(lesson.minutes)}</span>
-      </div>
-      <div className="mt-5 flex flex-wrap items-center gap-3">
-        <button
-          type="button"
-          className="appearance-none border-0 bg-transparent text-inherit [font:inherit] -m-2 flex min-w-40 flex-1 items-center gap-3 rounded-xl p-2 text-left transition-colors hover:bg-white/10"
-          aria-label={text.openLesson(student.name, lesson.time)}
-          onClick={() => onOpen(lesson.id)}
-        >
-          <Avatar initials={student.initials} color={student.color} />
-          <span className="min-w-0 flex-1">
-            <b className="block text-lg font-extrabold">{student.name}</b>
-            <span className="block text-sm font-semibold text-white/75">{lesson.goal}</span>
-          </span>
-        </button>
-        <Button variant="lime" onClick={onJoin}>
-          {text.join}
-        </Button>
-      </div>
-    </li>
-  );
+  return <li className={styles.next}>
+    <button type="button" className={styles.lessonButton} aria-label={text.openLesson(student.name, lesson.time)} onClick={() => onOpen(lesson.id)}>
+      <span className={styles.lessonTime}>{lesson.time}</span>
+      <Avatar initials={student.initials} color={student.color} />
+      <span className={styles.person}><b>{student.name}</b><small>{lesson.goal}</small></span>
+    </button>
+    <div className={styles.nextActions}><span className={styles.countdown}>{formatCountdown(lesson.minutes)}</span><Button variant="lime" onClick={onJoin}>{text.join}<ArrowRight size={16} aria-hidden="true" /></Button></div>
+  </li>;
 }
 
 function EmptyToday({ windows, today }: { windows: FreeWindowLink[]; today: string }) {
@@ -127,11 +92,12 @@ export function TodayCard({ lessons, freeWindows, today, onOpen }: Props) {
   );
 
   return (
-    <Card title={text.title}>
+    <OverviewSection title={text.title}>
+      <h3 className={styles.day}>{cabinet.teacher.overview.mainDate(formatDayMonth(today))}</h3>
       {lessons.today.length === 0 ? (
         <EmptyToday windows={freeWindows} today={today} />
       ) : (
-        <ul className="m-0 list-none p-0">
+        <ul className={styles.timeline}>
           {lessons.today.map((lesson, index) =>
             index === nextIndex ? (
               <NextLesson key={lesson.id} lesson={lesson} onOpen={onOpen} onJoin={() => notifySoon(text.join)} />
@@ -143,10 +109,10 @@ export function TodayCard({ lessons, freeWindows, today, onOpen }: Props) {
       )}
       {lessons.tomorrow.length > 0 && (
         <>
-          <h3 className="m-0 mt-5 border-t border-border pt-4 text-sm font-extrabold tracking-wide text-muted-foreground uppercase">{text.tomorrow}</h3>
-          <ul className="m-0 list-none p-0">{lessons.tomorrow.map(line)}</ul>
+          <h3 className={cx(styles.day, styles.tomorrow)}>{cabinet.teacher.overview.nextDate(formatDayMonth(addDays(today, 1)))}</h3>
+          <ul className={styles.timeline}>{lessons.tomorrow.map(line)}</ul>
         </>
       )}
-    </Card>
+    </OverviewSection>
   );
 }

@@ -3,7 +3,8 @@ import { useState } from "react";
 import { cabinet } from "../content/cabinet.ru";
 import { useLibrary, type WorkKind } from "../tasks/library";
 import { EmptyState } from "../ui/EmptyState";
-import { PageHead } from "../ui/PageHead";
+import { StudyHeading } from "./tasks/StudyHeading";
+import styles from "./review/review.module.css";
 import { ReviewDetail } from "./review/ReviewDetail";
 import { ReviewPanel } from "./review/ReviewPanel";
 
@@ -19,9 +20,9 @@ export function ReviewPage() {
   const work = selected ? works.find((item) => item.id === selected.workId) : undefined;
 
   return (
-    <>
-      <PageHead title={text.title} subtitle={text.subtitle} />
-      <div className="grid grid-cols-[minmax(0,1fr)] items-start gap-4 min-[1001px]:grid-cols-[300px_minmax(0,1fr)]">
+    <div className={styles.page}>
+      <StudyHeading title={text.title} />
+      <div className={styles.columns}>
         <ReviewPanel
           kind={kind}
           onKind={(next) => {
@@ -39,6 +40,6 @@ export function ReviewPage() {
           <EmptyState icon={firstWaiting === undefined && kind === "homework" ? PhChecks : PhCursorClick} title={firstWaiting === undefined && kind === "homework" ? text.allDone : text.emptyDetail} />
         )}
       </div>
-    </>
+    </div>
   );
 }

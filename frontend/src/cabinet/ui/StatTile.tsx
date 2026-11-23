@@ -1,6 +1,7 @@
 import type { AppIcon } from "@/shared/ui/icon";
 import { GradientIcon, type GradientTone } from "@/shared/ui/GradientIcon";
 import { cx } from "./cx";
+import surfaces from "./surfaces.module.css";
 
 /** Тон стекла под цвет иконки: пастель на 60% поверх размытого фона (VIBE-13). */
 const pastel: Record<GradientTone, string> = {
@@ -26,9 +27,9 @@ export function StatTile({ label, value, note, tone, icon, className, onClick }:
       </span>
     </>
   );
-  const classes = cx("glass flex min-w-0 items-center gap-4 rounded-2xl p-5 text-left text-foreground", pastel[tone], className);
+  const classes = cx("glass flex min-w-0 items-center gap-4 rounded-2xl p-5 text-left text-foreground", surfaces.surface, surfaces.compact, surfaces[tone], pastel[tone], className);
   return onClick ? (
-    <button type="button" onClick={onClick} className={cx(classes, "appearance-none [font-family:inherit] transition-transform hover:-translate-y-0.5")}>
+    <button type="button" onClick={onClick} className={cx(classes, surfaces.interactive, "appearance-none [font-family:inherit] hover:-translate-y-0.5")}>
       {body}
     </button>
   ) : (

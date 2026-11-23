@@ -2,7 +2,8 @@ import { useState } from "react";
 import { cabinet } from "../content/cabinet.ru";
 import type { Work, WorkKind } from "../tasks/library";
 import { getDraft } from "../tasks/draft";
-import { PageHead } from "../ui/PageHead";
+import { StudyHeading } from "./tasks/StudyHeading";
+import styles from "./tasks/tasks.module.css";
 import { Tabs } from "../ui/Tabs";
 import { AssignWorkDialog } from "./tasks/AssignWorkDialog";
 import { PrintDialog, type PrintSource } from "./tasks/PrintDialog";
@@ -28,9 +29,9 @@ export function TasksPage({ tab }: { tab: TasksTab }) {
   };
 
   return (
-    <>
-      <PageHead title={text.title} />
-      <div className="mb-4">
+    <div className={styles.page}>
+      <StudyHeading title={text.title} />
+      <div className={styles.tabs}>
         <Tabs label={text.tabsLabel} items={tabItems} selectedId={tab} />
       </div>
       {tab === "create" && <TasksCreate onSave={setSaving} onPdf={printDraft} />}
@@ -46,6 +47,6 @@ export function TasksPage({ tab }: { tab: TasksTab }) {
       />
       <AssignWorkDialog open={assigning !== null} work={assigning} onClose={() => setAssigning(null)} />
       <PrintDialog source={printing} onClose={() => setPrinting(null)} />
-    </>
+    </div>
   );
 }

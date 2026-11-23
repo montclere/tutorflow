@@ -2,6 +2,7 @@ import { ArrowDown, ArrowLeftRight, ArrowUp, ArrowUpDown, Ban, Check } from "luc
 import { useState } from "react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuLabel, DropdownMenuRadioGroup, DropdownMenuRadioItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/shared/ui/kit/dropdown-menu";
 import { ToggleGroup, ToggleGroupItem } from "@/shared/ui/kit/toggle-group";
+import { attendance, homeworkAverage } from "../../model/students";
 import { addDays } from "../../model/dates";
 import { cabinet } from "../../content/cabinet.ru";
 import type { RecentLesson, Student } from "../../mocks/types";
@@ -9,6 +10,8 @@ import { Avatar } from "../../ui/Avatar";
 import { cx } from "../../ui/cx";
 import { formatRubles } from "../../model/format";
 import { balanceBadge, formatBalance } from "./StudentsTable";
+
+import styles from "./students.module.css";
 
 const text = cabinet.teacher.students.journal;
 const GOOD = 0.8;
@@ -18,37 +21,26 @@ const day = (iso: string) => Number(iso.slice(8, 10));
 const weekdayOf = (iso: string) => weekday.format(new Date(`${iso}T00:00:00Z`)).replace(".", "");
 
 /** Посещаемость — доля проведённых среди проведённых и отменённых; перенос не считается пропуском. */
-export function attendance(student: Student): number | null {
-  const counted = student.recentLessons.filter((lesson) => lesson.status !== "moved");
-  if (counted.length === 0) return null;
-  return Math.round((counted.filter((lesson) => lesson.status === "done").length / counted.length) * 100);
-}
-
-/** Средний результат ДЗ по проверенным: несданное считается нулём. */
-export function homeworkAverage(student: Student): number | null {
-  const graded = student.recentLessons.flatMap((lesson) => (lesson.homework ? [lesson.homework] : []));
-  if (graded.length === 0) return null;
-  return Math.round((graded.reduce((sum, homework) => sum + (homework.done ?? 0) / homework.total, 0) / graded.length) * 100);
-}
+export { attendance, homeworkAverage } from "../../model/students";
 
 function Mark({ lesson, compact }: { lesson: RecentLesson | undefined; compact?: boolean }) {
-  if (!lesson) return <span className="text-muted-foreground/40" aria-hidden="true">·</span>;
+  if (!lesson) return <span className="text-muted-foreground/60" aria-hidden="true">—</span>;
   if (lesson.status === "cancelled")
     return (
-      <span className={cx("inline-flex items-center justify-center rounded-lg", compact ? "size-5" : "size-7", "bg-secondary text-muted-foreground")} title={text.cancelled}>
+      <span className={cx("inline-flex items-center justify-center rounded-full", compact ? "size-5" : "size-7", "bg-secondary text-muted-foreground")} title={text.cancelled}>
         <Ban size={14} aria-label={text.cancelled} />
       </span>
     );
   if (lesson.status === "moved")
     return (
-      <span className={cx("inline-flex items-center justify-center rounded-lg", compact ? "size-5" : "size-7", "bg-[var(--cab-warn-soft)] text-[var(--cab-warn)]")} title={text.moved}>
+      <span className={cx("inline-flex items-center justify-center rounded-full", compact ? "size-5" : "size-7", "bg-[var(--cab-warn-soft)] text-[var(--cab-warn)]")} title={text.moved}>
         <ArrowLeftRight size={14} aria-label={text.moved} />
       </span>
     );
   const homework = lesson.homework;
   if (!homework)
     return (
-      <span className={cx("inline-flex items-center justify-center rounded-lg", compact ? "size-5" : "size-7", "bg-[var(--cab-ok-soft)] text-success")} title={text.done(lesson.topic)}>
+      <span className={cx("inline-flex items-center justify-center rounded-full", compact ? "size-5" : "size-7", "bg-[var(--cab-ok-soft)] text-success")} title={text.done(lesson.topic)}>
         <Check size={15} aria-label={text.done(lesson.topic)} />
       </span>
     );
@@ -57,7 +49,7 @@ function Mark({ lesson, compact }: { lesson: RecentLesson | undefined; compact?:
   const tone = missing ? "bg-[var(--cab-bad-soft)] text-destructive" : share >= GOOD ? "bg-[var(--cab-ok-soft)] text-success" : "bg-[var(--cab-warn-soft)] text-[var(--cab-warn)]";
   const label = missing ? text.missing : `${homework.done}/${homework.total}`;
   return (
-    <span className={cx("inline-flex items-center justify-center rounded-lg px-1.5 font-extrabold tabular-nums", compact ? "h-5 min-w-9 text-[10px]" : "h-7 min-w-11 text-xs", tone)} title={text.homework(lesson.topic, homework.title, label)}>
+    <span className={cx(styles.resultMark, "inline-flex items-center justify-center rounded-full px-2 font-extrabold tabular-nums", compact ? "h-5 min-w-9 text-[10px]" : "h-7 min-w-11 text-xs", tone)} title={text.homework(lesson.topic, homework.title, label)}>
       {label}
     </span>
   );
@@ -99,13 +91,12 @@ export function periodDates(students: Student[], today: string, days: JournalPer
 
 type Props = { students: Student[]; today: string; selectedId: string | null; onOpen: (id: string) => void };
 
-const headCell = "border-b border-border/70 bg-card/95 px-3 py-2.5 text-left text-xs font-bold tracking-wide whitespace-nowrap text-muted-foreground uppercase backdrop-blur";
-const sumCell = "z-10 border-b border-border/70 bg-card/95 px-3 py-2 tabular-nums backdrop-blur group-hover:bg-secondary";
-// Имя и итоги закреплены слева — при длинном периоде вбок прокручиваются только даты.
-const stickyName = "sticky left-0 w-[240px] min-w-[240px] max-w-[240px]";
-const stickyAttendance = "sticky left-[240px] w-[84px] min-w-[84px]";
-const stickyAverage = "sticky left-[324px] w-[84px] min-w-[84px]";
-const stickyBalance = "sticky left-[408px] w-[116px] min-w-[116px]";
+const headCell = styles.head;
+const sumCell = styles.summaryCell;
+const stickyName = styles.nameCol;
+const stickyAttendance = styles.attendanceCol;
+const stickyAverage = styles.averageCol;
+const stickyBalance = styles.balanceCol;
 
 /** Заголовок итоговой колонки: стрелка показывает текущую сортировку, выбор — кнопкой «Сортировка». */
 function Head({ id, label, className, sort }: { id: JournalSort["key"]; label: string; className?: string; sort: JournalSort }) {
@@ -128,7 +119,7 @@ function SortMenu({ sort, onSort }: { sort: JournalSort; onSort: (sort: JournalS
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <button type="button" className="inline-flex h-9 items-center gap-2 rounded-lg border bg-card px-3 text-sm font-bold [font-family:inherit] hover:bg-secondary data-[state=open]:bg-secondary">
+        <button type="button" className={styles.sort}>
           <ArrowUpDown size={15} aria-hidden="true" />
           {text.sort.button}: <span className="text-primary">{text.sort.keys[sort.key]}</span>
           <span className="text-muted-foreground">{text.sort.dirs[sort.key][sort.dir]}</span>
@@ -171,31 +162,33 @@ export function StudentsJournal({ students, today, selectedId, onOpen }: Props) 
 
   return (
     <div className="max-[520px]:hidden">
-      <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
-        <ToggleGroup type="single" spacing={1} value={String(period)} aria-label={text.periodLabel} className="gap-1 rounded-lg border bg-card p-1" onValueChange={(value) => value && setPeriod(Number(value) as JournalPeriod)}>
+      <div className={styles.journalControls}>
+        <ToggleGroup type="single" spacing={1} value={String(period)} aria-label={text.periodLabel} className={styles.period} onValueChange={(value) => value && setPeriod(Number(value) as JournalPeriod)}>
           {([14, 31] as const).map((days) => (
             <ToggleGroupItem key={days} value={String(days)} className="h-7 px-3 text-sm font-bold data-[state=on]:bg-accent data-[state=on]:text-accent-foreground">
               {text.periods[days]}
             </ToggleGroupItem>
           ))}
         </ToggleGroup>
-        <div className="flex flex-wrap items-center gap-3">
+        <div className={styles.journalMeta}>
           <span className="text-sm font-semibold text-muted-foreground">{text.counts(rows.length, dates.length)}</span>
           <SortMenu sort={sort} onSort={setSort} />
         </div>
       </div>
-      <div className="glass max-h-[calc(100vh-290px)] min-h-64 overflow-auto rounded-2xl">
-        <table className="w-max min-w-full border-separate border-spacing-0 text-sm" aria-label={text.label}>
-          <thead className="sticky top-0 z-20">
+      {/* Область прокрутки доступна с клавиатуры: стрелки прокручивают даты без выбора ученика. */}
+      {/* eslint-disable-next-line jsx-a11y/no-noninteractive-tabindex */}
+      <div className={styles.journal} role="region" aria-label={text.label} tabIndex={0}>
+        <table className={styles.table} aria-label={text.label}>
+          <thead>
             <tr>
               <Head sort={sort} id="name" label={text.student} className={cx(stickyName, "z-30")} />
-              <Head sort={sort} id="attendance" label={text.attendance} className={cx(stickyAttendance, "z-30 border-l")} />
-              <Head sort={sort} id="average" label={text.average} className={cx(stickyAverage, "z-30 border-l")} />
-              <Head sort={sort} id="balance" label={text.balance} className={cx(stickyBalance, "z-30 border-r-2 border-l border-r-border")} />
+              <Head sort={sort} id="attendance" label={text.attendance} className={stickyAttendance} />
+              <Head sort={sort} id="average" label={text.average} className={stickyAverage} />
+              <Head sort={sort} id="balance" label={text.balance} className={stickyBalance} />
               {dates.map((date) => (
-                <th key={date} scope="col" className={cx(headCell, "min-w-16 border-l px-1 text-center normal-case", date === today && "text-primary")}>
-                  <span className={cx("block font-[family-name:var(--font-display)] text-sm font-extrabold tabular-nums", date === today ? "text-primary" : "text-foreground")}>{day(date)}</span>
-                  <span className="block text-[11px] font-semibold">{weekdayOf(date)}</span>
+                <th key={date} scope="col" className={cx(headCell, styles.dateHead, date === today && styles.today)}>
+                  <b>{day(date)}</b>
+                  <small>{weekdayOf(date)}</small>
                 </th>
               ))}
               {dates.length === 0 && <th scope="col" className={cx(headCell, "w-full border-l normal-case")}>{text.noDates}</th>}
@@ -207,37 +200,37 @@ export function StudentsJournal({ students, today, selectedId, onOpen }: Props) 
               for (const lesson of student.recentLessons) byDate.set(lesson.date, [...(byDate.get(lesson.date) ?? []), lesson]);
               const selected = student.id === selectedId;
               return (
-                <tr key={student.id} className={cx("group cursor-pointer", selected && "[&>td]:bg-accent/60")} onClick={() => onOpen(student.id)}>
-                  <th scope="row" className={cx(stickyName, "z-10 border-b border-border/70 bg-card/95 px-3 py-2 text-left font-normal backdrop-blur group-hover:bg-secondary", selected && "bg-accent")}>
-                    <span className="flex items-center gap-3">
-                      <span className="w-5 text-xs font-bold text-muted-foreground tabular-nums">{index + 1}</span>
+                <tr key={student.id} className={cx("group", styles.row, selected && styles.selected)} onClick={() => onOpen(student.id)}>
+                  <th scope="row" className={cx(stickyName, styles.personCell)}>
+                    <span className={styles.person}>
+                      <span className={styles.rowIndex}>{index + 1}</span>
                       <Avatar initials={student.initials} color={student.color} />
-                      <span className="grid min-w-0">
+                      <span className={styles.personText}>
                         <button
                           type="button"
                           data-student-button={student.id}
                           aria-label={cabinet.teacher.students.openCard(student.name)}
-                          className="block max-w-36 truncate rounded-sm border-0 bg-transparent p-0 text-left text-sm font-extrabold outline-none focus-visible:ring-[3px] focus-visible:ring-ring/40"
+                          className="focus-visible:ring-[3px] focus-visible:ring-ring/40"
                         >
                           {student.name}
                         </button>
-                        <span className="max-w-36 truncate text-xs font-semibold text-muted-foreground">{student.goal}</span>
+                        <small>{student.goal}</small>
                       </span>
                     </span>
                   </th>
-                  <td className={cx(sumCell, stickyAttendance, "border-l", selected && "bg-accent")}>
+                  <td className={cx(sumCell, stickyAttendance)}>
                     <Percent value={attendance(student)} />
                   </td>
-                  <td className={cx(sumCell, stickyAverage, "border-l", selected && "bg-accent")}>
+                  <td className={cx(sumCell, stickyAverage)}>
                     <Percent value={homeworkAverage(student)} />
                   </td>
-                  <td className={cx(sumCell, stickyBalance, "border-r-2 border-l border-r-border", selected && "bg-accent")}>
+                  <td className={cx(sumCell, stickyBalance)}>
                     <span title={formatBalance(student.balance)} className={cx("inline-flex rounded-full px-2.5 py-0.5 text-xs font-extrabold whitespace-nowrap", balanceBadge(student.balance))}>
                       {shortBalance(student.balance)}
                     </span>
                   </td>
                   {dates.map((date) => (
-                    <td key={date} className={cx("border-b border-l border-border/70 px-1 py-2 text-center group-hover:bg-secondary/50", date === today && "bg-accent/30")}>
+                    <td key={date} className={cx(styles.dateCell, date === today && styles.today)}>
                       <span className="inline-grid gap-1">
                         {(byDate.get(date) ?? [undefined]).map((lesson, lessonIndex, all) => (
                           <Mark key={lessonIndex} lesson={lesson} compact={all.length > 1} />
@@ -252,7 +245,7 @@ export function StudentsJournal({ students, today, selectedId, onOpen }: Props) 
           </tbody>
         </table>
       </div>
-      <ul className="m-0 mt-3 flex list-none flex-wrap gap-x-5 gap-y-2 p-0 text-xs font-semibold text-muted-foreground" aria-label={text.legendLabel}>
+      <ul className={styles.legend} aria-label={text.legendLabel}>
         <li className="flex items-center gap-1.5"><span className="inline-flex h-5 min-w-8 items-center justify-center rounded-md bg-[var(--cab-ok-soft)] px-1 text-[10px] font-extrabold text-success">9/10</span>{text.legend.homework}</li>
         <li className="flex items-center gap-1.5"><span className="inline-flex h-5 min-w-8 items-center justify-center rounded-md bg-[var(--cab-bad-soft)] px-1 text-[10px] font-extrabold text-destructive">{text.missing}</span>{text.legend.missing}</li>
         <li className="flex items-center gap-1.5"><span className="inline-flex size-5 items-center justify-center rounded-md bg-[var(--cab-ok-soft)] text-success"><Check size={12} aria-hidden="true" /></span>{text.legend.done}</li>

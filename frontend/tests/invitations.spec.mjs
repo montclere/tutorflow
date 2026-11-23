@@ -58,7 +58,8 @@ async function registerTeacher(page, contact, name) {
   await page.goto("/")
   await register(page.locator("#signup"), contact, "email", name)
   await page.getByRole("button", { name: "Включить кабинет и перейти" }).click()
-  await expect(page.getByRole("heading", { name: `Добрый день, ${name.split(" ")[0]}` })).toBeVisible()
+  await expect(page).toHaveURL(/\/teacher$/)
+  await expect(page.getByRole("heading", { name: "Сегодня в работе", level: 1 })).toBeVisible()
 }
 
 async function invitation(teacher, purpose) {
@@ -86,6 +87,11 @@ test("репетитор, ученик и родитель проходят пр
   try {
     const teacher = await teacherContext.newPage()
     await registerTeacher(teacher, email(), "Анна Репетитор")
+    // WEB-INTEGRATION-1: серверных функций здесь ещё нет; рабочая сборка не выдаёт демо за настоящие данные.
+    for (const path of ["/teacher/finance", "/teacher/tasks", "/teacher/review"]) {
+      await teacher.goto(path)
+      await expect(teacher.getByText("Раздел скоро", { exact: true })).toBeVisible()
+    }
     await teacher.getByRole("link", { name: "Ученики" }).click()
     await expect(teacher.getByRole("heading", { name: "Ученики" })).toBeVisible()
 
@@ -153,7 +159,7 @@ test("репетитор, ученик и родитель проходят пр
     await expect(teacher.getByText("Урок поставлен").first()).toBeVisible()
     await teacher.getByRole("button", { name: /Илья Ученик · 16:00–17:00/ }).click()
     const lesson = teacher.getByRole("dialog")
-    await lesson.getByRole("button", { name: "Отменить урок" }).click()
+    await lesson.getByRole("button", { name: "Отменить", exact: true }).click()
     await lesson.getByLabel(/Причина отмены/).fill("Каникулы")
     await lesson.getByRole("button", { name: "Отменить урок" }).click()
     await expect(lesson.getByText("Отменён", { exact: true })).toBeVisible()
@@ -175,4 +181,21 @@ test("репетитор, ученик и родитель проходят пр
   } finally {
     await Promise.all([teacherContext, learnerContext, parentContext, outsiderContext].map(context => context.close()))
   }
+})
+
+// WEB-INTEGRATION-2: изображения вне /assets не должны подменяться HTML страницы.
+test("публичные ресурсы лендинга и маршруты SPA доступны в рабочей сборке", async ({ request }) => {
+  for (const path of ["/favicon.svg", "/landing/assets/brand/tyutor-logo.svg"]) {
+    const resource = await request.get(path)
+    expect(resource.ok()).toBeTruthy()
+    expect(resource.headers()["content-type"]).toContain("image/svg+xml")
+    expect(await resource.text()).toContain("<svg")
+  }
+  const image = await request.get("/og-image.png")
+  expect(image.ok()).toBeTruthy()
+  expect(image.headers()["content-type"]).toContain("image/png")
+  const page = await request.get("/teacher/students")
+  expect(page.ok()).toBeTruthy()
+  expect(page.headers()["content-type"]).toContain("text/html")
+  expect(await page.text()).toContain('id="root"')
 })

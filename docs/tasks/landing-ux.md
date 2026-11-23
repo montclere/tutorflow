@@ -3,7 +3,7 @@
 - Статус: готово к ревью.
 - Исполнитель: Claude. Ревьюер: владелец проекта.
 - Ветка: текущая рабочая `codex/work-from-dev`; commit не выполнялся.
-- Результат: исправлены замечания из [UX-REVIEW.md](../../UX-REVIEW.md), стиль страницы сохранён.
+- Результат: исправлены замечания из [UX-REVIEW.md](../archive/landing-ux-review.md), стиль страницы сохранён.
 - ID правил: LANDING-1…10.
 - Файлы и общие точки пересечения: `landing.ru.ts`, `App.tsx`, `main.tsx`, секции лендинга, `SignupCta`, `MethodStep`, `wizard.module.css`, `docs/behavior.md`, `docs/stages.md`, `.env.example`, `vite-env.d.ts`.
 - Вне объёма: кабинет, API, новые зависимости, сведение шкалы кеглей в `tokens.css` (затрагивает кабинет и меняет стиль), смена названия продукта.

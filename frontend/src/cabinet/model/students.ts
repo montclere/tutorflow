@@ -93,3 +93,17 @@ export function debtLessons(student: Pick<Student, "balance" | "payment">): numb
   const price = student.payment.pricePerLesson;
   return student.balance < 0 && price > 0 ? Math.ceil(-student.balance / price) : 0;
 }
+
+/** Посещаемость — доля проведённых среди проведённых и отменённых; перенос не считается пропуском. */
+export function attendance(student: Student): number | null {
+  const counted = student.recentLessons.filter((lesson) => lesson.status !== "moved");
+  if (counted.length === 0) return null;
+  return Math.round((counted.filter((lesson) => lesson.status === "done").length / counted.length) * 100);
+}
+
+/** Средний результат ДЗ по проверенным: несданное считается нулём. */
+export function homeworkAverage(student: Student): number | null {
+  const graded = student.recentLessons.flatMap((lesson) => (lesson.homework ? [lesson.homework] : []));
+  if (graded.length === 0) return null;
+  return Math.round((graded.reduce((sum, homework) => sum + (homework.done ?? 0) / homework.total, 0) / graded.length) * 100);
+}

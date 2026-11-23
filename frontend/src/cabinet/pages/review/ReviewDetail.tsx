@@ -10,6 +10,7 @@ import { Avatar } from "../../ui/Avatar";
 import { cx } from "../../ui/cx";
 import { Pill } from "../../ui/Pill";
 import { RichText } from "../../ui/RichText";
+import styles from "./review.module.css";
 import { ExtendedReview } from "./ExtendedReview";
 
 const text = cabinet.teacher.review;
@@ -37,7 +38,7 @@ function AutoPart({ assignment, work }: { assignment: Assignment; work: Work }) 
   if (auto.length === 0) return null;
   const score = attemptScore(work.items, last.results);
   return (
-    <section className="grid gap-3 glass rounded-2xl p-5">
+    <section className={styles.autoPart}>
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-3">
           <span className="grid size-9 place-items-center rounded-xl bg-[var(--cab-ok-soft)] text-success" aria-hidden="true">
@@ -53,7 +54,7 @@ function AutoPart({ assignment, work }: { assignment: Assignment; work: Work }) 
           <ChevronDown size={14} className={cx("transition-transform", open && "rotate-180")} aria-hidden="true" />
         </button>
       </div>
-      <ol className="m-0 flex list-none flex-wrap gap-1.5 p-0" aria-hidden={open}>
+      <ol className="m-0 flex list-none flex-wrap gap-1.5 p-0" hidden={!open}>
         {work.items.map((task, index) => {
           const result = last.results[task.id]?.correct;
           return (
@@ -105,8 +106,8 @@ export function ReviewDetail({ assignment, work }: { assignment: Assignment; wor
   const minutes = last ? Math.max(1, Math.round((last.finishedAt - last.startedAt) / 60_000)) : 0;
 
   return (
-    <div className="grid content-start gap-4">
-      <header className="flex flex-wrap items-center gap-3 glass rounded-2xl p-5">
+    <div className={styles.detail}>
+      <header className={styles.studentHeader}>
         <Avatar initials={student.initials} color={student.color} large />
         <div className="grid min-w-0 flex-1 gap-0.5">
           <h2 className="m-0 font-[family-name:var(--font-display)] text-xl font-black">{student.name}</h2>
@@ -123,12 +124,12 @@ export function ReviewDetail({ assignment, work }: { assignment: Assignment; wor
         <p className="m-0 rounded-2xl border border-dashed bg-card p-8 text-center text-sm font-semibold text-muted-foreground">{text.testResult.none}</p>
       ) : (
         <>
-          <AutoPart assignment={assignment} work={work} />
-          {pending.map((task) => (
-            <ExtendedReview key={`${assignment.id}-${task.id}`} assignment={assignment} task={task} index={work.items.indexOf(task) + 1} />
+          {pending.length === 0 && <AutoPart assignment={assignment} work={work} />}
+          {pending.map((task, pendingIndex) => (
+            <ExtendedReview key={`${assignment.id}-${task.id}`} assignment={assignment} task={task} index={work.items.indexOf(task) + 1} auto={pendingIndex === 0 ? <AutoPart assignment={assignment} work={work} /> : undefined} />
           ))}
           {graded.map((task) => (
-            <section key={task.id} className="flex flex-wrap items-center gap-3 glass rounded-2xl p-4 text-sm">
+            <section key={task.id} className={styles.graded}>
               <Check size={16} className="text-success" aria-hidden="true" />
               <b>{text.task.title(work.items.indexOf(task) + 1, task.points)}</b>
               <span className="font-semibold text-muted-foreground">{text.grade.done(last.results[task.id]?.points ?? 0, task.points)}</span>

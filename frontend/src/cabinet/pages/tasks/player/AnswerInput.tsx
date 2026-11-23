@@ -4,6 +4,8 @@ import { tasksText } from "../../../tasks/tasks.ru";
 import type { AnswerResponse, AnswerSpec } from "../../../tasks/types";
 import { cx } from "../../../ui/cx";
 
+import styles from "./test-modal.module.css";
+
 const text = tasksText.player;
 const MAX_PHOTOS = 5;
 
@@ -14,12 +16,14 @@ type Props = {
   /** После проверки ответ менять нельзя (тренировка). */
   locked?: boolean;
   onSubmit?: () => void;
+  appearance?: "test-modal";
 };
 
 const letter = (index: number) => String.fromCharCode(0x0410 + index);
 
 /** Поле ответа под тип задачи — одинаково для всех предметов (TASKS-8). */
-export function AnswerInput({ spec, value, onChange, locked, onSubmit }: Props) {
+export function AnswerInput({ spec, value, onChange, locked, onSubmit, appearance }: Props) {
+  const modern = appearance === "test-modal";
   const id = useId();
   const fileRef = useRef<HTMLInputElement>(null);
 
@@ -60,7 +64,7 @@ export function AnswerInput({ spec, value, onChange, locked, onSubmit }: Props) 
       onChange({ kind: "choice", selected });
     };
     return (
-      <fieldset className="m-0 grid gap-2 border-0 p-0">
+      <fieldset className={cx("m-0 grid gap-2 border-0 p-0", modern && styles.choices)}>
         <legend className="mb-2 text-sm font-bold text-muted-foreground">{many ? text.chooseMany : text.chooseOne}</legend>
         {spec.options.map((option, index) => {
           const on = value.selected.includes(index);
@@ -75,12 +79,14 @@ export function AnswerInput({ spec, value, onChange, locked, onSubmit }: Props) 
               className={cx(
                 "flex w-full appearance-none items-center gap-3 rounded-xl border-2 px-4 py-3 text-left text-base font-bold text-foreground [font-family:inherit] transition-colors disabled:cursor-default",
                 on ? "border-primary bg-accent" : "border-border bg-card hover:border-primary/50",
+                modern && styles.choice,
               )}
             >
-              <span className={cx("grid size-7 flex-none place-items-center text-sm font-extrabold tabular-nums", many ? "rounded-md" : "rounded-full", on ? "bg-primary text-primary-foreground" : "bg-secondary")}>
-                {on ? <Check size={15} aria-hidden="true" /> : index + 1}
+              <span aria-hidden={modern || undefined} className={cx("grid size-7 flex-none place-items-center text-sm font-extrabold tabular-nums", many ? "rounded-md" : "rounded-full", on ? "bg-primary text-primary-foreground" : "bg-secondary", modern && styles.choiceNumber)}>
+                {modern ? index + 1 : on ? <Check size={15} aria-hidden="true" /> : index + 1}
               </span>
               <span className="min-w-0 flex-1">{option}</span>
+              {modern && <span className={styles.choiceCheck} data-single={!many || undefined} aria-hidden="true">{on && <Check size={17} />}</span>}
             </button>
           );
         })}

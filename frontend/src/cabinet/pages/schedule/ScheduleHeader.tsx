@@ -9,6 +9,8 @@ import { Calendar } from "@/shared/ui/kit/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/shared/ui/kit/popover";
 import { ToggleGroup, ToggleGroupItem } from "@/shared/ui/kit/toggle-group";
 
+import styles from "./schedule.module.css";
+
 const text = cabinet.teacher.schedule;
 
 type Props = {
@@ -26,21 +28,20 @@ export function ScheduleHeader({ view, date, today, onChange, onAdd }: Props) {
   const showsToday = today >= range.from && today <= range.to;
 
   return (
-    <div className="mb-4 flex flex-wrap items-center justify-between gap-x-4 gap-y-3">
-      <div className="flex flex-wrap items-center gap-2">
+    <div className={styles.header}>
+      <div className={styles.headerStart}>
+        <h1 className={styles.title}>{text.title}</h1>
         <Popover open={pickerOpen} onOpenChange={setPickerOpen}>
-          <h1 className="m-0 mr-1 font-[family-name:var(--font-display)] text-2xl leading-tight font-black tracking-tight max-[520px]:text-xl">
             <PopoverTrigger asChild>
               <button
                 type="button"
-                className="-ml-2 inline-flex min-h-9 items-center gap-2 rounded-lg border border-transparent bg-transparent px-2 text-left font-[inherit] text-[length:inherit] leading-[inherit] font-black tracking-[inherit] transition-colors duration-150 hover:bg-secondary focus-visible:ring-[3px] focus-visible:ring-ring/40 motion-reduce:transition-none"
+                className={styles.datePicker}
                 aria-label={`${text.pickDate}: ${periodTitle(view, date)}`}
               >
+                <CalendarDays size={19} aria-hidden="true" />
                 {periodTitle(view, date)}
-                <CalendarDays size={18} className="text-muted-foreground" aria-hidden="true" />
               </button>
             </PopoverTrigger>
-          </h1>
           <PopoverContent className="w-auto p-0" align="start">
             <Calendar
               mode="single"
@@ -62,13 +63,13 @@ export function ScheduleHeader({ view, date, today, onChange, onAdd }: Props) {
           {text.today}
         </Button>
       </div>
-      <div className="flex flex-wrap items-center gap-2">
+      <div className={styles.headerActions}>
         <ToggleGroup
           type="single"
           value={view}
           spacing={1}
           aria-label={text.viewLabel}
-          className="gap-1 rounded-lg border bg-card p-1 max-[520px]:w-full"
+          className={styles.viewSwitch}
           onValueChange={(value) => value && onChange({ view: value as ScheduleView })}
         >
           {text.views.map((item) => (

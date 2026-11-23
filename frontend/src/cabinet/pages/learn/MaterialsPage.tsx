@@ -1,85 +1,57 @@
-import { Download, ExternalLink } from "lucide-react";
-import { useState } from "react";
-import { getSchedule, getStudentDetails, markMaterialOpened } from "../../data";
+import { Search, X } from "lucide-react";
+import { useRef, useState } from "react";
+import { ToggleGroup, ToggleGroupItem } from "@/shared/ui/kit/toggle-group";
+import { cabinet } from "../../content/cabinet.ru";
+import { getStudentDetails } from "../../data";
 import { useStudents } from "../../data/useStudents";
 import { demoStudentId } from "../../mocks/student";
-import type { MaterialKind } from "../../mocks/types";
-import { formatShortDate } from "../../model/dates";
-import { formatBytes } from "../../model/materials";
-import { cabinet } from "../../content/cabinet.ru";
-import { cx } from "../../ui/cx";
-import { MaterialIcon } from "../../ui/MaterialIcon";
-import { PageHead } from "../../ui/PageHead";
-import { ToggleGroup, ToggleGroupItem } from "@/shared/ui/kit/toggle-group";
-import { chunky } from "./chunky";
-import styles from "./learn.module.css";
+import { studentMaterialsView, type StudentMaterialFilter } from "../../model/studentMaterials";
+import { StudentMaterialCard } from "../student-materials/StudentMaterialCard";
+import styles from "../student-materials/student-materials.module.css";
 import { learnText } from "./learn.ru";
 
 const text = learnText.materials;
 const kinds = cabinet.teacher.students.profile.materials.kinds;
-const home = cabinet.student.home;
-type Filter = "all" | MaterialKind;
 
-/** «Материалы» ученика: всё, что прислал репетитор, с фильтром по типу; открытие отмечается (STUDENT-3). */
+/** STUDENT-MATERIALS-UI-1/2: материалы текущего ученика, прежняя отметка открытия. */
 export function MaterialsPage() {
   useStudents();
   const { materials } = getStudentDetails(demoStudentId);
-  const [filter, setFilter] = useState<Filter>("all");
-  const present = [...new Set(materials.map((material) => material.kind))];
-  const shown = filter === "all" ? materials : materials.filter((material) => material.kind === filter);
-  const unread = materials.filter((material) => !material.openedAt).length;
+  const [filter, setFilter] = useState<StudentMaterialFilter>("all");
+  const [query, setQuery] = useState("");
+  const searchRef = useRef<HTMLInputElement>(null);
+  const view = studentMaterialsView(materials, filter, query);
+  const featured = view.shown.find((material) => material.id === view.featuredId);
+  const ordered = featured ? [featured, ...view.shown.filter((material) => material.id !== featured.id)] : view.shown;
 
-  return (
-    <>
-      <PageHead title={text.title} subtitle={unread > 0 ? `${text.subtitle} · ${text.unread(unread)}` : text.subtitle} />
-      {present.length > 1 && (
-        <ToggleGroup type="single" spacing={1} value={filter} aria-label={text.filterLabel} className="mb-4 w-fit flex-wrap gap-1 rounded-2xl border-2 bg-card p-1" onValueChange={(value) => value && setFilter(value as Filter)}>
-          {(["all", ...present] as Filter[]).map((id) => (
-            <ToggleGroupItem key={id} value={id} className="h-8 rounded-xl px-3 text-sm font-bold data-[state=on]:bg-accent data-[state=on]:text-accent-foreground">
-              {id === "all" ? text.all : kinds[id]}
-            </ToggleGroupItem>
-          ))}
+  return <div className={styles.root}>
+    <header className={styles.header}>
+      <h1>{text.title}</h1>
+      <picture className={styles.art}>
+        <source srcSet="/student-materials/books-600.webp 600w, /student-materials/books.webp 1000w" sizes="(max-width: 1279px) 220px, 320px" type="image/webp" />
+        <img src="/student-materials/books.webp" width="1000" height="667" alt="" decoding="async" />
+      </picture>
+    </header>
+    <div className={styles.toolbar}>
+      <div className={styles.filters}>
+        <ToggleGroup type="single" spacing={1} value={filter} aria-label={text.filterLabel} className={styles.tabs} onValueChange={(value) => value && setFilter(value as StudentMaterialFilter)}>
+          {view.filters.map((id) => <ToggleGroupItem key={id} value={id} className={styles.tab}>{id === "all" ? text.all : kinds[id]}</ToggleGroupItem>)}
         </ToggleGroup>
-      )}
-      {shown.length === 0 ? (
-        <p className="m-0 rounded-3xl border-2 border-dashed bg-card p-10 text-center text-sm font-semibold text-muted-foreground">{text.empty}</p>
-      ) : (
-        <ul className="m-0 grid list-none gap-4 p-0 min-[821px]:grid-cols-2">
-          {shown.map((material, index) => {
-            const isLink = material.kind === "link";
-            return (
-              <li key={material.id} className={cx("grid content-between gap-4 rounded-3xl border-2 bg-card p-5", styles.rise)} style={{ "--delay": `${index * 60}ms` } as React.CSSProperties}>
-                <div className="flex items-start gap-4">
-                  <MaterialIcon kind={material.kind} />
-                  <div className="grid min-w-0 flex-1 gap-1">
-                    <b className="flex flex-wrap items-center gap-2 text-base font-extrabold">
-                      {material.title}
-                      {!material.openedAt && <span className="rounded-full bg-highlight px-2 py-0.5 text-xs font-extrabold text-highlight-foreground">{home.materialNew}</span>}
-                    </b>
-                    <span className="text-sm font-semibold text-muted-foreground tabular-nums">
-                      {[kinds[material.kind], material.sizeBytes ? formatBytes(material.sizeBytes) : null, home.materialSent(formatShortDate(material.sentAt))].filter(Boolean).join(" · ")}
-                    </span>
-                    {material.note && <p className="m-0 mt-1 rounded-xl bg-secondary/70 px-3 py-2 text-sm font-semibold">{material.note}</p>}
-                  </div>
-                </div>
-                {material.url && (
-                  <a
-                    href={material.url}
-                    target="_blank"
-                    rel="noreferrer"
-                    download={isLink ? undefined : material.fileName}
-                    onClick={() => markMaterialOpened(material.id, getSchedule().today)}
-                    className={chunky(material.openedAt ? "ghost" : "primary", "w-fit no-underline")}
-                  >
-                    {isLink ? <ExternalLink size={16} aria-hidden="true" /> : <Download size={16} aria-hidden="true" />}
-                    {isLink ? home.open : home.download}
-                  </a>
-                )}
-              </li>
-            );
-          })}
-        </ul>
-      )}
-    </>
-  );
+        <span className={styles.unread} role="status">{text.unread(view.unread)}</span>
+      </div>
+      <label className={styles.search}>
+        <Search size={20} aria-hidden="true" />
+        <input ref={searchRef} type="search" aria-label={text.search} placeholder={text.search} value={query} onChange={(event) => setQuery(event.target.value)} />
+        {query && <button type="button" aria-label={text.clearSearch} title={text.clearSearch} onClick={() => { setQuery(""); searchRef.current?.focus(); }}><X size={17} aria-hidden="true" /></button>}
+      </label>
+    </div>
+    <p className={styles.srOnly} role="status">{text.results(view.shown.length)}</p>
+    {ordered.length > 0 ? <ul className={styles.grid} aria-label={text.listLabel}>
+      {ordered.map((material) => <StudentMaterialCard key={material.id} material={material} featured={material.id === view.featuredId} />)}
+    </ul> : <section className={styles.empty}>
+      <h2>{materials.length > 0 ? text.noResults : text.empty}</h2>
+      <p>{materials.length > 0 ? text.noResultsNote : text.emptyNote}</p>
+      {materials.length > 0 && <button type="button" className={styles.reset} onClick={() => { setFilter("all"); setQuery(""); searchRef.current?.focus(); }}>{text.reset}</button>}
+    </section>}
+  </div>;
 }

@@ -1,180 +1,95 @@
-import { Bot, Check, ChevronDown, Loader2, RotateCcw, Sparkles, X } from "lucide-react";
-import { useState } from "react";
+import { Check, ChevronDown, FileText, Image, Info, Loader2, Pencil, Save, Sparkles, Star, Undo2, X } from "lucide-react";
+import { useId, useState, useSyncExternalStore, type ReactNode } from "react";
 import { cabinet } from "../../content/cabinet.ru";
 import { gradeTask, returnAssignment, type Assignment } from "../../tasks/library";
 import { aiReview, solutionOf, type AiReview } from "../../tasks/reviewAi";
 import type { TaskItem } from "../../tasks/types";
 import { Button } from "../../ui/Button";
-import { cx } from "../../ui/cx";
 import { useNotifier } from "../../ui/Notifications";
 import { RichText } from "../../ui/RichText";
-import { ToggleGroup, ToggleGroupItem } from "@/shared/ui/kit/toggle-group";
-import styles from "../pages.module.css";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/shared/ui/kit/select";
+import { clearReviewDraft, getReviewDraft, reviewDraftKey, subscribeReviewDrafts, updateReviewDraft } from "./model/reviewDraft";
+import styles from "./review.module.css";
 
 const text = cabinet.teacher.review;
 const AI_DELAY_MS = 1100;
 
-type AiState = { kind: "idle" } | { kind: "checking" } | { kind: "done"; review: AiReview };
-
-/** Проверка развёрнутой задачи: решение, разбор ИИ по кнопке и оценка репетитора (REVIEW-3, REVIEW-4). */
-export function ExtendedReview({ assignment, task, index }: { assignment: Assignment; task: TaskItem; index: number }) {
+export function ExtendedReview({ assignment, task, index, auto }: { assignment: Assignment; task: TaskItem; index: number; auto?: ReactNode }) {
   const { notify } = useNotifier();
-  const photos = (() => {
-    const answer = assignment.attempts.at(-1)?.answers[task.id];
-    return answer?.kind === "extended" ? answer.photos : [];
-  })();
+  const commentErrorId = useId();
+  const last = assignment.attempts.at(-1);
+  const answer = last?.answers[task.id];
+  const photos = answer?.kind === "extended" ? answer.photos : [];
   const solution = solutionOf(assignment.studentId, task.id, photos);
-  const [ai, setAi] = useState<AiState>({ kind: "idle" });
-  const [points, setPoints] = useState<number | null>(null);
-  const [comment, setComment] = useState("");
+  const transcript = solution.lines.filter((line) => !line.startsWith("Фото: "));
+  const key = reviewDraftKey(assignment.id, last?.finishedAt ?? 0, task.id);
+  const { points, comment, ai } = useSyncExternalStore(subscribeReviewDrafts, () => getReviewDraft(key));
   const [criteriaOpen, setCriteriaOpen] = useState(false);
+  const [detailsOpen, setDetailsOpen] = useState(false);
   const [tried, setTried] = useState(false);
   const mistake = ai.kind === "done" ? ai.review.mistake : undefined;
-
+  const save = () => notify(text.grade.draftSaved);
   const runAi = () => {
-    setAi({ kind: "checking" });
-    setTimeout(() => setAi({ kind: "done", review: aiReview(assignment.studentId, task) }), AI_DELAY_MS);
+    updateReviewDraft(key, { ai: { kind: "checking" } });
+    setTimeout(() => {
+      try { updateReviewDraft(key, { ai: { kind: "done", review: aiReview(assignment.studentId, task) } }); }
+      catch { updateReviewDraft(key, { ai: { kind: "error" } }); }
+    }, AI_DELAY_MS);
   };
-
   const applyAi = (review: AiReview) => {
-    if (review.score >= 0) setPoints(review.score);
-    if (!comment.trim()) setComment(review.summary);
+    if (review.score >= 0) updateReviewDraft(key, { points: review.score, ...(!comment.trim() ? { comment: review.summary } : {}) });
   };
-
   const submit = () => {
     if (points === null) return;
     gradeTask(assignment.id, task.id, points, task.points, comment);
+    clearReviewDraft(key);
     notify(text.grade.graded);
   };
-
   const rework = () => {
     setTried(true);
     if (!comment.trim()) return;
     returnAssignment(assignment.id, comment);
+    clearReviewDraft(key);
     notify(text.grade.returned);
   };
 
-  return (
-    <section className="grid gap-4 glass rounded-2xl p-5">
-      <header className="grid gap-2">
-        <span className="text-xs font-bold tracking-wide text-muted-foreground uppercase">{text.task.title(index, task.points)}</span>
-        <p className="m-0 text-base leading-snug font-bold">
-          <RichText parts={task.statement} />
-        </p>
-        {task.answer.kind === "extended" && (
-          <div>
-            <button
-              type="button"
-              aria-expanded={criteriaOpen}
-              onClick={() => setCriteriaOpen((open) => !open)}
-              className="inline-flex appearance-none items-center gap-1 border-0 bg-transparent p-0 text-sm font-bold text-primary [font-family:inherit]"
-            >
-              {text.task.criteria}
-              <ChevronDown size={14} className={cx("transition-transform", criteriaOpen && "rotate-180")} aria-hidden="true" />
-            </button>
-            {criteriaOpen && <p className="m-0 mt-1.5 rounded-lg bg-secondary px-3 py-2 text-sm font-semibold text-muted-foreground">{task.answer.criteria}</p>}
-          </div>
-        )}
-      </header>
-
-      <div className="grid gap-1.5">
-        <span className="flex items-center justify-between text-sm font-bold text-muted-foreground">
-          {text.task.solution}
-          <span className="text-xs">{text.task.photos(photos.length)}</span>
-        </span>
-        <div className={styles.photo}>
-          {solution.lines.map((line, lineIndex) => (
-            <div key={`${line}-${lineIndex}`}>{lineIndex === mistake ? <mark>{line}</mark> : line}</div>
-          ))}
-        </div>
+  return <section className={styles.extended}>
+    <div className={styles.assessment}>
+      {auto}
+      <div className={styles.humanGrade}>
+        <Star aria-hidden="true" />
+        <label><b>{text.grade.label}</b><Select value={points === null ? "unset" : String(points)} onValueChange={(value) => updateReviewDraft(key, { points: Number(value) })}>
+          <SelectTrigger aria-label={text.grade.select}><SelectValue placeholder={text.grade.unset} /></SelectTrigger>
+          <SelectContent><SelectItem value="unset" disabled>{text.grade.unset}</SelectItem>{Array.from({ length: task.points + 1 }, (_, value) => <SelectItem key={value} value={String(value)}>{text.grade.choice(value, task.points)}</SelectItem>)}</SelectContent>
+        </Select></label>
+        <Button size="sm" onClick={save}>{text.grade.save}</Button>
       </div>
-
-      <div className={cx("grid gap-3 rounded-xl border p-4", ai.kind === "done" && ai.review.score >= 0 ? "border-[var(--cab-lime-border)] bg-[var(--cab-lime-soft)]" : "bg-secondary/40")}>
-        <div className="flex items-center gap-2">
-          <span className="grid size-7 place-items-center rounded-full bg-highlight text-highlight-foreground" aria-hidden="true">
-            <Bot size={15} />
-          </span>
-          <b className="text-sm">{ai.kind === "done" ? (ai.review.score >= 0 ? text.ai.suggests(ai.review.score, ai.review.max) : text.ai.unsure) : text.ai.title}</b>
-        </div>
-        {ai.kind === "idle" && (
-          <div className="flex flex-wrap items-center justify-between gap-3">
-            <p className="m-0 text-sm font-semibold text-muted-foreground">{text.ai.idle}</p>
-            <Button size="sm" variant="lime" icon={Sparkles} onClick={runAi}>
-              {text.ai.check}
-            </Button>
-          </div>
-        )}
-        {ai.kind === "checking" && (
-          <p className="m-0 flex items-center gap-2 text-sm font-semibold text-muted-foreground" role="status">
-            <Loader2 size={15} className="animate-spin motion-reduce:animate-none" aria-hidden="true" />
-            {text.ai.checking}
-          </p>
-        )}
-        {ai.kind === "done" && (
-          <>
-            <p className="m-0 text-sm font-semibold">{ai.review.summary}</p>
-            {ai.review.checks.length > 0 && (
-              <ul className="m-0 grid list-none gap-1 p-0">
-                {ai.review.checks.map((check) => (
-                  <li key={check.text} className={cx("flex items-start gap-2 text-sm font-semibold", check.ok ? "text-success" : "text-destructive")}>
-                    {check.ok ? <Check size={15} className="mt-0.5 flex-none" aria-hidden="true" /> : <X size={15} className="mt-0.5 flex-none" aria-hidden="true" />}
-                    <span className="text-foreground">{check.text}</span>
-                  </li>
-                ))}
-              </ul>
-            )}
-            <div className="flex flex-wrap gap-2">
-              {ai.review.score >= 0 && (
-                <Button size="sm" variant="primary" onClick={() => applyAi(ai.review)}>
-                  {text.ai.apply}
-                </Button>
-              )}
-              <Button size="sm" icon={RotateCcw} onClick={runAi}>
-                {text.ai.recheck}
-              </Button>
-            </div>
-          </>
-        )}
+    </div>
+    <div className={styles.reviewScroll}>
+    <div className={styles.taskPrompt}>
+      <FileText aria-hidden="true" />
+      <div><p className={styles.taskMeta}>{text.task.title(index, task.points)}</p><p className={styles.statement}><RichText parts={task.statement} /></p>
+      {task.answer.kind === "extended" && <><button type="button" className={styles.textButton} aria-expanded={criteriaOpen} onClick={() => setCriteriaOpen((open) => !open)}>{text.task.criteria}<ChevronDown size={15} aria-hidden="true" /></button>{criteriaOpen && <p className={styles.criteria}>{task.answer.criteria}</p>}</>}
       </div>
-
-      <div className="grid gap-3">
-        <div className="grid gap-1.5">
-          <span className="text-sm font-bold text-muted-foreground">{text.grade.label}</span>
-          <ToggleGroup
-            type="single"
-            spacing={1}
-            value={points === null ? "" : String(points)}
-            aria-label={text.grade.label}
-            className="w-fit max-w-full flex-wrap gap-1 rounded-lg border bg-card p-1"
-            onValueChange={(value) => value !== "" && setPoints(Number(value))}
-          >
-            {Array.from({ length: task.points + 1 }, (_, value) => (
-              <ToggleGroupItem key={value} value={String(value)} className="size-9 text-base font-extrabold data-[state=on]:bg-primary data-[state=on]:text-primary-foreground">
-                {text.grade.points(value)}
-              </ToggleGroupItem>
-            ))}
-          </ToggleGroup>
-        </div>
-        <label className="grid gap-1.5">
-          <span className="text-sm font-bold text-muted-foreground">{text.grade.comment}</span>
-          <textarea
-            value={comment}
-            rows={2}
-            maxLength={1000}
-            placeholder={text.grade.commentPlaceholder}
-            aria-invalid={tried && !comment.trim()}
-            onChange={(event) => setComment(event.target.value)}
-            className="w-full resize-y rounded-md border border-input bg-transparent px-3 py-2 text-base [font-family:inherit] outline-none placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
-          />
-          {tried && !comment.trim() && <span className="text-sm font-semibold text-destructive">{text.grade.reworkHint}</span>}
-        </label>
-        <div className="flex flex-wrap gap-2">
-          <Button variant="primary" disabled={points === null} onClick={submit}>
-            {points === null ? text.grade.label : text.grade.submit(points, task.points)}
-          </Button>
-          <Button onClick={rework}>{text.grade.rework}</Button>
-        </div>
-      </div>
+    </div>
+    <section className={styles.solution}>
+      <header><b><Pencil size={18} aria-hidden="true" />{text.task.solution}</b><span><Image size={17} aria-hidden="true" />{text.task.photos(photos.length)}</span></header>
+      {transcript.length > 0 ? <div className={styles.notebook}>{transcript.map((line, lineIndex) => <div key={`${line}-${lineIndex}`}>{lineIndex === mistake ? <mark>{line}</mark> : line}</div>)}</div> : <p className={styles.demoNote}>{text.task.noTranscript}</p>}
+      <details className={styles.attachments}><summary>{text.task.photos(photos.length)}</summary><p className={styles.demoNote}>{text.task.demoTranscript}</p>{photos.map((photo, photoIndex) => /^(https?:|blob:)/.test(photo) ? <a key={photo} href={photo} target="_blank" rel="noreferrer">{text.task.attachment(photoIndex + 1)}</a> : <span key={photo}>{photo}</span>)}</details>
     </section>
-  );
+    <section className={styles.ai} aria-busy={ai.kind === "checking"}>
+      <header><h3><Sparkles size={22} aria-hidden="true" />{text.ai.title}</h3>{ai.kind === "done" && <button type="button" className={styles.textButton} aria-expanded={detailsOpen} onClick={() => setDetailsOpen((open) => !open)}>{text.ai.details}<ChevronDown size={15} aria-hidden="true" /></button>}<Button size="sm" variant="primary" icon={ai.kind === "checking" ? Loader2 : Sparkles} disabled={ai.kind === "checking"} onClick={runAi}>{ai.kind === "checking" ? text.ai.checking : text.ai.check}</Button></header>
+      {ai.kind === "idle" && <p className={styles.aiEmpty}>{text.ai.idle}</p>}
+      {ai.kind === "checking" && <p className={styles.aiEmpty} role="status">{text.ai.checking}</p>}
+      {ai.kind === "error" && <p className={styles.aiEmpty} role="alert">{text.ai.error}</p>}
+      {ai.kind === "done" && <>
+        <div className={styles.aiResult}><button type="button" className={styles.suggestion} disabled={ai.review.score < 0} aria-label={text.ai.apply} title={text.ai.apply} onClick={() => applyAi(ai.review)}><Check aria-hidden="true" />{ai.review.score >= 0 ? text.ai.suggests(ai.review.score, ai.review.max) : text.ai.unsure}</button><div><b><Info size={17} aria-hidden="true" />{text.ai.recommendation}</b><p>{ai.review.summary}</p></div></div>
+        {detailsOpen && <ul className={styles.aiChecks}>{ai.review.checks.map((check) => <li key={check.text}>{check.ok ? <Check aria-hidden="true" /> : <X aria-hidden="true" />}{check.text}</li>)}</ul>}
+      </>}
+      <p className={styles.demoNote}>{text.ai.demo}</p>
+    </section>
+    <label className={styles.comment}><span>{text.grade.comment}</span><textarea aria-label={text.grade.comment} aria-describedby={tried && !comment.trim() ? commentErrorId : undefined} value={comment} rows={1} maxLength={1000} placeholder={text.grade.commentPlaceholder} aria-invalid={tried && !comment.trim()} onChange={(event) => updateReviewDraft(key, { comment: event.target.value })} />{tried && !comment.trim() && <span id={commentErrorId} className={styles.error} role="alert">{text.grade.reworkHint}</span>}</label>
+    </div>
+    <footer className={styles.actions}><Button icon={Undo2} onClick={rework}>{text.grade.returnWithoutGrade}</Button><Button icon={Save} onClick={save}>{text.grade.saveDraft}</Button><Button icon={Check} variant="primary" disabled={points === null} onClick={submit}>{text.grade.publish}</Button></footer>
+  </section>;
 }

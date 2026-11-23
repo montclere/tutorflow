@@ -1,4 +1,15 @@
 :root {
+  /* Контуры пастельных плиток и светлых блоков кабинета (VIBE-18). */
+  --cab-line-detailed: color-mix(in srgb, var(--color-line) 76%, var(--color-muted));
+  --cab-edge-cyan: color-mix(in srgb, var(--vibe-sky) 70%, var(--cab-tone-sky-strong));
+  --cab-edge-purple: color-mix(in srgb, var(--vibe-lavender) 70%, var(--cab-tone-lilac-strong));
+  --cab-edge-pink: color-mix(in srgb, var(--vibe-pink) 70%, var(--cab-tone-rose-strong));
+  --cab-edge-green: color-mix(in srgb, var(--vibe-mint) 70%, var(--cab-tone-mint-strong));
+  --cab-edge-orange: color-mix(in srgb, var(--vibe-peach) 70%, var(--cab-tone-peach-strong));
+  --cab-edge-blue: color-mix(in srgb, var(--cab-blue-soft) 70%, var(--color-blue));
+  --cab-shadow-surface: 0 2px 3px rgb(13 21 66 / 0.03), 0 6px 16px rgb(13 21 66 / 0.045), inset 0 1px 0 var(--color-paper);
+  --cab-shadow-surface-hover: 0 4px 6px rgb(13 21 66 / 0.04), 0 8px 20px rgb(13 21 66 / 0.08), inset 0 1px 0 var(--color-paper);
+  --cab-shadow-primary: 0 5px 14px rgb(35 70 230 / 0.16), inset 0 1px 0 var(--color-on-blue-border);
   color-scheme: light;
 
   --color-outer: #1530b4;
@@ -179,4 +190,99 @@
 
 :root {
   --cab-chart-muted: #8b94b2;
+}
+
+:root {
+  --main-bg: #f8fbff;
+  --main-muted: #465575;
+  --main-panel: rgb(255 255 255 / 0.94);
+  --main-backdrop: rgb(255 255 255 / 0.48);
+  --main-line: #dce5f2;
+  --main-highlight: #e7f2ff;
+  --main-bar: #c6e0ff;
+  --main-timeline: #a9bce2;
+  --main-wave: #e6f2ff;
+}
+
+:root {
+  --schedule-page-bg: #f8faff;
+  --schedule-page-glow: #eaf5ff;
+  --schedule-grid-line: #e5ebf6;
+  --schedule-past-opacity: 0.83;
+  --schedule-edge-blue: #5b85fc;
+  --schedule-event-blue: #e7efff;
+  --schedule-edge-mint: #2ba775;
+  --schedule-event-mint: #def5e8;
+  --schedule-edge-peach: #f48d42;
+  --schedule-event-peach: #ffe4cf;
+  --schedule-edge-rose: #f05c70;
+  --schedule-event-rose: #ffe2e6;
+  --schedule-edge-lilac: #ae5bdb;
+  --schedule-event-lilac: #f8e4f6;
+  --schedule-edge-teal: #20a4a7;
+  --schedule-event-teal: #ddf5f4;
+}
+
+:root {
+  --lesson-panel-bg: #f8fafe;
+  --lesson-panel-line: #dfe6f3;
+  --lesson-panel-muted: #657293;
+  --lesson-panel-glow: #e7f1ff;
+  --lesson-panel-note: #fff5e6;
+  --lesson-panel-note-line: #f0d7b6;
+  --lesson-panel-overlay: rgb(16 27 70 / 0.24);
+  --lesson-panel-time: clamp(28px, 3vw, 40px);
+}
+
+:root {
+  --students-page-bg: #f9fbff;
+  --students-glow-blue: #eef8ff;
+  --students-glow-green: #f5fbe8;
+  --journal-line: #edf1f8;
+  --journal-divider: #dfe5f2;
+  --journal-today: #f5f8ff;
+  --journal-hover: #f4f8fd;
+  --journal-shadow: 0 8px 24px rgb(16 27 70 / 0.045);
+}
+
+/* Публичный лендинг: тема применяется только к layout и его порталам (LANDING-11). */
+[data-landing-theme] {
+  --landing-bg: #fafaff;
+  --landing-paper: #fff;
+  --landing-ink: #0b103b;
+  --landing-muted: #596487;
+  --landing-blue: #4a3ef3;
+  --landing-blue-hover: #3c32d9;
+  --landing-lime: #d9ff3f;
+  --landing-line: #e1e4f4;
+  --landing-sky: #eef0ff;
+  --landing-lilac: #eee7ff;
+  --landing-mint: #f5f9e2;
+  --landing-track: #e5dfff;
+  --landing-shadow: 0 14px 30px rgb(35 43 110 / .055);
+  --landing-shadow-hover: 0 16px 32px rgb(35 43 110 / .09);
+  --landing-button-shadow: 0 8px 24px rgb(49 85 240 / .12);
+  --landing-radius: 26px;
+  --landing-button-radius: var(--radius-pill);
+  --landing-hero-font: clamp(2.25rem, 4.6vw, 3.5rem);
+  --landing-section-font: clamp(1.875rem, 3vw, 2.25rem);
+  --landing-card-font: clamp(1.25rem, 1.9vw, 1.5rem);
+  --landing-ai-font: clamp(1.5rem, 2.8vw, 2.25rem);
+  --landing-mobile-hero-font: clamp(1.6rem, 8.3vw, 3.5rem);
+  --font-display: var(--font-body);
+  --color-blue: var(--landing-blue);
+  --color-blue-hover: var(--landing-blue-hover);
+  --color-ink: var(--landing-ink);
+  --color-muted: var(--landing-muted);
+  --color-lime: var(--landing-lime);
+  --focus-ring: var(--landing-blue);
+}
+
+/* FINANCE-UI-1: дополнительные цвета используются только на странице финансов. */
+:root {
+  --finance-expected-bg: #e4f4ff;
+  --finance-expected-line: #beddfa;
+  --finance-problem-bg: #fff0f4;
+  --finance-problem-line: #f4ccd9;
+  --finance-problem-ink: #b4233c;
 }

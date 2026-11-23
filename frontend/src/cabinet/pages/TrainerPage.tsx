@@ -1,15 +1,17 @@
-import { Check, CheckCheck, Flag, Target, TrendingUp, X, Zap } from "lucide-react";
-import { useState } from "react";
+import { ArrowRight, BookOpen, Check, CheckCheck, Flag, Flame, Target, TrendingUp, X } from "lucide-react";
+import { useRef, useState } from "react";
 import { navigate, useSearch } from "../../app/router";
 import { studentRoutes } from "../../config/routes";
 import { demoStudentId } from "../mocks/student";
-import { examOf } from "../tasks/catalog";
+import { examOf, subjectOf } from "../tasks/catalog";
 import { answerText, checkAnswer, emptyResponse, isAnswered } from "../tasks/check";
 import { goals, useStudentProgress } from "../tasks/learner";
 import { pickTask, practiceNumbers, recordPractice, SESSION_LENGTH, usePractice, type PracticeMode } from "../tasks/practice";
 import type { AnswerResponse, TaskItem } from "../tasks/types";
 import { cx } from "../ui/cx";
-import { PageHead } from "../ui/PageHead";
+import { trainerRecommendations } from "../model/trainer";
+import { growthShare } from "../model/studentHome";
+import ui from "./trainer/trainer.module.css";
 import { RichText } from "../ui/RichText";
 import { ToggleGroup, ToggleGroupItem } from "@/shared/ui/kit/toggle-group";
 import { chunky } from "./learn/chunky";
@@ -38,13 +40,22 @@ export function TrainerPage() {
   const [mode, setMode] = useState<PracticeMode>(() => (modes.find((item) => item === params.get("mode")) ?? "weak"));
   const [number, setNumber] = useState<number | undefined>(() => (params.get("number") ? Number(params.get("number")) : [...available][0]));
   const [session, setSession] = useState<Session>(newSession);
+  const numbersRef = useRef<HTMLDivElement>(null);
+  const recommendations = trainerRecommendations(progress?.units ?? [], available);
+  const subject = examOf(exam)?.subject;
+  const subjectLabel = subject ? subjectOf(subject).label : progress?.title;
+  const canStart = mode === "mistakes" ? practice.mistakes.length > 0 : mode === "number" ? number !== undefined && available.has(number) : available.size > 0;
   const weak = progress?.weak.map((unit) => unit.number).filter((value): value is number => value !== undefined) ?? [];
 
   const pick = (current: Session, seed: number): TaskItem | null => pickTask(mode, { exam, number, weak: weak.length > 0 ? weak : [...available], seed, recent: current.recent });
 
-  const start = () => {
+  const start = (selectedNumber?: number) => {
     const fresh = newSession();
-    const task = pick(fresh, Date.now());
+    if (selectedNumber !== undefined) {
+      setMode("number");
+      setNumber(selectedNumber);
+    }
+    const task = selectedNumber === undefined ? pick(fresh, Date.now()) : pickTask("number", { exam, number: selectedNumber, weak, seed: Date.now(), recent: [] });
     setSession({ ...fresh, task, answer: task ? emptyResponse(task.answer) : null });
   };
 
@@ -74,10 +85,11 @@ export function TrainerPage() {
   const running = session.task !== null && !session.done;
 
   return (
-    <>
-      <PageHead title={text.title} subtitle={text.subtitle} />
-      <div className="grid grid-cols-[minmax(0,1fr)] items-start gap-4 min-[1101px]:grid-cols-[minmax(0,1fr)_300px]">
-        <section className="grid min-h-[420px] overflow-hidden rounded-3xl border-2 bg-card">
+    <div className={ui.root}>
+      <header className={ui.heading}><h1>{text.title}</h1></header>
+      <div className={ui.grid}>
+        <div className={ui.main}>
+        <section className={running || session.done ? ui.session : ui.hero} aria-label={running || session.done ? text.title : undefined}>
           {session.done ? (
             <div className="grid place-items-center gap-4 p-8 text-center">
               <span className={cx("grid size-24 place-items-center rounded-full bg-[var(--cab-ok-soft)] text-success", styles.pop)} aria-hidden="true">
@@ -86,7 +98,7 @@ export function TrainerPage() {
               <h2 className="m-0 font-[family-name:var(--font-display)] text-2xl font-black">{text.finishTitle}</h2>
               <p className="m-0 text-lg font-bold tabular-nums">{text.finishScore(session.right, SESSION_LENGTH)}</p>
               <div className="flex flex-wrap justify-center gap-3">
-                <button type="button" className={chunky("primary")} onClick={start}>
+                <button type="button" className={chunky("primary")} onClick={() => start()}>
                   {text.again}
                 </button>
                 <button type="button" className={chunky("ghost")} onClick={() => navigate(studentRoutes.home)}>
@@ -140,56 +152,75 @@ export function TrainerPage() {
               )}
             </>
           ) : (
-            <div className="grid content-center justify-items-center gap-5 p-8 text-center">
-              <span className={cx("grid size-24 place-items-center rounded-full bg-primary text-primary-foreground shadow-[0_6px_0_color-mix(in_srgb,var(--color-blue)_60%,#000)]", styles.float)} aria-hidden="true">
-                <Zap size={42} />
-              </span>
-              <div className="grid gap-1">
-                <h2 className="m-0 font-[family-name:var(--font-display)] text-2xl font-black">{text.modes[mode]}</h2>
-                <p className="m-0 max-w-sm text-sm font-semibold text-muted-foreground">{text.modeHints[mode]}</p>
-              </div>
-              {mode === "mistakes" && practice.mistakes.length === 0 ? (
-                <p className="m-0 rounded-2xl bg-[var(--cab-ok-soft)] px-4 py-2 text-sm font-bold text-success">{text.emptyMistakes}</p>
-              ) : mode === "number" && (number === undefined || !available.has(number)) ? (
-                <p className="m-0 text-sm font-bold text-muted-foreground">{text.noNumber}</p>
-              ) : (
-                <button type="button" className={chunky("primary", "min-w-48")} onClick={start}>
-                  {text.start}
+            <>
+              <div className={ui.heroCopy}>
+                <h2>{text.heroTitle}</h2>
+                <p>{text.heroNote}</p>
+                <button type="button" className={ui.primary} disabled={!canStart} onClick={() => start()}>
+                  {text.start}<ArrowRight size={20} aria-hidden="true" />
                 </button>
-              )}
-            </div>
+                {!canStart && <p className={ui.empty} role="status">{mode === "mistakes" ? text.emptyMistakes : available.size === 0 ? text.noBank : text.noNumber}</p>}
+              </div>
+              <picture className={ui.art}>
+                <source srcSet="/student-trainer/target-600.webp 600w, /student-trainer/target.webp 1200w" sizes="(max-width: 600px) 240px, (max-width: 1200px) 320px, 440px" type="image/webp" />
+                <img src="/student-trainer/target.webp" width="1200" height="675" alt="" decoding="async" />
+              </picture>
+            </>
           )}
         </section>
-
-        <aside className="grid gap-4">
+        {!running && !session.done && (
+          <section className={ui.recommendations} aria-labelledby="trainer-recommendations">
+            <div className={ui.sectionHeading}>
+              <span className={ui.flame} aria-hidden="true"><Flame size={23} /></span>
+              <h2 id="trainer-recommendations">{text.recommendations}</h2>
+              <button type="button" className={ui.textButton} onClick={() => {
+                changeMode("number");
+                requestAnimationFrame(() => numbersRef.current?.focus());
+              }}>{text.allTraining}<ArrowRight size={18} aria-hidden="true" /></button>
+            </div>
+            {recommendations.length > 0 ? <ul className={ui.recommendationList}>
+              {recommendations.map((unit) => <li key={unit.key}>
+                <button type="button" className={ui.recommendation} aria-label={text.practiceNumber(unit.number)} onClick={() => start(unit.number)}>
+                  <span className={ui.topicIcon} aria-hidden="true"><BookOpen size={25} /></span>
+                  <span className={ui.topic}><b>{subjectLabel}</b><span>{text.taskNumber(unit.number)} · {unit.label}</span></span>
+                  <span className={ui.progressRow}>
+                    {unit.total > 0 ? <><span className={ui.progressTrack} aria-hidden="true"><span style={{ width: `${growthShare(unit)}%` }} /></span><b>{growthShare(unit)}%</b></> : <span>{text.notStudied}</span>}
+                  </span>
+                </button>
+              </li>)}
+            </ul> : <p className={ui.empty}>{text.emptyRecommendations}</p>}
+          </section>
+        )}
+        </div>
+        <aside className={ui.aside}>
           {/* Мини-мониторинг: сколько решено за неделю, точность и готовность — без целей, серий и опыта. */}
-          <section className="grid grid-cols-3 gap-2 rounded-3xl border-2 bg-card p-4 text-center" aria-label={text.monitorLabel}>
+          <section className={ui.metrics} aria-label={text.monitorLabel}>
             {[
               { icon: CheckCheck, value: String(practice.weekSolved), label: text.weekLabel },
               { icon: Target, value: progress?.accuracy === null || progress?.accuracy === undefined ? "—" : `${progress.accuracy}%`, label: text.accuracyLabel },
               { icon: TrendingUp, value: progress ? `${progress.readiness}%` : "—", label: text.readinessLabel },
             ].map((item) => (
-              <div key={item.label} className="grid justify-items-center content-start gap-1">
-                <span className="grid size-11 place-items-center rounded-2xl bg-accent text-primary" aria-hidden="true">
+              <div key={item.label} className={ui.metric}>
+                <span className={ui.metricIcon} aria-hidden="true">
                   <item.icon size={20} />
                 </span>
-                <b className="text-base font-extrabold tabular-nums">{item.value}</b>
-                <span className="text-[11px] leading-tight font-bold text-muted-foreground">{item.label}</span>
+                <b className={ui.metricValue}>{item.value}</b>
+                <span className={ui.metricLabel}>{item.label}</span>
               </div>
             ))}
           </section>
 
-          <section className="grid gap-3 rounded-3xl border-2 bg-card p-4">
-            <ToggleGroup type="single" spacing={1} value={mode} aria-label={text.modesLabel} className="grid w-full grid-cols-3 gap-1 rounded-2xl bg-secondary p-1" onValueChange={(value) => value && changeMode(value as PracticeMode)}>
+          <section className={ui.controls}>
+            <ToggleGroup type="single" spacing={1} value={mode} aria-label={text.modesLabel} className={ui.modes} onValueChange={(value) => value && changeMode(value as PracticeMode)}>
               {modes.map((item) => (
-                <ToggleGroupItem key={item} value={item} className="h-auto min-h-9 rounded-xl px-1 py-1.5 text-xs leading-tight font-extrabold whitespace-normal data-[state=on]:bg-card data-[state=on]:shadow-sm">
+                <ToggleGroupItem key={item} value={item} className={ui.mode}>
                   {text.modes[item]}
                   {item === "mistakes" && practice.mistakes.length > 0 ? ` · ${practice.mistakes.length}` : ""}
                 </ToggleGroupItem>
               ))}
             </ToggleGroup>
             {mode === "number" && (
-              <div className="grid grid-cols-5 gap-1.5" role="radiogroup" aria-label={text.numbersLabel}>
+              <div ref={numbersRef} tabIndex={-1} className={ui.numbers} role="radiogroup" aria-label={text.numbersLabel}>
                 {(examOf(exam)?.numbers ?? []).map((item) => {
                   const unit = progress?.units.find((candidate) => candidate.number === item.number);
                   const has = available.has(item.number);
@@ -218,13 +249,14 @@ export function TrainerPage() {
                 })}
               </div>
             )}
-            <button type="button" className={chunky("ghost", "w-full text-xs")} onClick={() => navigate(studentRoutes.exam)}>
+            {(mode !== "weak" || !canStart) && <p className={ui.modeHint} role="status">{!canStart ? mode === "mistakes" ? text.emptyMistakes : available.size === 0 ? text.noBank : text.noNumber : text.modeHints[mode]}</p>}
+            <button type="button" className={ui.exam} onClick={() => navigate(studentRoutes.exam)}>
               <Flag size={16} aria-hidden="true" />
               {text.exam}
             </button>
           </section>
         </aside>
       </div>
-    </>
+    </div>
   );
 }

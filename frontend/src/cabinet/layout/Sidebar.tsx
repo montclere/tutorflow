@@ -1,3 +1,4 @@
+import { CalendarDays, ClipboardCheck, Home, Layers, Users, Wallet } from "lucide-react";
 import { env } from "../../config/env";
 import { cabinet, type Role } from "../content/cabinet.ru";
 import { CabinetLink } from "../ui/CabinetLink";
@@ -17,6 +18,7 @@ export function Sidebar({ role, pathname, open, onClose }: Props) {
   // Сколько работ ждут проверки — число у «Проверки» (REVIEW-1).
   const waiting = useLibrary().assignments.filter((assignment) => assignment.status === "wait").length;
   const promo = cabinet.promo[role];
+  const mainIcons = { home: Home, calendar: CalendarDays, users: Users, tasks: Layers, check: ClipboardCheck, money: Wallet };
 
   return (
     <aside id="cabinet-menu" className={cx(styles.side, open && styles.sideOpen)} aria-label={cabinet.shell.menuLabel}>
@@ -28,7 +30,7 @@ export function Sidebar({ role, pathname, open, onClose }: Props) {
             aria-current={isActive(pathname, item.path, item.matchPrefix) ? "page" : undefined}
             onClick={onClose}
           >
-            <NavIcon name={item.icon} />
+            {item.icon in mainIcons ? (() => { const Icon = mainIcons[item.icon as keyof typeof mainIcons]; return <Icon size={20} aria-hidden="true" />; })() : <NavIcon name={item.icon} />}
             {item.label}
             {env.demo && (item.path === teacherRoutes.review ? waiting > 0 : item.badge) && <span className={styles.count}>{item.path === teacherRoutes.review ? waiting : item.badge}</span>}
           </CabinetLink>

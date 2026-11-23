@@ -1,13 +1,14 @@
 import { Archive as PhArchive, Checks as PhChecks, MagnifyingGlass as PhMagnifyingGlass, PauseCircle as PhPauseCircle, UserPlus as PhUserPlus } from "@phosphor-icons/react";
 import { List, Plus, Search, Table2, TriangleAlert } from "lucide-react";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { cabinet } from "../../content/cabinet.ru";
 import { getSchedule } from "../../data";
 import { useStudents } from "../../data/useStudents";
 import { countByStatus, filterStudents } from "../../model/students";
 import { Button } from "../../ui/Button";
 import { EmptyState } from "../../ui/EmptyState";
-import { PageHead } from "../../ui/PageHead";
+import { StudentsHeading } from "./StudentsHeading";
+import styles from "./students.module.css";
 import { Tabs } from "../../ui/Tabs";
 import { Input } from "@/shared/ui/kit/input";
 import { Toggle } from "@/shared/ui/kit/toggle";
@@ -34,6 +35,9 @@ export function StudentsPage() {
 
   const counts = countByStatus(students);
   const list = filterStudents(students, { status, query, debtorsOnly });
+  const openedStudentId = useRef<string | null>(null);
+  const openStudent = (id: string) => { openedStudentId.current = id; go({ studentId: id }); };
+
   const selected = students.find((student) => student.id === studentId) ?? null;
 
   const emptyState = () => {
@@ -58,7 +62,7 @@ export function StudentsPage() {
 
   const restoreFocus = (event: Event) => {
     event.preventDefault();
-    const buttons = document.querySelectorAll<HTMLElement>(`[data-student-button="${studentId}"]`);
+    const buttons = document.querySelectorAll<HTMLElement>(`[data-student-button="${openedStudentId.current ?? studentId}"]`);
     for (const button of buttons) {
       if (button.offsetParent !== null) {
         button.focus();
@@ -68,8 +72,8 @@ export function StudentsPage() {
   };
 
   return (
-    <>
-      <PageHead
+    <div className={styles.page}>
+      <StudentsHeading
         title={text.title}
         actions={
           <Button variant="primary" icon={Plus} onClick={() => setAdding(true)}>
@@ -77,14 +81,14 @@ export function StudentsPage() {
           </Button>
         }
       />
-      <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+      <div className={styles.toolbar}>
         <Tabs
           label={text.tabsLabel}
           selectedId={status}
-          items={text.statusTabs.map((tab) => ({ id: tab.id, label: text.tabLabel(tab.label, counts[tab.id]), href: studentsHref(tab.id) }))}
+          items={text.statusTabs.map((tab) => ({ id: tab.id, label: tab.label, count: counts[tab.id], href: studentsHref(tab.id) }))}
         />
-        <div className="flex flex-wrap items-center gap-2 max-[520px]:w-full">
-          <ToggleGroup type="single" spacing={1} value={view} aria-label={text.viewsLabel} className="gap-1 rounded-lg border bg-card p-1 max-[520px]:hidden" onValueChange={(value) => value && setView(value as "journal" | "list")}>
+        <div className={styles.actions}>
+          <ToggleGroup type="single" spacing={1} value={view} aria-label={text.viewsLabel} className={styles.viewSwitch} onValueChange={(value) => value && setView(value as "journal" | "list")}>
             <ToggleGroupItem value="journal" className="h-7 gap-1.5 px-2.5 text-sm font-bold data-[state=on]:bg-accent data-[state=on]:text-accent-foreground">
               <Table2 size={15} aria-hidden="true" />
               {text.views.journal}
@@ -94,8 +98,8 @@ export function StudentsPage() {
               {text.views.list}
             </ToggleGroupItem>
           </ToggleGroup>
-          <div className="relative min-w-0 max-[520px]:flex-1">
-            <Search size={16} className="pointer-events-none absolute top-1/2 left-3 -translate-y-1/2 text-muted-foreground" aria-hidden="true" />
+          <div className={styles.search}>
+            <Search size={16} aria-hidden="true" />
             <Input
               type="search"
               value={query}
@@ -117,11 +121,11 @@ export function StudentsPage() {
       ) : (
         <>
           {view === "journal" ? (
-            <StudentsJournal students={list} today={today} selectedId={studentId} onOpen={(id) => go({ studentId: id })} />
+            <StudentsJournal students={list} today={today} selectedId={studentId} onOpen={openStudent} />
           ) : (
-            <StudentsTable students={list} today={today} selectedId={studentId} onOpen={(id) => go({ studentId: id })} />
+            <StudentsTable students={list} today={today} selectedId={studentId} onOpen={openStudent} />
           )}
-          <StudentCards students={list} today={today} selectedId={studentId} onOpen={(id) => go({ studentId: id })} />
+          <StudentCards students={list} today={today} selectedId={studentId} onOpen={openStudent} />
         </>
       )}
 
@@ -133,6 +137,6 @@ export function StudentsPage() {
         onOpenCard={(id) => go({ status: "active", studentId: id })}
       />
       <NewLessonSheet seed={newLesson} onClose={() => setNewLesson(null)} />
-    </>
+    </div>
   );
 }

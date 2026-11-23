@@ -1,4 +1,7 @@
 import { ArrowDown, ArrowUp, ClipboardList, FileDown, Library, RefreshCw, Trash2, X, Zap } from "lucide-react";
+import { useState } from "react";
+import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/shared/ui/kit/dialog";
+import styles from "./tasks.module.css";
 import { navigate } from "../../../app/router";
 import { teacherRoutes } from "../../../config/routes";
 import { replacementFor } from "../../tasks/assistant";
@@ -17,6 +20,7 @@ type Props = { onSave: (kind: SaveKind) => void; onPdf: () => void };
 /** Черновик справа от чата: порядок, замена, удаление; из него — задание или тест (TASKS-1, TASKS-2). */
 export function DraftPanel({ onSave, onPdf }: Props) {
   const { notify } = useNotifier();
+  const [clearing, setClearing] = useState(false);
   const draft = useDraft();
   const summary = draftSummary(draft.items);
 
@@ -32,20 +36,20 @@ export function DraftPanel({ onSave, onPdf }: Props) {
   };
 
   return (
-    <section className="flex min-h-0 flex-col rounded-2xl border bg-card" aria-label={text.draft.title}>
-      <header className="grid gap-2 border-b p-5">
+    <section className={styles.draft} aria-label={text.draft.title}>
+      <header className={styles.draftHeader}>
         <div className="flex items-center gap-2">
           <span className="grid size-8 flex-none place-items-center rounded-lg bg-highlight text-highlight-foreground" aria-hidden="true">
             <ClipboardList size={16} />
           </span>
-          <Input
+          <div className={styles.draftTitle}><h2>{text.draft.title}</h2><label><span>{text.draft.topic}:</span><Input
             value={draft.title}
             maxLength={120}
             placeholder={text.draft.titlePlaceholder}
             aria-label={text.draft.titleLabel}
             onChange={(event) => setDraftTitle(event.target.value)}
-            className="h-9 border-transparent bg-transparent px-1 font-[family-name:var(--font-display)] text-base font-extrabold shadow-none hover:border-border focus-visible:border-ring"
-          />
+            className={styles.topicInput}
+          /></label></div>
         </div>
         <p className="m-0 text-sm font-semibold text-muted-foreground tabular-nums">
           {text.draft.summary(text.count(summary.count), text.points(summary.points), text.minutes(summary.minutes))}
@@ -53,7 +57,7 @@ export function DraftPanel({ onSave, onPdf }: Props) {
         </p>
       </header>
 
-      <div className="min-h-0 flex-1 overflow-y-auto p-4 [scrollbar-width:thin]">
+      <div className={styles.draftList}>
         {draft.items.length === 0 ? (
           <div className="grid place-items-center gap-3 rounded-xl border border-dashed px-6 py-12 text-center">
             <p className="m-0 max-w-xs text-sm font-semibold text-muted-foreground">{text.draft.empty}</p>
@@ -92,7 +96,7 @@ export function DraftPanel({ onSave, onPdf }: Props) {
         )}
       </div>
 
-      <footer className="flex flex-wrap gap-2 border-t p-4">
+      <footer className={styles.draftActions}>
         <Button variant="primary" icon={ClipboardList} disabled={summary.count === 0} onClick={() => onSave("homework")}>
           {text.draft.saveTask}
         </Button>
@@ -106,13 +110,15 @@ export function DraftPanel({ onSave, onPdf }: Props) {
           icon={Trash2}
           disabled={summary.count === 0}
           onClick={() => {
-            clearDraft();
-            notify(text.draft.cleared);
+            setClearing(true);
           }}
         >
           {text.draft.clear}
         </Button>
       </footer>
+      <Dialog open={clearing} onOpenChange={setClearing}>
+        <DialogContent><DialogTitle>{text.draft.clear}</DialogTitle><DialogDescription>{text.draft.clearDescription}</DialogDescription><div className="flex flex-wrap gap-2"><Button onClick={() => setClearing(false)}>{text.draft.cancelClear}</Button><Button variant="primary" onClick={() => { clearDraft(); setClearing(false); notify(text.draft.cleared); }}>{text.draft.clear}</Button></div></DialogContent>
+      </Dialog>
     </section>
   );
 }

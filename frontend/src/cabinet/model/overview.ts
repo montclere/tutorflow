@@ -1,4 +1,4 @@
-import type { AttentionItem, LessonRow, ScheduleLesson, Student, WeekDay } from "../mocks/types";
+import type { AttentionItem, AttentionKind, LessonRow, ScheduleLesson, Student, WeekDay } from "../mocks/types";
 import { addDays, startOfWeek } from "./dates";
 import { isPast, lessonsOn, minutesUntil } from "./lessons";
 import { paymentStatus } from "./students";
@@ -37,4 +37,9 @@ export function attentionDestination(item: AttentionItem): AttentionDestination 
   if (item.kind === "review") return { to: "review" };
   if (item.kind === "lesson") return { to: "markLesson" };
   return item.studentId ? { to: "student", studentId: item.studentId } : null;
+}
+
+/** MAIN-2: финансовые напоминания остаются в финансах, счётчик — по видимым действиям. */
+export function mainAttention(items: readonly AttentionItem[], hidden: readonly AttentionKind[], limit: number): AttentionItem[] {
+  return items.filter(item => item.kind !== "debt" && !hidden.includes(item.kind)).slice(0, limit);
 }

@@ -12,6 +12,7 @@ import { exam } from "../mocks/student";
 import { assignedTasksOf, subscribeLibrary } from "../tasks/library";
 import { finance, financeToday } from "../mocks/finance";
 import { overviewBase } from "../mocks/teacher";
+import { normalizeNoteText, projectNotes, type IdentifiedNote } from "../model/studentNotes";
 import type {
   ExamData,
   FinanceOperation,
@@ -62,8 +63,10 @@ export function getSchedule(): ScheduleData {
 // Ученики — тоже хранилище в памяти вместо сервера (STUDENTS-6). Удалённые остаются в записях с пометкой removed:
 // на них ссылаются прошлые уроки и операции, а из списков они исчезают.
 let studentRecords: (StudentRecord & { removed?: boolean })[] = [...students];
-type AddedDetails = { payments: PaymentMove[]; notes: StudentNote[]; materials: StudentMaterial[] };
+type AddedDetails = { payments: PaymentMove[]; notes: IdentifiedNote[]; materials: StudentMaterial[] };
 const addedDetails: Record<string, AddedDetails> = {};
+const editedNotes = new Map<string, string>();
+const removedNotes = new Set<string>();
 const removedMaterials = new Set<string>();
 const openedMaterials = new Map<string, string>();
 const addedOf = (id: string): AddedDetails => (addedDetails[id] ??= { payments: [], notes: [], materials: [] });
@@ -124,10 +127,29 @@ export function addPayment(id: string, move: PaymentMove): void {
   emitStudents();
 }
 
-export function addNote(id: string, note: StudentNote): void {
+export function addNote(id: string, note: StudentNote): boolean {
+  const text = normalizeNoteText(note.text);
+  if (text === null) return false;
   const added = addedOf(id);
-  added.notes = [note, ...added.notes];
+  added.notes = [{ ...note, text, id: `added-${crypto.randomUUID()}` }, ...added.notes];
   emitStudents();
+  return true;
+}
+
+export function updateNote(studentId: string, noteId: string, value: string): boolean {
+  const text = normalizeNoteText(value);
+  if (text === null || !getStudentDetails(studentId).notes.some((note) => note.id === noteId)) return false;
+  editedNotes.set(noteId, text);
+  emitStudents();
+  return true;
+}
+
+export function removeNote(studentId: string, noteId: string): boolean {
+  if (!getStudentDetails(studentId).notes.some((note) => note.id === noteId)) return false;
+  removedNotes.add(noteId);
+  editedNotes.delete(noteId);
+  emitStudents();
+  return true;
 }
 
 /** Материал ученику: в демо — в памяти до перезагрузки, файл — по локальной ссылке браузера. */
@@ -154,7 +176,7 @@ const emptyDetails: StudentDetails = { payments: [], tasks: [], trainer: null, n
 // Выданные из «Моих заданий» задания и тесты — в мониторинг ученика (TASKS-6).
 subscribeLibrary(() => emitStudents());
 
-export function getStudentDetails(id: string): StudentDetails {
+export function getStudentDetails(id: string): Omit<StudentDetails, "notes"> & { notes: IdentifiedNote[] } {
   const stored = studentDetails[id] ?? emptyDetails;
   const assigned = assignedTasksOf(id);
   const base = assigned.length === 0 ? stored : { ...stored, tasks: [...assigned, ...stored.tasks] };
@@ -162,8 +184,8 @@ export function getStudentDetails(id: string): StudentDetails {
   const materials = [...(added?.materials ?? []), ...base.materials]
     .filter((material) => !removedMaterials.has(material.id))
     .map((material) => (material.openedAt || !openedMaterials.has(material.id) ? material : { ...material, openedAt: openedMaterials.get(material.id) ?? null }));
-  if (!added) return removedMaterials.size === 0 && openedMaterials.size === 0 ? base : { ...base, materials };
-  return { ...base, payments: [...added.payments, ...base.payments], notes: [...added.notes, ...base.notes], materials };
+  const notes = projectNotes(id, base.notes, added?.notes ?? [], editedNotes, removedNotes);
+  return { ...base, payments: added ? [...added.payments, ...base.payments] : base.payments, notes, materials };
 }
 
 export function getStudent(id: string): Student {

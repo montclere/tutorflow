@@ -1,5 +1,7 @@
 # Задачи
 
+- [Интеграция интерфейса в dev и очистка веток](frontend-dev-integration.md).
+
 - [Доставка кодов, восстановление и приватность](identity-delivery.md).
 - [Публичные HTTP-ответы](http-contract.md).
 - [Занятия и расписание](lessons-schedule.md).

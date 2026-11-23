@@ -49,6 +49,8 @@ export function SchedulePage() {
         students={students}
         filters={filters}
         summary={text.summary(lessonCount, windowCount)}
+        lessonCount={lessonCount}
+        windowCount={windowCount}
         onFilters={setFilters}
       />
       {view === "week" && (

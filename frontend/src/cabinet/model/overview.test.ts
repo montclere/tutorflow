@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
-import type { ScheduleLesson, Student } from "../mocks/types";
-import { attentionDestination, lessonMark, toLessonRow, weekDays } from "./overview";
+import type { AttentionItem, ScheduleLesson, Student } from "../mocks/types";
+import { mainAttention, attentionDestination, lessonMark, toLessonRow, weekDays } from "./overview";
 
 const student = { id: "s", goal: "ОГЭ · цель 5", balance: 0, payment: { model: "per_lesson", pricePerLesson: 100000 } } as Student;
 const debtor = { ...student, balance: -100 } as Student;
@@ -73,5 +73,28 @@ describe("attentionDestination", () => {
 
   it("без ученика вести некуда", () => {
     expect(attentionDestination({ kind: "debt", title: "", note: "" })).toBeNull();
+  });
+});
+
+
+describe("mainAttention — MAIN-2", () => {
+  const items: AttentionItem[] = [
+    { kind: "debt", title: "Долг", note: "" },
+    { kind: "lesson", title: "Урок", note: "" },
+    { kind: "review", title: "Проверка", note: "" },
+    { kind: "package", title: "Пакет", note: "" },
+    { kind: "inactive", title: "Активность", note: "" },
+  ];
+  it("исключает задолженность до лимита, сохраняя полезные действия", () => {
+    expect(mainAttention(items, [], 4).map(item => item.kind)).toEqual(["lesson", "review", "package", "inactive"]);
+    expect(items).toHaveLength(5);
+  });
+  it("учитывает скрытые элементы в видимом количестве", () => {
+    expect(mainAttention(items, ["lesson", "review"], 4).map(item => item.kind)).toEqual(["package", "inactive"]);
+    expect(mainAttention(items, ["lesson", "review", "package", "inactive"], 4)).toEqual([]);
+  });
+  it("не показывает пустой список и только задолженность как действия", () => {
+    expect(mainAttention([], [], 4)).toEqual([]);
+    expect(mainAttention(items.slice(0, 1), [], 4)).toEqual([]);
   });
 });

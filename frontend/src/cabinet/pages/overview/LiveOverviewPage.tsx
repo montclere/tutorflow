@@ -11,9 +11,10 @@ import { useSession } from "../../session/SessionContext";
 import { Avatar } from "../../ui/Avatar";
 import { Button } from "../../ui/Button";
 import { CabinetLink } from "../../ui/CabinetLink";
-import { Card } from "../../ui/Card";
+import { OverviewSection } from "./OverviewSection";
+import styles from "./overview.module.css";
 import { EmptyState } from "../../ui/EmptyState";
-import { Greeting } from "./Greeting";
+import { MainHeading } from "./MainHeading";
 import { LiveLessonSheet } from "../schedule/live/LiveLessonSheet";
 import { livePeople } from "../schedule/live/livePeople";
 import { useLiveSchedule } from "../schedule/live/useLiveSchedule";
@@ -54,7 +55,7 @@ function LessonList({ lessons, people, withDate, onOpen }: { lessons: ScheduleLe
 
 function Count({ label, value }: { label: string; value: number }) {
   return (
-    <div className="grid gap-0.5 rounded-xl bg-secondary/60 p-3">
+    <div className="grid gap-2 py-3">
       <span className="text-xs font-bold text-muted-foreground">{label}</span>
       <b className="font-[family-name:var(--font-display)] text-2xl font-black tabular-nums">{value}</b>
     </div>
@@ -63,7 +64,7 @@ function Count({ label, value }: { label: string; value: number }) {
 
 /** Обзор рабочей сборки — из настоящих уроков: что впереди, что отметить, как прошла неделя. */
 export function LiveOverviewPage() {
-  const { displayName, timezone } = useSession();
+  const { timezone } = useSession();
   const { today, now } = nowIn(timezone);
   const { state, reload, retry, apply } = useLiveSchedule(overviewRange(today), timezone);
   const [selectedId, setSelectedId] = useState<string | null>(null);
@@ -73,7 +74,6 @@ export function LiveOverviewPage() {
   const cardsById = useMemo(() => new Map((ready?.cards ?? []).map((card) => [card.id, card])), [ready?.cards]);
   const people = useMemo(() => livePeople(lessonsById, cardsById), [lessonsById, cardsById]);
   const view = useMemo(() => liveOverview((ready?.lessons ?? []).map((lesson) => toScheduleLesson(lesson, timezone)), today, now), [ready?.lessons, timezone, today, now]);
-  const firstName = displayName.trim().split(/\s+/)[0] ?? displayName;
 
   const content = () => {
     if (state.kind === "loading") {
@@ -103,8 +103,8 @@ export function LiveOverviewPage() {
       </CabinetLink>
     );
     return (
-      <div className="grid grid-cols-[minmax(0,1fr)] gap-4 min-[1181px]:grid-cols-[minmax(0,3fr)_minmax(0,2fr)]">
-        <Card title={live.upcomingTitle} action={scheduleLink}>
+      <div className={styles.columns}>
+        <OverviewSection title={live.upcomingTitle} action={scheduleLink}>
           {view.today.length === 0 && view.tomorrow.length === 0 ? (
             <p className="m-0 text-sm font-semibold text-muted-foreground">{live.noUpcoming}</p>
           ) : (
@@ -123,23 +123,23 @@ export function LiveOverviewPage() {
               )}
             </div>
           )}
-        </Card>
-        <div className="flex flex-col gap-4">
-          <Card title={live.toMarkTitle} subtitle={view.toMark.length > 0 ? live.toMarkHint : undefined}>
+        </OverviewSection>
+        <div className={styles.right}>
+          <OverviewSection title={live.toMarkTitle}>
             {view.toMark.length === 0 ? (
               <p className="m-0 text-sm font-semibold text-muted-foreground">{live.allMarked}</p>
             ) : (
               <LessonList lessons={view.toMark} people={people} withDate onOpen={setSelectedId} />
             )}
-          </Card>
-          <Card title={live.weekTitle}>
-            <div className="grid grid-cols-2 gap-2">
+          </OverviewSection>
+          <OverviewSection title={live.weekTitle}>
+            <div className={styles.liveCounts}>
               <Count label={live.week.planned} value={view.week.planned} />
               <Count label={live.week.completed} value={view.week.completed} />
               <Count label={live.week.noShow} value={view.week.noShow} />
               <Count label={live.week.cancelled} value={view.week.cancelled} />
             </div>
-          </Card>
+          </OverviewSection>
         </div>
       </div>
     );
@@ -149,8 +149,8 @@ export function LiveOverviewPage() {
 
   return (
     <>
-      <Greeting name={firstName} now={now} />
-      {content()}
+      <div className={styles.page}><MainHeading today={today} />
+      {content()}</div>
       <LiveLessonSheet
         lesson={selected}
         card={selected ? (cardsById.get(selected.cardId) ?? null) : null}

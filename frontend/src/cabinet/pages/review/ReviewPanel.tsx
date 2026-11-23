@@ -1,4 +1,5 @@
-import { ClipboardList, Zap } from "lucide-react";
+import styles from "./review.module.css";
+import { ClipboardCheck, ClipboardList, Zap } from "lucide-react";
 import { cabinet } from "../../content/cabinet.ru";
 import { getStudent } from "../../data";
 import { attemptScore, type Assignment, type Work, type WorkKind } from "../../tasks/library";
@@ -30,7 +31,8 @@ export function ReviewPanel({ kind, onKind, works, assignments, selectedId, onSe
     .sort((a, b) => Number(b.items.some((item) => item.status === "wait")) - Number(a.items.some((item) => item.status === "wait")));
 
   return (
-    <aside className="grid min-w-0 grid-cols-[minmax(0,1fr)] content-start gap-3 glass rounded-2xl p-3" aria-label={text.panelLabel}>
+    <aside className={styles.queue} aria-label={text.panelLabel}>
+      <header className={styles.queueHeader}><h2>{text.queueTitle}</h2><ClipboardCheck aria-hidden="true" /></header>
       <ToggleGroup type="single" spacing={1} value={kind} aria-label={text.panelLabel} className="grid w-full grid-cols-2 gap-1 rounded-lg bg-secondary p-1" onValueChange={(value) => value && onKind(value as WorkKind)}>
         {(["homework", "test"] as const).map((id) => (
           <ToggleGroupItem key={id} value={id} className="min-w-0 truncate data-[state=on]:bg-card data-[state=on]:shadow-sm">
@@ -61,14 +63,11 @@ export function ReviewPanel({ kind, onKind, works, assignments, selectedId, onSe
                         type="button"
                         aria-pressed={assignment.id === selectedId}
                         onClick={() => onSelect(assignment.id)}
-                        className={cx(
-                          "flex w-full appearance-none items-center gap-2.5 rounded-xl border-0 px-2 py-2 text-left text-foreground [font-family:inherit] transition-colors",
-                          assignment.id === selectedId ? "bg-accent" : "bg-transparent hover:bg-secondary",
-                        )}
+                        className={styles.queueItem}
                       >
                         <Avatar initials={student.initials} color={student.color} />
                         <span className="grid min-w-0 flex-1">
-                          <b className="truncate text-sm font-extrabold">{student.name}</b>
+                          <b className="truncate text-sm font-extrabold">{student.name}</b><span className={styles.workName}>{work.title}</span>
                           <span className="flex items-center gap-1.5 text-xs font-semibold text-muted-foreground">
                             <span className={cx("size-1.5 rounded-full", statusDot[assignment.status])} aria-hidden="true" />
                             {text.status[assignment.status]}

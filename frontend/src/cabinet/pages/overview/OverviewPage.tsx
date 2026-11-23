@@ -3,7 +3,8 @@ import { getSchedule, getTeacherOverview } from "../../data";
 import type { ScheduleLesson } from "../../mocks/types";
 import { LessonSheet } from "../schedule/LessonSheet";
 import { AttentionCard } from "./AttentionCard";
-import { Greeting } from "./Greeting";
+import { MainHeading } from "./MainHeading";
+import styles from "./overview.module.css";
 import { OverviewHighlights } from "./OverviewHighlights";
 import { TodayCard } from "./TodayCard";
 import { WeekCard } from "./WeekCard";
@@ -17,19 +18,21 @@ export function OverviewPage() {
 
   return (
     <>
-      <Greeting name={data.teacherName} now={schedule.now} />
+      <div className={styles.page}>
+      <MainHeading today={schedule.today} />
       <OverviewHighlights data={data} />
-      <div className="grid grid-cols-[minmax(0,1fr)] gap-4 min-[1181px]:grid-cols-[minmax(0,3fr)_minmax(0,2fr)]">
+      <div className={styles.columns}>
         <TodayCard
           lessons={{ today: data.today, tomorrow: data.tomorrow }}
           freeWindows={data.week.freeWindows}
           today={schedule.today}
           onOpen={openLesson}
         />
-        <div className="flex flex-col gap-4">
+        <div className={styles.right}>
           <AttentionCard items={data.attention} />
           <WeekCard week={data.week} today={schedule.today} />
         </div>
+      </div>
       </div>
       <LessonSheet lesson={selected} onClose={() => setSelected(null)} />
     </>

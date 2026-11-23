@@ -7,7 +7,8 @@ import { useSession } from "../../../session/SessionContext";
 import { Button } from "../../../ui/Button";
 import { EmptyState } from "../../../ui/EmptyState";
 import { useNotifier } from "../../../ui/Notifications";
-import { PageHead } from "../../../ui/PageHead";
+import { StudentsHeading } from "../StudentsHeading";
+import styles from "../students.module.css";
 import { Tabs } from "../../../ui/Tabs";
 import { Input } from "@/shared/ui/kit/input";
 import { InvitationsList } from "./InvitationsList";
@@ -109,13 +110,13 @@ export function LiveStudentsPage() {
   const counts: Record<LiveTab, number> = { active: data?.active.length ?? 0, archived: data?.archived.length ?? 0, invitations: pending };
 
   return (
-    <>
-      <PageHead title={text.title} actions={invite} />
-      <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+    <div className={styles.page}>
+      <StudentsHeading title={text.title} actions={invite} />
+      <div className={styles.toolbar}>
         <Tabs
           label={text.tabsLabel}
           selectedId={tab}
-          items={(Object.keys(text.tabs) as LiveTab[]).map((id) => ({ id, label: text.tabLabel(text.tabs[id], counts[id]), href: liveStudentsHref(id) }))}
+          items={(Object.keys(text.tabs) as LiveTab[]).map((id) => ({ id, label: text.tabs[id], count: counts[id], href: liveStudentsHref(id) }))}
         />
         {tab !== "invitations" && (
           <div className="relative min-w-0 max-[520px]:w-full">
@@ -136,6 +137,6 @@ export function LiveStudentsPage() {
 
       <LiveStudentSheet card={selected} onClose={() => go({ studentId: null })} onCloseAutoFocus={restoreFocus} onChanged={(card) => update((current) => placeCard(current, card))} />
       <InviteDialog purpose={inviting} onClose={() => setInviting(null)} onIssued={onIssued} />
-    </>
+    </div>
   );
 }

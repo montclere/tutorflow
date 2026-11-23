@@ -1,7 +1,7 @@
 import { LogOut } from "lucide-react";
 import type { ReactNode } from "react";
 import { routes } from "../config/routes";
-import { siteConfig } from "../config/site";
+import { BrandMark } from "../shared/ui/BrandMark";
 import { authApi } from "../features/auth/api";
 import { Button } from "../cabinet/ui/Button";
 import { CabinetLink } from "../cabinet/ui/CabinetLink";
@@ -54,8 +54,7 @@ export function LearnerFrame({ account, pathname, children }: { account: Account
     <div className="min-h-screen bg-background text-foreground">
       <header className="mx-auto flex max-w-3xl flex-wrap items-center justify-between gap-3 px-4 py-4">
         <CabinetLink className={layout.logo} href={routes.home} aria-label={learner.homeLabel}>
-          <span className={layout.logoLeft}>{siteConfig.logo.left}</span>
-          <span className={layout.logoRight}>{siteConfig.logo.right}</span>
+          <BrandMark compactAt={380} />
         </CabinetLink>
         {account && (
           <div className="flex flex-wrap items-center gap-3">

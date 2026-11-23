@@ -8,6 +8,8 @@ import { Button } from "@/shared/ui/kit/button";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/shared/ui/kit/command";
 import { Popover, PopoverContent, PopoverTrigger } from "@/shared/ui/kit/popover";
 
+import styles from "./schedule.module.css";
+
 const text = cabinet.teacher.schedule.filters;
 
 export type ComboboxStudent = { id: string; name: string; initials: string; color: StudentColor };
@@ -35,7 +37,7 @@ export function StudentCombobox({ students, value, onChange }: Props) {
         </Button>
       </PopoverTrigger>
       <PopoverContent className="w-64 p-0" align="start">
-        <Command>
+        <Command className={styles.studentOptions}>
           <CommandInput placeholder={text.searchStudent} />
           <CommandList>
             <CommandEmpty>{text.noStudents}</CommandEmpty>

@@ -163,7 +163,7 @@ function changeDetail(change: LessonChange, timeZone: string): string | null {
   return change.reason;
 }
 
-type Panel = "move" | "edit" | "series" | "delete" | null;
+export type Panel = "move" | "edit" | "series" | "delete" | null;
 
 type Props = {
   lesson: LiveLesson;
@@ -174,6 +174,8 @@ type Props = {
   onReload: () => void;
   onClose: () => void;
   upcoming: boolean;
+  panel: Panel;
+  onPanelChange: (panel: Panel) => void;
 };
 
 /**
@@ -181,9 +183,8 @@ type Props = {
  * ученику, правка содержания урока или шаблона серии, отмена будущих дат серии, удаление; ниже — предложения
  * переноса, предупреждения о неявке и история урока.
  */
-export function LessonPanels({ lesson, timeZone, onChanged, onReload, onClose, upcoming }: Props) {
+export function LessonPanels({ lesson, timeZone, onChanged, onReload, onClose, upcoming, panel, onPanelChange: setPanel }: Props) {
   const { notify } = useNotifier();
-  const [panel, setPanel] = useState<Panel>(null);
   const [series, setSeries] = useState<LiveSeries | null>(null);
   const [requests, setRequests] = useState<RescheduleRequest[]>([]);
   const [notices, setNotices] = useState<AbsenceNotice[]>([]);
@@ -376,7 +377,7 @@ function MovePanel({ lesson, series, timeZone, onSent, onError }: { lesson: Live
           </select>
         </Field>
       )}
-      <div className="grid grid-cols-[1fr_auto_auto] gap-2">
+      <div className="grid grid-cols-1 gap-3 min-[480px]:grid-cols-[minmax(0,1fr)_auto_auto]">
         <Field label={text.move.date}>
           <input type="date" className={fieldClass} value={date} onChange={(event) => reset(setDate)(event.target.value)} />
         </Field>

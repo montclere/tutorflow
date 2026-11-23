@@ -1,4 +1,4 @@
-import { ArrowLeft, ArrowRight, Check, CheckCheck, Clock, Flag, Sparkles, X } from "lucide-react";
+import { ArrowLeft, ArrowRight, Bookmark, Check, CheckCheck, Clock, Flag, Sparkles, X } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { navigate } from "../../../../app/router";
 import { studentRoutes } from "../../../../config/routes";
@@ -15,6 +15,7 @@ import { useNotifier } from "../../../ui/Notifications";
 import { RichText } from "../../../ui/RichText";
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/shared/ui/kit/dialog";
 import { AnswerInput } from "./AnswerInput";
+import styles from "./test-modal.module.css";
 
 const text = tasksText.player;
 
@@ -44,17 +45,18 @@ function responseText(response: AnswerResponse | undefined): string {
 type Props = { assignment: Assignment | null; work: Work | null; onClose: () => void };
 
 function Result({ work, assignment, attempt, onClose }: { work: Work; assignment: Assignment; attempt: Attempt; onClose: () => void }) {
+  const modern = work.kind === "test";
   const score = attemptScore(work.items, attempt.results);
   const minutes = Math.max(1, Math.round((attempt.finishedAt - attempt.startedAt) / 60_000));
   const reveal = (work.kind === "test" && work.test?.mode === "training") || assignment.reveal === "now";
   return (
-    <div className="mx-auto grid w-full max-w-2xl gap-6 p-5 sm:p-8">
+    <div className={cx("mx-auto grid w-full max-w-2xl gap-6 p-5 sm:p-8", modern && styles.result)}>
       <div className="grid justify-items-center gap-2 text-center">
         <span className={cx("grid size-20 place-items-center rounded-full bg-[var(--cab-ok-soft)] text-success", learn.pop)} aria-hidden="true">
           <CheckCheck size={34} />
         </span>
         <h3 className="m-0 font-[family-name:var(--font-display)] text-2xl font-black">{text.resultTitle}</h3>
-        {score.percent !== null && <b className="font-[family-name:var(--font-display)] text-6xl leading-none font-black tabular-nums">{score.percent}%</b>}
+        {score.percent !== null && <b className={cx("font-[family-name:var(--font-display)] text-6xl leading-none font-black tabular-nums", modern && styles.resultPercent)}>{score.percent}%</b>}
         <p className="m-0 text-base font-semibold text-muted-foreground tabular-nums">
           {[score.total > 0 ? text.resultScore(score.correct, score.total) : null, text.resultPoints(score.points, score.maxPoints), text.resultTime(minutes)].filter(Boolean).join(" · ")}
         </p>
@@ -95,7 +97,7 @@ function Result({ work, assignment, attempt, onClose }: { work: Work; assignment
         {score.correct < score.total && (
           <button
             type="button"
-            className={chunky("lime")}
+            className={modern ? styles.secondary : chunky("lime")}
             onClick={() => {
               onClose();
               navigate(studentRoutes.trainer);
@@ -105,7 +107,7 @@ function Result({ work, assignment, attempt, onClose }: { work: Work; assignment
             {text.practice}
           </button>
         )}
-        <button type="button" className={chunky("primary")} onClick={onClose}>
+        <button type="button" className={modern ? styles.primary : chunky("primary")} onClick={onClose}>
           {text.done}
         </button>
       </div>
@@ -115,6 +117,7 @@ function Result({ work, assignment, attempt, onClose }: { work: Work; assignment
 
 function Player({ work, assignment, startedAt, onClose }: { work: Work; assignment: Assignment; startedAt: number; onClose: () => void }) {
   const { notify } = useNotifier();
+  const modern = work.kind === "test";
   const [index, setIndex] = useState(0);
   const [answers, setAnswers] = useState<Record<string, AnswerResponse>>(() => Object.fromEntries(work.items.map((task) => [task.id, emptyResponse(task.answer)])));
   const [flagged, setFlagged] = useState<string[]>([]);
@@ -190,13 +193,13 @@ function Player({ work, assignment, startedAt, onClose }: { work: Work; assignme
   const primaryLabel = training && !isChecked && task.answer.kind !== "extended" ? text.check : last ? text.finish : text.next;
 
   return (
-    <div className="flex min-h-0 flex-1 flex-col">
-      <div className="shrink-0 px-5 pt-4 sm:px-6">
+    <div className={cx("flex min-h-0 flex-1 flex-col", modern && styles.player)}>
+      <div className={cx("shrink-0 px-5 pt-4 sm:px-6", modern && styles.progressWrap)}>
         <div className={learn.bar} role="progressbar" aria-valuemin={0} aria-valuemax={work.items.length} aria-valuenow={work.items.length - unanswered} aria-label={text.progress(work.items.length - unanswered, work.items.length)}>
           <div className={learn.barFill} style={{ width: `${((work.items.length - unanswered) / work.items.length) * 100}%` }} />
         </div>
       </div>
-      <nav aria-label={text.navLabel} className="flex shrink-0 gap-1.5 overflow-x-auto border-b px-5 py-3 sm:px-6">
+      <nav aria-label={text.navLabel} className={cx("flex shrink-0 gap-1.5 overflow-x-auto border-b px-5 py-3 sm:px-6", modern && styles.steps)}>
         {work.items.map((item, position) => {
           const state = stateOf(item, position);
           return (
@@ -204,6 +207,7 @@ function Player({ work, assignment, startedAt, onClose }: { work: Work; assignme
               key={item.id}
               type="button"
               aria-current={position === index ? "step" : undefined}
+              data-state={modern ? state : undefined}
               aria-label={text.navItem(position + 1, text.states[state])}
               onClick={() => go(position)}
               className={cx(
@@ -215,34 +219,36 @@ function Player({ work, assignment, startedAt, onClose }: { work: Work; assignme
                 state === "right" && "border-success bg-[var(--cab-ok-soft)] text-success",
                 state === "wrong" && "border-destructive bg-[var(--cab-bad-soft)] text-destructive",
                 position === index && state !== "current" && "ring-[3px] ring-ring/40",
+                modern && styles.step,
               )}
             >
               {position + 1}
             </button>
           );
         })}
+        {modern && <span className={styles.stepCount}>{text.progress(index + 1, work.items.length)}</span>}
       </nav>
 
-      <div className="min-h-0 flex-1 overflow-y-auto">
-        <article key={`${task.id}-${isChecked}`} className={cx("mx-auto grid w-full max-w-2xl gap-6 p-5 sm:p-8", training && isChecked && result === false && learn.shake)}>
-          <div className="flex flex-wrap items-center gap-2 text-xs font-bold">
+      <div className={cx("min-h-0 flex-1 overflow-y-auto", modern && styles.body)}>
+        <article key={`${task.id}-${isChecked}`} className={cx("mx-auto grid w-full max-w-2xl gap-6 p-5 sm:p-8", training && isChecked && result === false && learn.shake, modern && styles.question)}>
+          <div className={cx("flex flex-wrap items-center gap-2 text-xs font-bold", modern && styles.tags)}>
             <span className="rounded-md bg-accent px-2 py-1 text-accent-foreground">{taskPlace(task)}</span>
             <span className="rounded-md bg-secondary px-2 py-1 text-muted-foreground">{tasksText.points(task.points)}</span>
           </div>
-          <p className="m-0 text-xl leading-snug font-bold">
+          <p className={cx("m-0 text-xl leading-snug font-bold", modern && styles.statement)}>
             <RichText parts={task.statement} />
           </p>
-          <AnswerInput key={task.id} spec={task.answer} value={answer} locked={training && isChecked} onChange={(next) => setAnswers((current) => ({ ...current, [task.id]: next }))} onSubmit={primary} />
+          <AnswerInput key={task.id} appearance={modern ? "test-modal" : undefined} spec={task.answer} value={answer} locked={training && isChecked} onChange={(next) => setAnswers((current) => ({ ...current, [task.id]: next }))} onSubmit={primary} />
         </article>
       </div>
 
       {training && isChecked && result !== null && result !== undefined ? (
-        <footer className={cx("grid shrink-0 gap-3 px-5 py-4 sm:px-6", learn.slideUp, result ? "bg-[var(--cab-ok-soft)]" : "bg-[var(--cab-bad-soft)]")} role="status">
-          <div className="mx-auto flex w-full max-w-2xl flex-wrap items-center gap-4">
-            <span className={cx("grid size-12 flex-none place-items-center rounded-full bg-card", result ? "text-success" : "text-destructive", learn.pop)} aria-hidden="true">
+        <footer className={cx("grid shrink-0 gap-3 px-5 py-4 sm:px-6", learn.slideUp, result ? "bg-[var(--cab-ok-soft)]" : "bg-[var(--cab-bad-soft)]", modern && styles.footer, modern && styles.feedback)} data-outcome={modern ? result ? "right" : "wrong" : undefined} role="status">
+          <div className={cx("mx-auto flex w-full max-w-2xl flex-wrap items-center gap-4", modern && styles.feedbackInner)}>
+            <span className={cx("grid size-12 flex-none place-items-center rounded-full bg-card", result ? "text-success" : "text-destructive", learn.pop, modern && styles.feedbackIcon)} aria-hidden="true">
               {result ? <Check size={26} /> : <X size={26} />}
             </span>
-            <div className="grid min-w-0 flex-1 gap-0.5">
+            <div className={cx("grid min-w-0 flex-1 gap-0.5", modern && styles.feedbackCopy)}>
               <b className={cx("font-[family-name:var(--font-display)] text-xl font-black", result ? "text-success" : "text-destructive")}>{result ? praise(index) : text.wrong}</b>
               {!result && <span className="text-sm font-bold">{text.correctAnswer(answerText(task.answer))}</span>}
               {task.solution && (
@@ -251,28 +257,29 @@ function Player({ work, assignment, startedAt, onClose }: { work: Work; assignme
                 </span>
               )}
             </div>
-            <button type="button" className={chunky(result ? "good" : "bad", "max-[520px]:w-full")} onClick={primary}>
+            <button type="button" className={modern ? styles.primary : chunky(result ? "good" : "bad", "max-[520px]:w-full")} onClick={primary}>
               {last ? text.finish : text.next}
             </button>
           </div>
         </footer>
       ) : (
-        <footer className="grid shrink-0 gap-2 border-t px-5 py-3 sm:px-6">
+        <footer className={cx("grid shrink-0 gap-2 border-t px-5 py-3 sm:px-6", modern && styles.footer)}>
         {confirming && (
           <p className="m-0 text-sm font-bold text-[var(--cab-warn)]" role="alert">
             {text.finishConfirm(unanswered)}
           </p>
         )}
-        <div className="flex flex-wrap items-center gap-2">
-          <Button icon={ArrowLeft} disabled={index === 0} onClick={() => go(index - 1)}>
+        <div className={cx("flex flex-wrap items-center gap-2", modern && styles.footerControls)}>
+          <Button className={modern ? styles.secondary : undefined} icon={ArrowLeft} disabled={index === 0} onClick={() => go(index - 1)}>
             {text.back}
           </Button>
-          <Button icon={Flag} onClick={() => setFlagged((current) => (current.includes(task.id) ? current.filter((id) => id !== task.id) : [...current, task.id]))}>
+          <Button className={modern ? styles.secondary : undefined} icon={modern ? Bookmark : Flag} aria-pressed={modern ? flagged.includes(task.id) : undefined} onClick={() => setFlagged((current) => (current.includes(task.id) ? current.filter((id) => id !== task.id) : [...current, task.id]))}>
             {flagged.includes(task.id) ? text.unflag : text.flag}
           </Button>
-          <span className="flex-1 max-[520px]:hidden" />
+          <span className={cx("flex-1 max-[520px]:hidden", modern && styles.spacer)} />
           {!last && !training && (
             <Button
+              className={modern ? styles.secondary : undefined}
               onClick={() => {
                 if (unanswered > 0 && !confirming) setConfirming(true);
                 else finish();
@@ -283,7 +290,7 @@ function Player({ work, assignment, startedAt, onClose }: { work: Work; assignme
           )}
           <button
             type="button"
-            className={chunky(primaryLabel === text.check ? "good" : "primary", "max-[520px]:order-first max-[520px]:basis-full")}
+            className={modern ? styles.primary : chunky(primaryLabel === text.check ? "good" : "primary", "max-[520px]:order-first max-[520px]:basis-full")}
             onClick={primary}
             disabled={training && !isChecked && task.answer.kind !== "extended" && !isAnswered(answer)}
           >
@@ -300,6 +307,7 @@ function Player({ work, assignment, startedAt, onClose }: { work: Work; assignme
 
 /** Шапка и плеер одной попытки: создаются заново при каждом открытии, время отсчитывается от него. */
 function Shell({ work, assignment, onClose }: { work: Work; assignment: Assignment; onClose: () => void }) {
+  const modern = work.kind === "test";
   const [startedAt] = useState(() => Date.now());
   const [now, setNow] = useState(startedAt);
   const limit = work.kind === "test" ? (work.test?.timeLimitMin ?? null) : null;
@@ -312,21 +320,25 @@ function Shell({ work, assignment, onClose }: { work: Work; assignment: Assignme
 
   return (
     <>
-      <header className="flex shrink-0 items-center gap-3 border-b px-5 py-3 sm:px-6">
-        <div className="grid min-w-0 flex-1">
-          <DialogTitle className="m-0 truncate font-[family-name:var(--font-display)] text-lg font-black">{work.title}</DialogTitle>
-          <DialogDescription className="m-0 text-sm font-semibold">
+      <header className={cx("flex shrink-0 items-center gap-3 border-b px-5 py-3 sm:px-6", modern && styles.header)}>
+        <div className={cx("grid min-w-0 flex-1", modern && styles.headerCopy)}>
+          <DialogTitle className={cx("m-0 truncate font-[family-name:var(--font-display)] text-lg font-black", modern && styles.title)}>{work.title}</DialogTitle>
+          <DialogDescription className={cx("m-0 text-sm font-semibold", modern && styles.meta)}>
             {tasksText.kinds[work.kind]}
             {work.kind === "test" && work.test ? ` · ${tasksText.save.modes[work.test.mode]}` : ""} · {tasksText.count(work.items.length)}
           </DialogDescription>
         </div>
+        {modern && <picture className={styles.decor}>
+          <source srcSet="/student-test-modal/flashcards-400.webp 400w, /student-test-modal/flashcards.webp 800w" sizes="140px" type="image/webp" />
+          <img src="/student-test-modal/flashcards.webp" width="800" height="600" alt="" decoding="async" />
+        </picture>}
         {limit !== null && (
-          <span className="inline-flex items-center gap-1.5 rounded-full bg-secondary px-3 py-1.5 text-sm font-extrabold tabular-nums" aria-hidden="true">
+          <span className={cx("inline-flex items-center gap-1.5 rounded-full bg-secondary px-3 py-1.5 text-sm font-extrabold tabular-nums", modern && styles.timer)} aria-hidden="true">
             <Clock size={15} />
             {clock(limit * 60 - (now - startedAt) / 1000)}
           </span>
         )}
-        <Button icon={X} aria-label={`${text.close}. ${text.closeHint}`} title={text.closeHint} onClick={onClose} />
+        <Button className={modern ? styles.close : undefined} icon={X} aria-label={`${text.close}. ${text.closeHint}`} title={text.closeHint} onClick={onClose} />
       </header>
       <Player work={work} assignment={assignment} startedAt={startedAt} onClose={onClose} />
     </>
@@ -335,11 +347,23 @@ function Shell({ work, assignment, onClose }: { work: Work; assignment: Assignme
 
 /** Решение задания или теста на платформе — окно на весь экран (TASKS-8). */
 export function TaskPlayer({ assignment, work, onClose }: Props) {
+  const triggerRef = useRef<HTMLElement | null>(null);
   return (
     <Dialog open={assignment !== null && work !== null} onOpenChange={(open) => !open && onClose()}>
       <DialogContent
         showCloseButton={false}
-        className="top-0 left-0 flex h-dvh w-screen max-w-none translate-x-0 translate-y-0 flex-col gap-0 overflow-hidden rounded-none border-0 p-0 sm:max-w-none"
+        className={cx("top-0 left-0 flex h-dvh w-screen max-w-none translate-x-0 translate-y-0 flex-col gap-0 overflow-hidden rounded-none border-0 p-0 sm:max-w-none", work?.kind === "test" && styles.modal)}
+        onOpenAutoFocus={() => {
+          triggerRef.current = work?.kind === "test" && document.activeElement instanceof HTMLElement && document.activeElement !== document.body ? document.activeElement : null;
+        }}
+        onCloseAutoFocus={(event) => {
+          const trigger = triggerRef.current;
+          if (!trigger) return;
+          event.preventDefault();
+          triggerRef.current = null;
+          if (trigger.isConnected && !trigger.matches(":disabled")) trigger.focus();
+          else document.getElementById("cabinet-main")?.focus();
+        }}
       >
         {assignment && work && <Shell key={assignment.id} work={work} assignment={assignment} onClose={onClose} />}
       </DialogContent>

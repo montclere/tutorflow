@@ -13,14 +13,24 @@ import { balanceNote, formatBalance, nextLessonText } from "../StudentsTable";
 const students = cabinet.teacher.students;
 const text = students.profile.summary;
 
-/** Карточка сводки: иконка, заголовок, содержимое. */
-function Block({ icon: Icon, title, tone = "default", children }: { icon: LucideIcon; title: string; tone?: "default" | "accent"; children: ReactNode }) {
+type BlockTone = "blue" | "pink" | "mint" | "lavender" | "plain";
+
+const blockTones: Record<BlockTone, string> = {
+  blue: "glass-blue",
+  pink: "glass [--glass-bg:color-mix(in_srgb,var(--vibe-pink)_70%,transparent)]",
+  mint: "glass [--glass-bg:color-mix(in_srgb,var(--vibe-mint)_70%,transparent)]",
+  lavender: "glass [--glass-bg:color-mix(in_srgb,var(--vibe-lavender)_70%,transparent)]",
+  plain: "glass",
+};
+
+/** Блок сводки на матовом стекле: цвет — по смыслу (урок — синий, долг — розовый, предоплата — мятный). */
+function Block({ icon: Icon, title, tone = "plain", children }: { icon: LucideIcon; title: string; tone?: BlockTone; children: ReactNode }) {
+  const onBlue = tone === "blue";
   return (
-    <section className={cx("grid gap-3.5 rounded-2xl border p-5", tone === "accent" ? "border-primary/20 bg-accent" : "bg-card")}>
-      <h3 className="m-0 flex items-center gap-2.5 text-sm font-extrabold tracking-wide text-muted-foreground uppercase">
-        <span className={cx("grid size-8 place-items-center rounded-lg", tone === "accent" ? "bg-primary text-primary-foreground" : "bg-secondary text-foreground")} aria-hidden="true">
-          <Icon size={17} />
-        </span>
+    <section className={cx("relative isolate grid gap-3 overflow-hidden rounded-2xl p-4", blockTones[tone])}>
+      {onBlue && <span className="pointer-events-none absolute -top-12 -right-10 -z-10 size-36 rounded-full bg-[var(--color-lime)] opacity-25 blur-3xl" aria-hidden="true" />}
+      <h3 className={cx("m-0 flex items-center gap-2 text-xs font-extrabold tracking-wide uppercase", onBlue ? "text-white/80" : "text-muted-foreground")}>
+        <Icon size={15} aria-hidden="true" />
         {title}
       </h3>
       {children}
@@ -30,19 +40,17 @@ function Block({ icon: Icon, title, tone = "default", children }: { icon: Lucide
 
 function MiniStat({ label, value, note }: { label: string; value: ReactNode; note?: string }) {
   return (
-    <div className="grid content-start gap-0.5 rounded-xl bg-secondary/60 px-3 py-2.5">
-      <span className="text-sm font-bold text-muted-foreground">{label}</span>
-      <b className="font-[family-name:var(--font-display)] text-lg leading-tight font-extrabold tabular-nums">{value}</b>
-      {note && <span className="text-xs font-semibold text-muted-foreground tabular-nums">{note}</span>}
+    <div className="grid min-w-0 content-start gap-0.5">
+      <span className="text-xs font-bold text-muted-foreground">{label}</span>
+      <b className="truncate text-sm font-extrabold tabular-nums">{value}</b>
+      {note && <span className="truncate text-xs font-semibold text-muted-foreground tabular-nums">{note}</span>}
     </div>
   );
 }
 
-const balanceTone = (balance: number) => (balance < 0 ? "bg-[var(--cab-bad-soft)] text-destructive" : "bg-[var(--cab-ok-soft)] text-success");
-
 type Props = { student: Student; today: string; onAssignSchedule: () => void };
 
-/** Сводка слева: урок, оплата, экзамен, контакты — карточками, главное видно с любой вкладки (STUDENTS-13). */
+/** Сводка справа: урок, оплата, экзамен, контакты — на матовом стекле, главное видно с любой вкладки (STUDENTS-13). */
 export function ProfileSummary({ student, today, onAssignSchedule }: Props) {
   const { notify } = useNotifier();
   const { schedule, payment, parent, exam } = student;
@@ -61,8 +69,8 @@ export function ProfileSummary({ student, today, onAssignSchedule }: Props) {
 
   return (
     <div className="grid gap-3" aria-label={text.label} role="region">
-      <Block icon={CalendarClock} title={text.next} tone="accent">
-        <p className={cx("m-0 font-[family-name:var(--font-display)] text-2xl leading-tight font-black", !student.nextLesson && "text-muted-foreground")}>
+      <Block icon={CalendarClock} title={text.next} tone="blue">
+        <p className={cx("m-0 font-[family-name:var(--font-display)] text-xl leading-tight font-black", !student.nextLesson && "text-white/70")}>
           {student.nextLesson ? nextLessonText(student, today) : text.noNext}
         </p>
         {schedule.timesPerWeek > 0 ? (
@@ -73,7 +81,7 @@ export function ProfileSummary({ student, today, onAssignSchedule }: Props) {
                 return (
                   <li
                     key={day}
-                    className={cx("grid h-8 flex-1 place-items-center rounded-lg text-xs font-extrabold", on ? "bg-primary text-primary-foreground" : "bg-card/70 text-muted-foreground")}
+                    className={cx("grid h-7 flex-1 place-items-center rounded-md text-[11px] font-extrabold", on ? "bg-white text-primary" : "bg-white/12 text-white/70")}
                     aria-label={on ? day : undefined}
                     aria-hidden={on ? undefined : true}
                   >
@@ -82,7 +90,7 @@ export function ProfileSummary({ student, today, onAssignSchedule }: Props) {
                 );
               })}
             </ul>
-            <span className="text-sm font-bold text-muted-foreground tabular-nums">
+            <span className="text-sm font-bold text-white/80 tabular-nums">
               {mixed ? text.mixedTime : schedule.time} · {text.duration(schedule.durationMin)}
             </span>
           </div>
@@ -95,12 +103,12 @@ export function ProfileSummary({ student, today, onAssignSchedule }: Props) {
         )}
       </Block>
 
-      <Block icon={Wallet} title={text.payment}>
+      <Block icon={Wallet} title={text.payment} tone={student.balance < 0 ? "pink" : student.balance > 0 ? "mint" : "plain"}>
         <div className="grid gap-1">
-          <span className={cx("w-fit rounded-full px-3.5 py-1.5 text-base font-extrabold tabular-nums", balanceTone(student.balance))}>{formatBalance(student.balance)}</span>
-          {note && <span className={cx("text-sm font-bold", note.warn ? "text-[var(--cab-warn)]" : "text-muted-foreground")}>{note.text}</span>}
+          <b className={cx("font-[family-name:var(--font-display)] text-xl leading-tight font-black tabular-nums", student.balance < 0 ? "text-destructive" : student.balance > 0 ? "text-success" : "")}>{formatBalance(student.balance)}</b>
+          {note && <span className={cx("text-xs font-bold", note.warn ? "text-[var(--cab-warn)]" : "text-muted-foreground")}>{note.text}</span>}
         </div>
-        <div className="grid grid-cols-2 gap-2">
+        <div className="grid grid-cols-2 gap-3 border-t border-black/5 pt-3">
           <MiniStat
             label={text.tariff}
             value={pack ? students.payment.package : students.payment.perLesson}
@@ -111,9 +119,9 @@ export function ProfileSummary({ student, today, onAssignSchedule }: Props) {
       </Block>
 
       {exam && (
-        <Block icon={Target} title={text.exam}>
+        <Block icon={Target} title={text.exam} tone="lavender">
           <div className="flex items-center gap-3">
-            <Ring value={exam.readiness} size={64} stroke={7} label={text.readiness(exam.readiness)}>
+            <Ring value={exam.readiness} size={56} stroke={6} label={text.readiness(exam.readiness)}>
               <b className="text-sm font-black tabular-nums">{exam.readiness}%</b>
             </Ring>
             <div className="grid gap-0.5">
@@ -145,9 +153,9 @@ export function ProfileSummary({ student, today, onAssignSchedule }: Props) {
                 .slice(0, 2)}
             </span>
             <div className="grid min-w-0 flex-1">
-              <span className="text-sm font-bold text-muted-foreground">{parent.relation}</span>
-              <b className="truncate text-base font-extrabold">{parent.name}</b>
-              <span className="text-sm font-semibold text-muted-foreground tabular-nums">{parent.phone}</span>
+              <span className="text-xs font-bold text-muted-foreground">{parent.relation}</span>
+              <b className="truncate text-sm font-extrabold">{parent.name}</b>
+              <span className="text-xs font-semibold text-muted-foreground tabular-nums">{parent.phone}</span>
             </div>
             <a
               href={`tel:${parent.phone.replace(/[^\d+]/g, "")}`}
@@ -159,7 +167,7 @@ export function ProfileSummary({ student, today, onAssignSchedule }: Props) {
           </div>
         )}
         <div className="flex flex-wrap gap-1.5">
-          <span className="rounded-full bg-secondary px-3 py-1 text-sm font-bold text-muted-foreground">{text.sourceChip(student.source)}</span>
+          <span className="rounded-full bg-white/70 px-2.5 py-1 text-xs font-bold text-muted-foreground">{text.sourceChip(student.source)}</span>
         </div>
         {!student.telegramConnected && (
           <span>

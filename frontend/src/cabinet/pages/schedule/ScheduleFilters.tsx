@@ -1,4 +1,4 @@
-import { SlidersHorizontal } from "lucide-react";
+import { CalendarDays, Clock3, SlidersHorizontal } from "lucide-react";
 import { useState } from "react";
 import { cabinet } from "../../content/cabinet.ru";
 import type { LessonType } from "../../mocks/types";
@@ -7,6 +7,8 @@ import { Button } from "../../ui/Button";
 import { cx } from "../../ui/cx";
 import { StudentCombobox, type ComboboxStudent } from "./StudentCombobox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/shared/ui/kit/select";
+
+import styles from "./schedule.module.css";
 
 const text = cabinet.teacher.schedule;
 const ALL = "all";
@@ -17,16 +19,18 @@ type Props = {
   showType?: boolean;
   filters: LessonFilters;
   summary: string;
+  lessonCount?: number;
+  windowCount?: number;
   onFilters: (filters: LessonFilters) => void;
 };
 
-export function ScheduleFilters({ students, showType = true, filters, summary, onFilters }: Props) {
+export function ScheduleFilters({ students, showType = true, filters, summary, lessonCount, windowCount, onFilters }: Props) {
   // На телефоне фильтры свёрнуты за кнопкой, чтобы шапка не съедала экран до первого урока.
   const [open, setOpen] = useState(false);
   const active = Number(filters.studentId !== null) + Number(filters.type !== null);
 
   return (
-    <div className="mb-4 flex flex-wrap items-center gap-2">
+    <div className={styles.filters}>
       <span className="min-[521px]:hidden">
         <Button size="sm" icon={SlidersHorizontal} aria-expanded={open} onClick={() => setOpen((current) => !current)}>
           {text.filters.toggle(active)}
@@ -52,7 +56,12 @@ export function ScheduleFilters({ students, showType = true, filters, summary, o
         )}
       </div>
 
-      <p className="m-0 ml-auto text-sm font-bold text-muted-foreground tabular-nums max-[820px]:ml-0 max-[820px]:w-full max-[520px]:w-auto">{summary}</p>
+      <div className={styles.summary} aria-label={summary}>
+        {lessonCount !== undefined && windowCount !== undefined ? <>
+          <span><CalendarDays size={19} aria-hidden="true" /><b>{lessonCount}</b>{text.summaryLessons(lessonCount)}</span>
+          <span><Clock3 size={19} aria-hidden="true" /><b>{windowCount}</b>{text.summaryWindows(windowCount)}</span>
+        </> : summary}
+      </div>
     </div>
   );
 }

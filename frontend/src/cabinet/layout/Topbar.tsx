@@ -2,7 +2,7 @@ import { CaretDown, ChalkboardTeacher, Check, Crown, Globe, GraduationCap, Lifeb
 import { navigate } from "../../app/router";
 import { env } from "../../config/env";
 import { routes } from "../../config/routes";
-import { siteConfig } from "../../config/site";
+import { BrandMark } from "../../shared/ui/BrandMark";
 import { cabinet, type Role } from "../content/cabinet.ru";
 import { studentPerson, teacherPerson } from "../mocks/people";
 import { initialsOf } from "../model/newStudent";
@@ -46,8 +46,7 @@ export function Topbar({ role, menuOpen, onToggleMenu }: Props) {
           onClick={onToggleMenu}
         />
         <CabinetLink className={styles.logo} href={routes.home} aria-label={text.homeLabel}>
-          <span className={styles.logoLeft}>{siteConfig.logo.left}</span>
-          <span className={styles.logoRight}>{siteConfig.logo.right}</span>
+          <BrandMark compactAt={380} />
         </CabinetLink>
         <span className={styles.divider} aria-hidden="true" />
         <DropdownMenu>

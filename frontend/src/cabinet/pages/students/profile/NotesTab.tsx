@@ -1,70 +1,61 @@
+import { CalendarDays, NotebookPen, Pencil, Plus, Trash2 } from "lucide-react";
 import { useState } from "react";
 import { cabinet } from "../../../content/cabinet.ru";
-import { addNote, getSchedule, getStudentDetails } from "../../../data";
+import { addNote, getSchedule, getStudentDetails, removeNote, updateNote } from "../../../data";
 import type { Student } from "../../../mocks/types";
 import { formatDayMonth } from "../../../model/dates";
-import { Button } from "../../../ui/Button";
+import { NOTE_MAX, normalizeNoteText, type IdentifiedNote } from "../../../model/studentNotes";
+import { Button, IconButton } from "../../../ui/Button";
 import { useNotifier } from "../../../ui/Notifications";
-import { Empty, Panel } from "./parts";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/shared/ui/kit/dialog";
+import { RecordDeleteDialog, useRecordDialogFocus } from "./RecordDialog";
+import styles from "./profile-records.module.css";
 
 const old = cabinet.teacher.students.sheet.notes;
 const text = cabinet.teacher.students.profile.notes;
-const NOTE_MAX = 2000;
+const actions = cabinet.teacher.students.profile.recordActions;
 
-/** Заметки — лентой по датам; новая сверху, с сегодняшней датой. Ctrl/⌘+Enter — добавить. */
+function NoteEditor({ note, onSave, onClose }: { note: IdentifiedNote | null; onSave: (value: string) => boolean; onClose: () => void }) {
+  const [value, setValue] = useState(note?.text ?? "");
+  const [error, setError] = useState(false);
+  const focus = useRecordDialogFocus();
+  const submit = () => { if (onSave(value)) onClose(); else setError(true); };
+  return <Dialog open onOpenChange={(open) => !open && onClose()}>
+    <DialogContent className="sm:max-w-lg" {...focus}>
+      <form className={styles.noteForm} onSubmit={(event) => { event.preventDefault(); submit(); }}>
+        <DialogHeader><DialogTitle>{note ? text.edit : text.add}</DialogTitle><DialogDescription>{text.private}</DialogDescription></DialogHeader>
+        <textarea rows={5} maxLength={NOTE_MAX} aria-label={note ? text.edit : old.label} aria-invalid={error} aria-describedby={error ? "student-note-error" : undefined} placeholder={old.placeholder} value={value} onChange={(event) => { setValue(event.target.value); setError(false); }} onKeyDown={(event) => { if (event.key === "Enter" && (event.metaKey || event.ctrlKey)) { event.preventDefault(); submit(); } }} />
+        {error && <p id="student-note-error" role="alert">{text.error}</p>}
+        <DialogFooter><Button type="button" onClick={onClose}>{actions.cancel}</Button><Button type="submit" variant="primary" disabled={normalizeNoteText(value) === null}>{actions.save}</Button></DialogFooter>
+      </form>
+    </DialogContent>
+  </Dialog>;
+}
+
 export function NotesTab({ student }: { student: Student }) {
   const { notify } = useNotifier();
   const { notes } = getStudentDetails(student.id);
-  const [value, setValue] = useState("");
-
-  const submit = () => {
-    const note = value.trim();
-    if (!note) return;
-    addNote(student.id, { date: getSchedule().today, text: note });
-    setValue("");
-    notify(old.added);
-  };
-
-  return (
-    <Panel title={text.title} hint={text.hint}>
-      <form
-        className="grid gap-2 rounded-xl bg-secondary/50 p-3"
-        onSubmit={(event) => {
-          event.preventDefault();
-          submit();
-        }}
-      >
-        <textarea
-          value={value}
-          rows={3}
-          maxLength={NOTE_MAX}
-          placeholder={old.placeholder}
-          aria-label={old.label}
-          className="w-full resize-y rounded-md border border-input bg-card px-3 py-2 text-base [font-family:inherit] outline-none placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
-          onChange={(event) => setValue(event.target.value)}
-          onKeyDown={(event) => {
-            if (event.key === "Enter" && (event.metaKey || event.ctrlKey)) submit();
-          }}
-        />
-        <span className="flex justify-end">
-          <Button type="submit" size="sm" variant="primary" disabled={value.trim() === ""}>
-            {old.add}
-          </Button>
-        </span>
-      </form>
-      {notes.length === 0 ? (
-        <Empty>{old.empty}</Empty>
-      ) : (
-        <ol className="m-0 ml-1.5 grid list-none gap-0 border-l-2 border-border pl-5">
-          {notes.map((note) => (
-            <li key={`${note.date}-${note.text}`} className="relative grid gap-1 pb-5 last:pb-0">
-              <span className="absolute top-1.5 -left-[27px] size-3 rounded-full border-2 border-card bg-primary" aria-hidden="true" />
-              <span className="text-xs font-bold tracking-wide text-muted-foreground uppercase tabular-nums">{formatDayMonth(note.date)}</span>
-              <p className="m-0 text-base font-semibold whitespace-pre-line">{note.text}</p>
-            </li>
-          ))}
-        </ol>
-      )}
-    </Panel>
-  );
+  const [editor, setEditor] = useState<{ note: IdentifiedNote | null } | null>(null);
+  const [removing, setRemoving] = useState<IdentifiedNote | null>(null);
+  const add = () => setEditor({ note: null });
+  return <section className={styles.panel} aria-labelledby="student-notes-title">
+    <header className={styles.panelHeader}>
+      <span className={`${styles.sectionIcon} ${styles.warm}`}><NotebookPen aria-hidden="true" /></span>
+      <div className={styles.heading}><h3 id="student-notes-title">{text.title}</h3><p>{text.hint}</p></div>
+      <Button variant="primary" icon={Plus} onClick={add}>{text.add}</Button>
+    </header>
+    {notes.length === 0 ? <div className={styles.empty}><NotebookPen aria-hidden="true" /><p>{text.empty}</p><Button icon={Plus} onClick={add}>{text.add}</Button></div> : <ol className={styles.notesList}>
+      {notes.map((note) => <li key={note.id} className={styles.noteRow}>
+        <time dateTime={note.date} className={styles.noteDate}><CalendarDays aria-hidden="true" />{formatDayMonth(note.date)}</time>
+        <p className={styles.noteText}>{note.text}</p>
+        <span className={styles.noteActions}><IconButton icon={Pencil} label={text.editLabel(formatDayMonth(note.date))} onClick={() => setEditor({ note })} /><IconButton icon={Trash2} label={text.deleteLabel(formatDayMonth(note.date))} onClick={() => setRemoving(note)} /></span>
+      </li>)}
+    </ol>}
+    {editor && <NoteEditor note={editor.note} onClose={() => setEditor(null)} onSave={(value) => {
+      const saved = editor.note ? updateNote(student.id, editor.note.id, value) : addNote(student.id, { date: getSchedule().today, text: value });
+      if (saved) notify(editor.note ? text.saved : old.added);
+      return saved;
+    }} />}
+    <RecordDeleteDialog open={removing !== null} title={text.deleteTitle} description={text.deleteDescription} onCancel={() => setRemoving(null)} onConfirm={() => { if (removing) { notify(removeNote(student.id, removing.id) ? text.removed : text.deleteError); setRemoving(null); } }} />
+  </section>;
 }

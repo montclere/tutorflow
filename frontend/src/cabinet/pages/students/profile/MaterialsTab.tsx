@@ -1,4 +1,5 @@
-import { Download, ExternalLink, Trash2, Upload } from "lucide-react";
+import { Download, ExternalLink, FolderOpen, Trash2, Upload } from "lucide-react";
+import { useState } from "react";
 import { cabinet } from "../../../content/cabinet.ru";
 import { getStudentDetails, removeMaterial } from "../../../data";
 import type { Student, StudentMaterial } from "../../../mocks/types";
@@ -8,7 +9,8 @@ import { Button, IconButton } from "../../../ui/Button";
 import { useNotifier } from "../../../ui/Notifications";
 import { Pill } from "../../../ui/Pill";
 import { MaterialIcon } from "../../../ui/MaterialIcon";
-import { Empty, Panel } from "./parts";
+import { RecordDeleteDialog } from "./RecordDialog";
+import styles from "./profile-records.module.css";
 
 const text = cabinet.teacher.students.profile.materials;
 
@@ -18,62 +20,24 @@ export function materialMeta(material: StudentMaterial): string {
 
 export function MaterialRow({ material, onRemove }: { material: StudentMaterial; onRemove?: () => void }) {
   const isLink = material.kind === "link";
-  return (
-    <li className="flex flex-wrap items-center gap-3 py-3">
-      <MaterialIcon kind={material.kind} />
-      <div className="grid min-w-0 flex-1 gap-0.5">
-        <b className="truncate text-lg font-extrabold">{material.title}</b>
-        <span className="text-base font-semibold text-muted-foreground tabular-nums">{materialMeta(material)}</span>
-        {material.note && <span className="text-sm font-semibold">{material.note}</span>}
-      </div>
+  return <li className={styles.materialRow}>
+    <MaterialIcon kind={material.kind} />
+    <div className={styles.materialInfo}><b>{material.title}</b><span>{materialMeta(material)}</span>{material.note && <p>{material.note}</p>}</div>
+    <div className={styles.materialActions}>
       <Pill tone={material.openedAt ? "ok" : "grey"}>{material.openedAt ? text.opened(formatShortDate(material.openedAt)) : text.notOpened}</Pill>
-      {material.url && (
-        <a
-          href={material.url}
-          target="_blank"
-          rel="noreferrer"
-          download={isLink ? undefined : material.fileName}
-          className="inline-flex h-8 items-center gap-1.5 rounded-md border border-border bg-card px-3 text-sm font-bold text-foreground no-underline hover:bg-secondary"
-        >
-          {isLink ? <ExternalLink size={14} aria-hidden="true" /> : <Download size={14} aria-hidden="true" />}
-          {isLink ? text.open : text.download}
-        </a>
-      )}
+      {material.url && <a href={material.url} target="_blank" rel="noopener noreferrer" download={isLink ? undefined : material.fileName} className={styles.materialOpen}>{isLink ? <ExternalLink aria-hidden="true" /> : <Download aria-hidden="true" />}{isLink ? text.open : text.download}</a>}
       {onRemove && <IconButton icon={Trash2} label={text.remove(material.title)} onClick={onRemove} />}
-    </li>
-  );
+    </div>
+  </li>;
 }
 
 export function MaterialsTab({ student, onSend }: { student: Student; onSend: () => void }) {
   const { notify } = useNotifier();
   const { materials } = getStudentDetails(student.id);
-
-  return (
-    <Panel
-      title={text.title}
-      hint={text.hint}
-      action={
-        <Button variant="primary" size="sm" icon={Upload} onClick={onSend}>
-          {text.send}
-        </Button>
-      }
-    >
-      {materials.length === 0 ? (
-        <Empty>{text.empty}</Empty>
-      ) : (
-        <ul className="m-0 list-none divide-y divide-border p-0">
-          {materials.map((material) => (
-            <MaterialRow
-              key={material.id}
-              material={material}
-              onRemove={() => {
-                removeMaterial(material.id);
-                notify(text.removed);
-              }}
-            />
-          ))}
-        </ul>
-      )}
-    </Panel>
-  );
+  const [removing, setRemoving] = useState<StudentMaterial | null>(null);
+  return <section className={styles.panel} aria-labelledby="student-materials-title">
+    <header className={styles.panelHeader}><div className={styles.heading}><h3 id="student-materials-title">{text.title}</h3><p>{text.hint}</p></div><Button variant="primary" icon={Upload} onClick={onSend}>{text.send}</Button></header>
+    {materials.length === 0 ? <div className={styles.empty}><FolderOpen aria-hidden="true" /><p>{text.emptyTitle}</p><span>{text.empty}</span><Button icon={Upload} onClick={onSend}>{text.send}</Button></div> : <ul className={styles.materialList}>{materials.map((material) => <MaterialRow key={material.id} material={material} onRemove={() => setRemoving(material)} />)}</ul>}
+    <RecordDeleteDialog open={removing !== null} title={text.deleteTitle} description={removing ? text.deleteDescription(removing.title) : ""} onCancel={() => setRemoving(null)} onConfirm={() => { if (removing) { removeMaterial(removing.id); notify(text.removed); setRemoving(null); } }} />
+  </section>;
 }

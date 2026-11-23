@@ -1,6 +1,6 @@
 // Расширения указаны явно: этот файл загружает ещё и vite.config.ts.
 import { routes, studentRoutes, teacherRoutes } from "../config/routes.ts";
-import { siteConfig } from "../config/site.ts";
+import { publicBrand, siteConfig } from "../config/site.ts";
 import type { AuthErrorCode } from "../features/auth/api/types";
 
 const { brand, trialDays, freeStudentsLimit, proPriceRub } = siteConfig;
@@ -143,12 +143,13 @@ const showcase: ShowcaseItem[] = [
 
 export const landing = {
   meta: {
-    title: `${brand} — расписание, оплаты и ДЗ для репетитора`,
-    description: `Кабинет репетитора: расписание уроков, баланс и оплаты учеников, ДЗ и напоминания родителям в Telegram. ${trialDays} дней Про бесплатно, без карты.`,
-    ogImageAlt: `${brand}: уроки, оплаты и ученики в одном кабинете`,
+    title: `${publicBrand.name} — расписание, оплаты и ДЗ для репетитора`,
+    description: `Меньше рутины — больше времени на учеников. Расписание, карточки учеников, задания и учёт оплат на платформе «${publicBrand.name}». Посмотрите возможности и создайте кабинет.`,
+    ogImageAlt: `${publicBrand.name}: уроки, оплаты и ученики в одном кабинете`,
   },
 
   header: {
+    publicHomeLabel: `${publicBrand.name} — главная`,
     homeLabel: `${brand}, наверх`,
     navLabel: "Разделы",
     nav: [
@@ -598,6 +599,7 @@ export const landing = {
   },
 
   footer: {
+    publicCopyright: `© 2026 ${publicBrand.name}`,
     copyright: `© 2026 ${brand}`,
     navLabel: "Документы",
     links: [

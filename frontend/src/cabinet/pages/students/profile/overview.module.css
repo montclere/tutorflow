@@ -1,0 +1,110 @@
+.dialog { background: var(--color-paper); }
+.overviewBody { background: radial-gradient(ellipse at 94% 68%, color-mix(in srgb, var(--vibe-lavender) 62%, transparent), transparent 62%), linear-gradient(125deg, var(--cab-bg), var(--color-paper)); }
+.dialog > header { min-height: 110px; border-color: var(--color-line-soft); }
+.watermark { position: absolute; top: -28px; right: 24px; z-index: 11; width: 148px; height: 148px; color: var(--color-blue); opacity: .065; fill: currentColor; stroke-width: 1; pointer-events: none; }
+.content { padding-top: 16px; padding-bottom: 28px; }
+.grid { display: grid; grid-template-columns: repeat(24, minmax(0, 1fr)); gap: 20px; }
+.card { position: relative; display: flex; flex-direction: column; min-width: 0; padding: 20px 24px; border: 1px solid color-mix(in srgb, var(--color-line-soft) 60%, var(--color-paper)); border-radius: var(--radius-tile); background: color-mix(in srgb, var(--color-paper) 88%, transparent); box-shadow: var(--cab-shadow-surface); }
+.cardHeader { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; margin-bottom: 12px; }
+.cardHeader h3 { display: flex; align-items: center; gap: 14px; margin: 0; font-family: var(--font-display); font-size: var(--fs-xl); font-weight: 800; letter-spacing: -.6px; line-height: 1.4; }
+.cardHeader h3 > svg { width: 26px; height: 26px; flex: none; color: var(--color-muted); stroke-width: 1.7; }
+.metricsCard { grid-column: span 14; min-height: 252px; }
+.paymentCard { grid-column: span 10; min-height: 252px; }
+.lessonCard { grid-column: span 11; min-height: 218px; }
+.contactsCard { grid-column: span 13; min-height: 218px; }
+.period { width: auto; color: var(--color-blue); background: var(--color-paper); font-size: var(--fs-md); font-weight: 700; border-radius: var(--radius-input); border-color: var(--color-line-soft); box-shadow: var(--cab-shadow-surface); }
+.metrics { display: grid; grid-template-columns: 156px repeat(3, minmax(0, 1fr)); align-items: center; gap: 12px; flex: 1; }
+.progress { display: grid; justify-items: center; gap: 4px; color: var(--color-muted); font-size: var(--fs-md); font-weight: 700; }
+.progress b { font-family: var(--font-display); font-size: var(--fs-2xl); color: var(--color-ink); font-weight: 900; letter-spacing: -1px; }
+.metric { display: flex; flex-direction: column; align-items: center; justify-content: center; min-width: 0; gap: 6px; min-height: 104px; color: var(--color-muted); font-size: var(--fs-md); font-weight: 700; text-align: center; }
+.metric + .metric { border-left: 1px solid var(--color-line-soft); }
+.metric > svg { width: 25px; height: 25px; stroke-width: 1.7; margin-bottom: 4px; }
+.metric b { font-size: var(--fs-2xl); font-weight: 800; line-height: 1.35; font-variant-numeric: tabular-nums; }
+.good { color: var(--color-positive); }
+.warn { color: var(--cab-tone-peach-strong); }
+.missing { color: var(--color-muted); }
+.metric .delta { padding: 2px 12px; border-radius: var(--radius-pill); background: var(--cab-ok-soft); font-size: var(--fs-xl); }
+.metric .delta.warn { background: var(--cab-warn-soft); }
+.priceRow { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 22px; }
+.price { display: flex; align-items: baseline; flex-wrap: wrap; gap: 8px; color: var(--color-muted); font-size: var(--fs-md); font-weight: 700; }
+.price > b { color: var(--color-ink); font-family: var(--font-display); font-size: var(--fs-2xl); font-weight: 900; letter-spacing: -1px; white-space: nowrap; }
+.paymentStatus { display: inline-flex; align-items: center; gap: 8px; border-radius: var(--radius-pill); padding: 8px 14px; font-size: var(--fs-md); font-weight: 800; }
+.paymentStatus svg { width: 20px; height: 20px; }
+.paid { background: var(--cab-ok-soft); color: var(--color-positive); }
+.debt { background: var(--cab-bad-soft); color: var(--color-error); }
+.low { background: var(--cab-warn-soft); color: var(--cab-warn); }
+.paymentDetails { display: grid; grid-template-columns: 1fr 1fr; border-top: 1px solid var(--color-line-soft); padding-top: 20px; margin-top: auto; }
+.paymentDetails > div { display: flex; align-items: center; gap: 16px; padding-left: 12px; }
+.paymentDetails > div + div { border-left: 1px solid var(--color-line); padding-left: 24px; }
+.paymentDetails svg { width: 28px; height: 28px; color: var(--color-muted); flex: none; stroke-width: 1.7; }
+.paymentDetails span { display: grid; gap: 3px; color: var(--color-muted); font-size: var(--fs-md); font-weight: 600; }
+.paymentDetails b { color: var(--color-ink); font-size: var(--fs-lg); font-weight: 800; }
+.nextLesson { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin: auto 6px 8px; padding: 18px 24px; border-radius: var(--radius-lg); background: linear-gradient(115deg, color-mix(in srgb, var(--cab-blue-soft) 68%, var(--color-paper)), var(--vibe-lavender)); }
+.nextLesson > div { display: grid; gap: 6px; min-width: 0; }
+.nextLesson b { font-family: var(--font-display); font-size: var(--fs-xl); font-weight: 900; letter-spacing: -.7px; }
+.nextLesson span { color: var(--color-muted); font-size: var(--fs-base); font-weight: 700; }
+.openLesson { display: grid; place-items: center; width: 48px; height: 48px; flex: none; border: 1px solid var(--color-line-soft); border-radius: var(--radius-input); background: var(--color-paper); color: var(--color-ink); box-shadow: var(--cab-shadow-surface); cursor: pointer; }
+.openLesson svg { width: 24px; height: 24px; }
+.openLesson:hover { background: var(--color-mist); }
+.openLesson:focus-visible, .phone:focus-visible { outline: 3px solid var(--color-blue); outline-offset: 4px; }
+.contactsCard .cardHeader { margin-bottom: 8px; }
+.contacts { margin-top: auto; }
+.contact { display: grid; grid-template-columns: 48px minmax(120px, 1fr) auto auto; align-items: center; gap: 14px; min-height: 68px; }
+.contact + .contact { border-top: 1px solid var(--color-line-soft); }
+.contactAvatar { display: grid; place-items: center; width: 48px; height: 48px; border-radius: var(--radius-pill); background: var(--vibe-lavender); font-size: var(--fs-lg); font-weight: 800; }
+.contactPerson { display: grid; gap: 2px; min-width: 0; }
+.contactPerson b { font-size: var(--fs-base); font-weight: 800; overflow-wrap: anywhere; }
+.contactPerson span { color: var(--color-muted); font-size: var(--fs-md); font-weight: 600; }
+.phone { display: inline-flex; align-items: center; gap: 14px; color: var(--color-muted); font-size: var(--fs-md); font-weight: 700; white-space: nowrap; text-decoration: none; min-height: 44px; }
+.phone svg { width: 20px; height: 20px; }
+.phoneMissing { color: var(--color-muted); font-size: var(--fs-sm); }
+.connection { display: grid; place-items: center; width: 44px; height: 44px; border-radius: var(--radius-pill); color: var(--color-muted); background: var(--color-mist); }
+.connection svg { width: 23px; height: 23px; }
+.connected { color: var(--color-blue); background: var(--vibe-sky); }
+.empty { margin: auto 0; color: var(--color-muted); font-size: var(--fs-base); }
+@media (max-width: 1399px) {
+  .metrics { grid-template-columns: 140px repeat(3, minmax(0, 1fr)); gap: 4px; }
+  .card { padding: 20px; }
+  .cardHeader h3 { font-size: var(--fs-lg); gap: 12px; }
+  .metric, .progress { font-size: var(--fs-md); }
+  .contact { column-gap: 12px; grid-template-columns: 48px minmax(100px, 1fr) auto auto; }
+  .contactAvatar { width: 48px; height: 48px; }
+  .phone { gap: 8px; font-size: var(--fs-md); }
+  .contactPerson b { font-size: var(--fs-base); }
+}
+@media (max-width: 1099px) {
+  .metricsCard, .paymentCard, .lessonCard, .contactsCard { grid-column: 1 / -1; min-height: auto; }
+  .grid { grid-template-columns: minmax(0, 1fr); gap: 20px; }
+  .metrics { min-height: 160px; }
+  .paymentDetails { margin-top: 0; }
+  .nextLesson { margin: 0; }
+}
+@media (max-width: 600px) {
+  .dialog > header { min-height: auto; }
+  .content { padding-inline: 16px; padding-top: 12px; }
+  .card { padding: 20px 16px; border-radius: var(--radius-card-sm); }
+  .cardHeader { gap: 12px; margin-bottom: 16px; }
+  .cardHeader h3 { font-size: var(--fs-base); gap: 10px; }
+  .cardHeader h3 > svg { width: 24px; height: 24px; }
+  .period { font-size: var(--fs-sm); }
+  .metrics { grid-template-columns: repeat(3, minmax(0, 1fr)); row-gap: 16px; }
+  .progress { grid-column: 1 / -1; }
+  .metric { font-size: var(--fs-xs); min-height: 94px; }
+  .metric b { font-size: var(--fs-2xl); }
+  .metric .delta { font-size: var(--fs-lg); padding-inline: 8px; }
+  .paymentDetails > div { gap: 12px; padding-left: 0; }
+  .paymentDetails > div + div { padding-left: 16px; }
+  .paymentDetails span { font-size: var(--fs-sm); }
+  .paymentDetails b { font-size: var(--fs-base); }
+  .nextLesson { padding: 16px; gap: 12px; }
+  .nextLesson b { font-size: var(--fs-xl); }
+  .nextLesson span { font-size: var(--fs-md); }
+  .openLesson { width: 44px; height: 44px; }
+  .contact { grid-template-columns: 44px minmax(0, 1fr) auto; gap: 4px 12px; padding-block: 14px; }
+  .contactAvatar { grid-row: 1 / 3; width: 44px; height: 44px; font-size: var(--fs-lg); }
+  .phone, .phoneMissing { grid-column: 2; grid-row: 2; font-size: var(--fs-sm); }
+  .phone { min-height: 32px; }
+  .phone svg { display: none; }
+  .connection { grid-column: 3; grid-row: 1 / 3; }
+  .watermark { top: 0; width: 110px; height: 110px; right: 16px; }
+}

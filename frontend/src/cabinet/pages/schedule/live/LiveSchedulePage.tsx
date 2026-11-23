@@ -98,7 +98,7 @@ export function LiveSchedulePage() {
   return (
     <SchedulePeopleContext.Provider value={people}>
       <ScheduleHeader view={view} date={date} today={today} onChange={go} onAdd={() => openNew({ date })} />
-      <ScheduleFilters students={filterStudents} showType={false} filters={filters} summary={text.summary(lessonCount, windowCount)} onFilters={setFilters} />
+      <ScheduleFilters students={filterStudents} showType={false} filters={filters} summary={text.summary(lessonCount, windowCount)} lessonCount={lessonCount} windowCount={windowCount} onFilters={setFilters} />
       {body()}
       <Button variant="primary" icon={Plus} className="fixed right-4 bottom-4 z-40 h-12 rounded-full px-5 shadow-lg min-[521px]:hidden" onClick={() => openNew({ date })}>
         {text.addLesson}

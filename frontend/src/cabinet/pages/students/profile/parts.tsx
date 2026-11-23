@@ -4,11 +4,11 @@ import { cx } from "../../../ui/cx";
 /** Блок раздела: заголовок, подпись и действие справа. */
 export function Panel({ title, hint, action, children, className }: { title: string; hint?: string; action?: ReactNode; children: ReactNode; className?: string }) {
   return (
-    <section className={cx("grid min-w-0 grid-cols-[minmax(0,1fr)] content-start gap-4 rounded-2xl border bg-card p-6", className)}>
+    <section className={cx("grid min-w-0 grid-cols-[minmax(0,1fr)] content-start gap-4 rounded-2xl glass p-5", className)}>
       <header className="flex flex-wrap items-start justify-between gap-x-4 gap-y-2">
         <div className="grid gap-0.5">
-          <h3 className="m-0 font-[family-name:var(--font-display)] text-lg font-extrabold tracking-tight">{title}</h3>
-          {hint && <p className="m-0 text-base font-semibold text-muted-foreground">{hint}</p>}
+          <h3 className="m-0 font-[family-name:var(--font-display)] text-base font-extrabold tracking-tight">{title}</h3>
+          {hint && <p className="m-0 text-sm font-semibold text-muted-foreground">{hint}</p>}
         </div>
         {action}
       </header>
@@ -18,7 +18,7 @@ export function Panel({ title, hint, action, children, className }: { title: str
 }
 
 export function Empty({ children }: { children: ReactNode }) {
-  return <p className="m-0 rounded-xl border border-dashed px-4 py-6 text-center text-base font-semibold text-muted-foreground">{children}</p>;
+  return <p className="m-0 rounded-xl border border-dashed px-4 py-6 text-center text-sm font-semibold text-muted-foreground">{children}</p>;
 }
 
 /** Плитка с числом: подпись, значение и пояснение. */
@@ -44,7 +44,7 @@ export function Kpi({ label, value, note, tone }: { label: string; value: string
 /** Ссылка-кнопка «Подробнее →» в шапке блока. */
 export function MoreButton({ children, onClick }: { children: string; onClick: () => void }) {
   return (
-    <button type="button" onClick={onClick} className="appearance-none border-0 bg-transparent p-0 text-base font-bold text-primary [font-family:inherit] hover:underline">
+    <button type="button" onClick={onClick} className="appearance-none border-0 bg-transparent p-0 text-sm font-bold text-primary [font-family:inherit] hover:underline">
       {children}
     </button>
   );
@@ -52,5 +52,5 @@ export function MoreButton({ children, onClick }: { children: string; onClick: (
 
 /** Дата слева в строке списка. */
 export function DateCell({ children }: { children: ReactNode }) {
-  return <span className="w-16 flex-none text-base font-bold text-muted-foreground tabular-nums">{children}</span>;
+  return <span className="w-14 flex-none text-sm font-bold text-muted-foreground tabular-nums">{children}</span>;
 }

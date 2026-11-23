@@ -1,4 +1,5 @@
 import { ChevronLeft, ChevronRight, Ellipsis, Plus } from "lucide-react";
+import { useState } from "react";
 import { cabinet } from "../../content/cabinet.ru";
 import { getCurrentMonth, getFinanceMonths, getFinanceOverview } from "../../data";
 import { shiftMonth } from "../../model/finance";
@@ -7,9 +8,7 @@ import { Button, IconButton } from "../../ui/Button";
 import { useNotifier } from "../../ui/Notifications";
 import { Button as KitButton } from "@/shared/ui/kit/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/shared/ui/kit/dropdown-menu";
-import { useState } from "react";
-import { monthIndex } from "../../model/finance";
-import { ByStudentCard } from "./ByStudentCard";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/shared/ui/kit/select";
 import { DebtsCard } from "./DebtsCard";
 import { IncomeChart } from "./IncomeChart";
 import { MoneyTiles } from "./MoneyTiles";
@@ -17,8 +16,6 @@ import { RecordPaymentDialog } from "./RecordPaymentDialog";
 import { OperationsCard } from "./OperationsCard";
 import styles from "./finance.module.css";
 import { useFinanceUrl } from "./useFinanceUrl";
-
-const rise = (delay: number) => ({ "--delay": `${delay}ms` }) as React.CSSProperties;
 
 const text = cabinet.teacher.finance;
 
@@ -29,56 +26,39 @@ export function FinancePage() {
   const data = getFinanceOverview(month);
   const currentMonth = getCurrentMonth();
   const current = month === currentMonth ? data : getFinanceOverview(currentMonth);
-  // Записать оплату: из шапки — с выбором ученика, из «Долгов» — сразу для него.
   const [recording, setRecording] = useState<{ studentId: string | null } | null>(null);
   const previous = shiftMonth(month, -1);
   const next = shiftMonth(month, 1);
 
   return (
-    <>
-      <div className="mb-5 flex flex-wrap items-center justify-between gap-x-4 gap-y-3">
-        <div className="flex items-center gap-2">
-          <h1 className="m-0 mr-2 font-[family-name:var(--font-display)] text-2xl leading-tight font-black tracking-tight max-[520px]:text-xl">{formatMonthTitle(`${month}-01`)}</h1>
-          <IconButton icon={ChevronLeft} label={text.prev} disabled={!months.includes(previous)} onClick={() => go(previous)} />
-          <IconButton icon={ChevronRight} label={text.next} disabled={!months.includes(next)} onClick={() => go(next)} />
+    <div className={styles.page}>
+      <header className={styles.heading}>
+        <div className={styles.period}>
+          <h1>{text.title}<svg viewBox="0 0 160 15" preserveAspectRatio="none" aria-hidden="true"><path d="M2 10 52 3 35 12 101 4 91 10 155 6" /></svg></h1>
+          <div className={styles.monthControls}>
+            <IconButton icon={ChevronLeft} label={text.prev} disabled={!months.includes(previous)} onClick={() => go(previous)} />
+            <Select value={month} onValueChange={go}>
+              <SelectTrigger aria-label={text.monthLabel} className={styles.monthSelect}><SelectValue /></SelectTrigger>
+              <SelectContent>{months.map((key) => <SelectItem key={key} value={key}>{formatMonthTitle(`${key}-01`)}</SelectItem>)}</SelectContent>
+            </Select>
+            <IconButton icon={ChevronRight} label={text.next} disabled={!months.includes(next)} onClick={() => go(next)} />
+          </div>
         </div>
-        <div className="flex flex-wrap gap-2">
+        <div className={styles.headingActions}>
           <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <KitButton variant="secondary" size="icon" aria-label={text.menuLabel}>
-                <Ellipsis aria-hidden="true" />
-              </KitButton>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuItem onSelect={() => notifySoon(text.export)}>{text.export}</DropdownMenuItem>
-            </DropdownMenuContent>
+            <DropdownMenuTrigger asChild><KitButton variant="secondary" size="icon" aria-label={text.menuLabel}><Ellipsis aria-hidden="true" /></KitButton></DropdownMenuTrigger>
+            <DropdownMenuContent align="end"><DropdownMenuItem onSelect={() => notifySoon(text.export)}>{text.export}</DropdownMenuItem></DropdownMenuContent>
           </DropdownMenu>
-          <Button variant="primary" icon={Plus} onClick={() => setRecording({ studentId: null })}>
-            {text.addPayment}
-          </Button>
+          <Button variant="primary" icon={Plus} onClick={() => setRecording({ studentId: null })}>{text.addPayment}</Button>
         </div>
+      </header>
+      <MoneyTiles data={data} />
+      <div className={styles.middle}>
+        <IncomeChart history={data.history} month={month} currentMonth={currentMonth} expected={current.expected.amount} onPick={go} />
+        <DebtsCard data={data} onRecord={(studentId) => setRecording({ studentId })} />
       </div>
-
-      <div className="flex flex-col gap-4">
-        <MoneyTiles data={data} />
-        <div className="grid grid-cols-[minmax(0,1fr)] gap-4 min-[1181px]:grid-cols-[minmax(0,3fr)_minmax(0,2fr)]">
-          <div className={`${styles.rise} [&>*]:h-full`} style={rise(320)}>
-            <IncomeChart history={data.history} month={month} currentMonth={currentMonth} expected={current.expected.amount} onPick={go} />
-          </div>
-          <div className="grid content-start gap-4">
-            <div className={styles.rise} style={rise(400)}>
-              <DebtsCard data={data} onRecord={(studentId) => setRecording({ studentId })} />
-            </div>
-            <div className={styles.rise} style={rise(480)}>
-              <ByStudentCard operations={data.operations} monthName={text.monthNames[monthIndex(month)] ?? month} />
-            </div>
-          </div>
-        </div>
-        <div className={styles.rise} style={rise(560)}>
-          <OperationsCard key={month} operations={data.operations} />
-        </div>
-      </div>
+      <OperationsCard key={month} operations={data.operations} />
       <RecordPaymentDialog open={recording !== null} studentId={recording?.studentId} onClose={() => setRecording(null)} />
-    </>
+    </div>
   );
 }

@@ -9,14 +9,14 @@
 .idea/
 .vscode/
 .worktrees/
-.venv/
+.venv
 __pycache__/
 *.py[cod]
 .pytest_cache/
 .mypy_cache/
 .ruff_cache/
 .hypothesis/
-node_modules/
+node_modules
 dist/
 build/
 coverage/
@@ -25,3 +25,7 @@ htmlcov/
 .local-stack/
 playwright-report/
 test-results/
+
+# Входные пакеты заданий хранятся локально, а не в истории исходников.
+*_Agent_Package.zip
+*_Complete_Package.zip
