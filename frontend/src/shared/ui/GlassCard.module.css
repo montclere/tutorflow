@@ -1,0 +1,14 @@
+.glass {
+  position: absolute;
+  z-index: 2;
+  padding: 14px 16px;
+  border: 1.5px solid var(--color-glass-border);
+  border-radius: var(--radius-card);
+  background: var(--color-glass);
+  color: var(--color-paper);
+  text-align: left;
+  box-shadow: var(--shadow-float);
+  -webkit-backdrop-filter: blur(18px);
+  backdrop-filter: blur(18px);
+}
+

@@ -1,0 +1,66 @@
+.page {
+  min-height: 100vh;
+  padding-bottom: 40px;
+}
+
+.inner {
+  max-width: 1240px;
+  margin: 0 auto;
+}
+
+.gutter {
+  padding: 0 20px;
+}
+
+.frame {
+  position: relative;
+  overflow: hidden;
+  /* clip, а не hidden: обрезает декор так же, но не ломает position: sticky у колонок внутри. */
+  overflow: clip;
+  background-color: var(--color-blue);
+  background-image: var(--grid-pattern);
+  background-position: -1px -1px;
+  background-size: var(--grid-size) var(--grid-size);
+}
+
+.sheet {
+  --focus-ring: var(--color-blue);
+  position: relative;
+  z-index: 4;
+  padding: 56px 0 30px;
+  border-radius: var(--radius-frame) var(--radius-frame) 0 0;
+  background: var(--color-paper);
+}
+
+.sheetInner {
+  padding: 0 26px;
+}
+
+/* Отступ сверху даёт сам лист; первой секции свой не нужен, какой бы она ни была. */
+.sheetInner > :first-child {
+  margin-top: 0;
+}
+
+@media (max-width: 560px) {
+  .page {
+    padding-bottom: 28px;
+  }
+
+  .gutter {
+    padding: 0 10px;
+  }
+
+  .sheetInner {
+    padding: 0 14px;
+  }
+
+  /* Наклонная лента заходит на верх листа: первая секция отступает, чтобы заголовок не прятался под ней. */
+  .sheetInner > :first-child {
+    margin-top: 30px;
+  }
+
+  .sheet {
+    padding: 18px 0 22px;
+    border-radius: var(--radius-frame-mobile) var(--radius-frame-mobile) 0 0;
+  }
+}

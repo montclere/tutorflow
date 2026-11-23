@@ -1,0 +1,13 @@
+.object {
+  position: absolute;
+  z-index: 2;
+  height: auto;
+  pointer-events: none;
+  filter: var(--shadow-object);
+}
+
+.object svg {
+  display: block;
+  width: 100%;
+  height: auto;
+}

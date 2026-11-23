@@ -1,6 +1,6 @@
 # TutorFlow
 
-CRM и учебная платформа для репетиторов. Сейчас — каркас для совместной разработки: backend разложен по модулям и shared, продуктовые функции не реализованы. Описание: [spec](docs/spec.md).
+CRM и учебная платформа для репетиторов. Backend разложен по модулям и shared; интерфейс — React на Vite: лендинг, регистрация и кабинет репетитора. Описание: [spec](docs/spec.md).
 
 - `backend/` — API и бизнес-логика.
 - `frontend/` — интерфейс.
@@ -11,6 +11,6 @@ CRM и учебная платформа для репетиторов. Сейч
 
 Начать: [workflow](docs/workflow.md). Текущее состояние: [stages](docs/stages.md). Правила агента: [AGENTS.md](AGENTS.md).
 
-Подготовка: `./scripts/dev.sh setup`. Проверки: `./scripts/dev.sh check`. Нужны uv, Bash и Python; команды и состав проверок — в [scripts](scripts/README.md).
+Подготовка: `./scripts/dev.sh setup`. Проверки: `./scripts/dev.sh check`. Нужны uv, Bash, Python и Node.js 22.13+; команды и состав проверок — в [scripts](scripts/README.md).
 
 Локальный запуск полного стека и проверка перед push или PR описаны в [scripts](scripts/README.md). Конфигурация production находится в [deploy](deploy/README.md).

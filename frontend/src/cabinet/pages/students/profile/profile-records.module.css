@@ -1,0 +1,123 @@
+.body { background: radial-gradient(ellipse at 90% 65%,color-mix(in srgb,var(--vibe-lavender) 40%,transparent),transparent 70%),linear-gradient(120deg,var(--cab-bg),var(--color-paper)); }
+.body > [data-slot=tabs] { overflow: visible; }
+.body [data-slot=tabs-trigger][data-state=active] { border-color: var(--color-blue-soft); box-shadow: var(--cab-shadow-surface); }
+.panel { min-width: 0; padding: 24px 28px; border: 1px solid var(--main-line); border-radius: var(--radius-card); background: var(--main-panel); box-shadow: var(--cab-shadow-surface); color: var(--color-ink); }
+.panelHeader { display: flex; align-items: center; flex-wrap: wrap; gap: 18px; margin-bottom: 24px; }
+.panelHeader > :last-child { margin-left: auto; }
+.heading { flex: 1; min-width: 0; }
+.panel h3 { margin: 0; font-family: var(--font-display); font-size: var(--fs-xl); font-weight: 800; line-height: 1.5; letter-spacing: -.035em; }
+.heading p { margin: 4px 0 0; color: var(--color-muted); font-size: var(--fs-base); font-weight: 500; line-height: 1.6; }
+.sectionIcon { display: grid; place-items: center; flex: none; width: 58px; height: 58px; border-radius: var(--radius-md); background: var(--vibe-lavender); color: var(--cab-tone-lilac-strong); }
+.sectionIcon svg { width: 28px; height: 28px; stroke-width: 1.6; }
+.warm { background: var(--vibe-peach); color: var(--cab-tone-peach-strong); }
+.materialList, .paymentList, .notesList { margin: 0; padding: 0; list-style: none; }
+.materialRow { display: flex; align-items: center; gap: 22px; min-width: 0; padding: 22px 0; }
+.materialRow + .materialRow { border-top: 1px solid var(--color-line-soft); }
+.materialRow > span:first-child { width: 52px; height: 52px; border-radius: var(--radius-lg); }
+.materialRow > span:first-child svg { width: 25px; height: 25px; stroke-width: 1.7; }
+.materialInfo { display: grid; gap: 5px; min-width: 0; flex: 1; overflow-wrap: anywhere; }
+.materialInfo b, .operationInfo > b { font-size: var(--fs-lg); line-height: 1.5; font-weight: 800; }
+.materialInfo > span, .operationInfo > span { color: var(--color-muted); font-size: var(--fs-md); font-weight: 500; line-height: 1.6; }
+.materialInfo p { max-width: 85ch; margin: 0; font-size: var(--fs-base); font-weight: 500; line-height: 1.6; white-space: pre-wrap; }
+.materialActions { display: flex; align-items: center; flex-wrap: wrap; justify-content: flex-end; gap: 16px; flex: none; max-width: 50%; }
+.materialActions [data-slot=badge] { font-size: var(--fs-sm); padding: 5px 14px; }
+.materialActions button, .noteActions button { width: 44px; height: 44px; border-radius: var(--radius-md); background: var(--color-paper); }
+.materialOpen { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 44px; padding: 8px 18px; border: 1px solid var(--main-line); border-radius: var(--radius-control); background: var(--color-paper); color: var(--color-ink); font-size: var(--fs-md); font-weight: 700; text-decoration: none; }
+.materialOpen:hover { background: var(--main-highlight); }
+.materialOpen svg { width: 19px; height: 19px; }
+.empty { display: grid; justify-items: center; gap: 14px; padding: 28px 16px; text-align: center; color: var(--color-muted); font-size: var(--fs-md); line-height: 1.6; }
+.empty > svg { width: 30px; height: 30px; color: var(--color-blue); stroke-width: 1.4; }
+.empty p { margin: 0; font-weight: 700; }
+.empty > span { max-width: 55ch; }
+.notesList { display: grid; gap: 14px; }
+.noteRow { display: flex; align-items: center; gap: 26px; min-width: 0; min-height: 88px; padding: 16px; border: 1px solid var(--main-line); border-radius: var(--radius-card-sm); background: var(--color-paper); box-shadow: var(--cab-shadow-surface); }
+.noteDate { display: inline-flex; align-items: center; gap: 10px; flex: none; min-width: 150px; padding: 12px 16px; border-radius: var(--radius-md); background: color-mix(in srgb,var(--vibe-lavender) 65%,var(--color-paper)); color: var(--color-ink); font-size: var(--fs-md); font-weight: 700; }
+.noteDate svg { flex: none; width: 21px; height: 21px; color: var(--cab-tone-lilac-strong); stroke-width: 1.7; }
+.noteText { flex: 1; min-width: 0; max-width: 100ch; margin: 0 auto 0 0; padding: 8px 0 8px 28px; border-left: 1px solid var(--main-line); font-size: var(--fs-lg); font-weight: 600; line-height: 1.6; white-space: pre-wrap; overflow-wrap: anywhere; }
+.noteActions { display: flex; flex: none; gap: 10px; margin-left: auto; }
+.noteForm { display: grid; gap: 20px; min-width: 0; }
+.noteForm textarea { width: 100%; min-height: 130px; max-height: 50dvh; resize: vertical; padding: 12px 14px; border: 1px solid var(--main-line); border-radius: var(--radius-input); background: var(--color-paper); color: var(--color-ink); font: inherit; font-size: var(--fs-base); line-height: 1.6; }
+.noteForm > p { margin: 0; color: var(--color-error); font-size: var(--fs-sm); }
+.paymentsLayout { display: grid; gap: 20px; min-width: 0; }
+.paymentCards { display: grid; grid-template-columns: minmax(0,1.17fr) minmax(0,1fr); gap: 20px; }
+.balanceCard, .tariffCard { display: flex; align-items: flex-start; gap: 22px; padding: 26px 28px; }
+.balanceCard .sectionIcon, .tariffCard .sectionIcon { border-radius: var(--radius-pill); }
+.balanceInfo { flex: 1; min-width: 0; }
+.balanceCard h3, .tariffCard h3 { font-family: var(--font-body); font-size: var(--fs-base); font-weight: 700; letter-spacing: 0; color: var(--color-muted); }
+.balance { display: block; margin: 3px 0 6px; font-family: var(--font-display); font-size: var(--fs-3xl); font-weight: 800; line-height: 1.5; overflow-wrap: anywhere; }
+.balanceInfo p, .tariffInfo p { margin: 5px 0 0; color: var(--color-muted); font-size: var(--fs-md); font-weight: 500; line-height: 1.6; }
+.balanceInfo p[data-warning=true] { color: var(--cab-warn); }
+.positive { color: var(--color-positive); }
+.negative { color: var(--color-error); }
+.balanceActions { display: grid; justify-items: end; align-self: center; gap: 10px; }
+.tariffCard { background: linear-gradient(120deg,var(--main-panel),color-mix(in srgb,var(--vibe-lavender) 18%,var(--main-panel))); }
+.tariffInfo { display: grid; align-content: start; gap: 7px; min-width: 0; }
+.tariffInfo > b { font-family: var(--font-display); font-size: var(--fs-lg); font-weight: 800; line-height: 1.5; letter-spacing: -.035em; overflow-wrap: anywhere; }
+.packageLeft { display: grid; gap: 6px; color: var(--color-muted); font-size: var(--fs-sm); }
+.packageTrack { display: block; width: 100%; height: 6px; overflow: hidden; border-radius: var(--radius-pill); background: var(--color-paper); }
+.packageTrack > span { display: block; height: 100%; border-radius: inherit; background: var(--color-blue); }
+.packageTrack > span[data-ending=true] { background: var(--cab-warn); }
+.filters { display: flex; flex-wrap: wrap; gap: 4px; padding: 4px; border: 1px solid var(--main-line); border-radius: var(--radius-pill); background: var(--color-paper); }
+.filters button { min-height: 36px; padding-inline: 18px; border-radius: var(--radius-pill); font-size: var(--fs-sm); font-weight: 700; }
+.filters button[data-state=on] { background: var(--vibe-lavender); color: var(--color-ink); }
+.paymentRow { display: flex; align-items: center; gap: 20px; padding: 14px 8px; min-width: 0; }
+.paymentRow + .paymentRow { border-top: 1px solid var(--color-line-soft); }
+.operationIcon { display: grid; place-items: center; width: 48px; height: 48px; flex: none; border-radius: var(--radius-pill); background: var(--vibe-lavender); color: var(--color-muted); }
+.operationIcon svg { width: 25px; height: 25px; stroke-width: 1.6; }
+.incomeIcon { background: var(--vibe-mint); color: var(--color-positive); }
+.operationInfo { display: grid; gap: 3px; flex: 1; min-width: 0; overflow-wrap: anywhere; }
+.amount { margin-left: auto; flex: none; font-family: var(--font-display); font-size: var(--fs-lg); font-weight: 800; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.body [data-slot=tabpanel] :is(button,a):focus-visible, .noteForm textarea:focus-visible { outline: 3px solid var(--color-blue); outline-offset: 3px; }
+@media (max-width:1399px) {
+  .balanceCard, .tariffCard { flex-wrap: wrap; }
+  .balanceActions { margin-left: auto; }
+  .balanceInfo { flex-basis: calc(100% - 90px); }
+}
+@media (max-width:950px) {
+  .paymentCards { grid-template-columns: minmax(0,1fr); }
+  .balanceInfo { flex-basis: auto; }
+  .materialRow { flex-wrap: wrap; gap: 14px; }
+  .materialInfo { flex-basis: calc(100% - 70px); }
+  .materialActions { margin-left: 66px; max-width: calc(100% - 66px); }
+  .noteRow { display: grid; grid-template-columns: minmax(0,1fr) auto; gap: 16px; }
+  .noteDate { justify-self: start; min-width: 0; }
+  .noteActions { grid-column: 2; grid-row: 1; }
+  .noteText { grid-column: 1 / -1; padding: 0; border: 0; }
+}
+@media (max-width:640px) {
+  .panel { padding: 20px 16px; border-radius: var(--radius-card-sm); }
+  .panelHeader { align-items: flex-start; gap: 12px; margin-bottom: 20px; }
+  .panelHeader > button:last-child { margin-left: 0; }
+  .panelHeader > .heading:first-child { flex-basis: 100%; }
+  .heading p { font-size: var(--fs-md); }
+  .sectionIcon { width: 44px; height: 44px; border-radius: var(--radius-control); }
+  .sectionIcon svg { width: 24px; height: 24px; }
+  .panelHeader > .sectionIcon + .heading { flex-basis: calc(100% - 60px); }
+  .panel h3 { font-size: var(--fs-lg); }
+  .materialActions { gap: 10px; justify-content: flex-start; }
+  .materialInfo b, .operationInfo > b { font-size: var(--fs-base); }
+  .materialInfo > span, .operationInfo > span { font-size: var(--fs-sm); }
+  .materialInfo p { font-size: var(--fs-md); }
+  .materialRow { padding: 18px 0; }
+  .noteText { font-size: var(--fs-base); }
+  .noteRow { gap: 14px 8px; padding: 14px 12px; }
+  .noteDate { gap: 7px; padding: 10px; font-size: var(--fs-sm); }
+  .noteDate svg { width: 18px; height: 18px; }
+  .noteActions { gap: 6px; }
+  .noteActions button { width: 40px; height: 40px; border-radius: var(--radius-input); }
+  .balanceCard, .tariffCard { gap: 16px; }
+  .balanceInfo { flex-basis: calc(100% - 60px); }
+  .balanceActions { margin-left: 60px; justify-items: start; }
+  .balance { font-size: var(--fs-2xl); }
+  .tariffInfo { flex-basis: calc(100% - 60px); }
+  .tariffInfo > b { font-size: var(--fs-base); }
+  .filters { width: 100%; }
+  .filters button { flex: 1; min-width: 0; min-height: 40px; padding-inline: 10px; }
+  .paymentRow { gap: 12px; padding: 16px 0; }
+  .operationIcon { width: 40px; height: 40px; }
+  .amount { font-size: var(--fs-sm); }
+}
+@media (max-width:360px) {
+  .noteRow { grid-template-columns: minmax(0,1fr); }
+  .noteActions { grid-column: 1; grid-row: 3; justify-self: end; }
+}

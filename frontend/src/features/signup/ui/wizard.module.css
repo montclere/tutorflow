@@ -1,0 +1,310 @@
+.card {
+  --focus-ring: var(--color-blue);
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 440px;
+  padding: 24px;
+  border-radius: var(--radius-card);
+  background: var(--color-paper);
+}
+
+.step,
+.form {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+}
+
+.progress {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 18px;
+}
+
+.progress span {
+  flex: 1;
+  height: 5px;
+  border-radius: var(--radius-pill);
+  background: var(--color-mist);
+}
+
+.progress .progressOn {
+  background: var(--color-blue);
+}
+
+.title {
+  margin-bottom: 4px;
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: var(--fs-xl);
+  letter-spacing: -0.02em;
+}
+
+.hint {
+  margin-bottom: 18px;
+  color: var(--color-muted);
+  font-size: var(--fs-md);
+}
+
+/* Переключатель «Регистрация / Вход» над первым шагом. */
+.tabs {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4px;
+  margin-bottom: 18px;
+  padding: 4px;
+  border-radius: var(--radius-control);
+  background: var(--color-mist);
+}
+
+.tab {
+  padding: 10px;
+  border: 0;
+  border-radius: var(--radius-input);
+  background: transparent;
+  color: var(--color-muted);
+  font-weight: 800;
+  font-size: var(--fs-md);
+}
+
+.tab[aria-pressed="true"] {
+  background: var(--color-paper);
+  color: var(--color-ink);
+  box-shadow: var(--shadow-message);
+}
+
+/* Сообщение об успехе (например, после смены пароля). */
+.notice {
+  padding: 10px 12px;
+  border-radius: var(--radius-control);
+  background: var(--color-art-lime-light);
+  font-weight: 700;
+  font-size: var(--fs-sm);
+}
+
+.fieldHint {
+  color: var(--color-muted);
+  font-weight: 600;
+  font-size: var(--fs-xs);
+}
+
+.field {
+  display: grid;
+  gap: 6px;
+  margin-bottom: 14px;
+}
+
+.label {
+  font-weight: 800;
+  font-size: var(--fs-sm);
+}
+
+.input {
+  width: 100%;
+  padding: 13px 14px;
+  border: 1.5px solid var(--color-line);
+  border-radius: var(--radius-input);
+  background: var(--color-paper);
+  font-weight: 600;
+}
+
+.input:focus-visible,
+.codeDigit:focus-visible {
+  border-color: var(--color-blue);
+  outline: none;
+  box-shadow: 0 0 0 4px var(--color-focus-ring-soft);
+}
+
+.input[aria-invalid="true"],
+.codeDigit[aria-invalid="true"] {
+  border-color: var(--color-error);
+}
+
+.consent {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin-top: 14px;
+  color: var(--color-muted);
+  font-size: var(--fs-xs);
+  line-height: 1.45;
+}
+
+.consent input {
+  flex: none;
+  width: 22px;
+  height: 22px;
+  margin: 0;
+  accent-color: var(--color-blue);
+}
+
+.consent a {
+  color: var(--color-blue);
+  font-weight: 700;
+}
+
+.error {
+  min-height: 18px;
+  margin-top: 6px;
+  color: var(--color-error);
+  font-weight: 700;
+  font-size: var(--fs-xs);
+}
+
+.error:empty {
+  margin-top: 0;
+}
+
+.textButton {
+  align-self: flex-start;
+  min-height: 44px;
+  margin-top: auto;
+  padding: 16px 0 0;
+  border: 0;
+  background: none;
+  color: var(--color-blue);
+  font-weight: 700;
+  font-size: var(--fs-sm);
+  text-align: left;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.textButton:disabled {
+  color: var(--color-muted);
+  text-decoration: none;
+  cursor: default;
+}
+
+.note {
+  margin-top: 10px;
+  padding: 12px 14px;
+  border-radius: var(--radius-control);
+  background: var(--color-mist);
+  font-size: var(--fs-sm);
+}
+
+.back {
+  align-self: flex-start;
+  margin-bottom: 12px;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--color-muted);
+  font-weight: 700;
+  font-size: var(--fs-sm);
+}
+
+.submit {
+  margin-top: auto;
+}
+
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+}
+
+.chip {
+  padding: 8px 13px;
+  border: 1.5px solid var(--color-line);
+  border-radius: var(--radius-pill);
+  background: var(--color-paper);
+  font-weight: 700;
+  font-size: var(--fs-sm);
+}
+
+.chip[aria-pressed="true"] {
+  border-color: var(--color-ink);
+  background: var(--color-ink);
+  color: var(--color-paper);
+}
+
+.timezone {
+  margin: 2px 0 16px;
+  color: var(--color-muted);
+  font-size: var(--fs-sm);
+}
+
+.timezone b {
+  color: var(--color-ink);
+}
+
+.code {
+  display: flex;
+  gap: 8px;
+  margin: 4px 0 6px;
+}
+
+.codeDigit {
+  width: 100%;
+  min-width: 0;
+  padding: 12px 0;
+  border: 1.5px solid var(--color-line);
+  border-radius: var(--radius-input);
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: var(--fs-xl);
+  text-align: center;
+}
+
+.doneMark {
+  display: grid;
+  place-items: center;
+  width: 64px;
+  height: 64px;
+  margin-bottom: 14px;
+  border-radius: var(--radius-lg);
+  background: var(--color-lime);
+  font-weight: 900;
+  font-size: var(--fs-3xl);
+  transform: rotate(-6deg);
+}
+
+.checklist {
+  display: grid;
+  gap: 8px;
+  margin: 4px 0 18px;
+  counter-reset: todo;
+}
+
+.checklist li {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 11px 12px;
+  border-radius: var(--radius-input);
+  background: var(--color-mist);
+  font-weight: 700;
+  font-size: var(--fs-md);
+  counter-increment: todo;
+}
+
+.checklist li::before {
+  content: counter(todo);
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  border: 1.5px solid var(--color-line-dashed);
+  border-radius: var(--radius-xs);
+  background: var(--color-paper);
+  color: var(--color-muted);
+  font-size: var(--fs-xs);
+}
+
+@media (max-width: 560px) {
+  .card {
+    padding: 18px;
+  }
+}
+
+/* Код из 8 цифр на узком экране: зазор меньше, чтобы клетки оставались крупными. */
+@media (max-width: 560px) {
+  .code {
+    gap: 5px;
+  }
+}

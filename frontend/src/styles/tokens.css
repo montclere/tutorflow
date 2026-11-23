@@ -1,0 +1,288 @@
+:root {
+  /* Контуры пастельных плиток и светлых блоков кабинета (VIBE-18). */
+  --cab-line-detailed: color-mix(in srgb, var(--color-line) 76%, var(--color-muted));
+  --cab-edge-cyan: color-mix(in srgb, var(--vibe-sky) 70%, var(--cab-tone-sky-strong));
+  --cab-edge-purple: color-mix(in srgb, var(--vibe-lavender) 70%, var(--cab-tone-lilac-strong));
+  --cab-edge-pink: color-mix(in srgb, var(--vibe-pink) 70%, var(--cab-tone-rose-strong));
+  --cab-edge-green: color-mix(in srgb, var(--vibe-mint) 70%, var(--cab-tone-mint-strong));
+  --cab-edge-orange: color-mix(in srgb, var(--vibe-peach) 70%, var(--cab-tone-peach-strong));
+  --cab-edge-blue: color-mix(in srgb, var(--cab-blue-soft) 70%, var(--color-blue));
+  --cab-shadow-surface: 0 2px 3px rgb(13 21 66 / 0.03), 0 6px 16px rgb(13 21 66 / 0.045), inset 0 1px 0 var(--color-paper);
+  --cab-shadow-surface-hover: 0 4px 6px rgb(13 21 66 / 0.04), 0 8px 20px rgb(13 21 66 / 0.08), inset 0 1px 0 var(--color-paper);
+  --cab-shadow-primary: 0 5px 14px rgb(35 70 230 / 0.16), inset 0 1px 0 var(--color-on-blue-border);
+  color-scheme: light;
+
+  --color-outer: #1530b4;
+  --color-blue: #2346e6;
+  --color-blue-hover: #1a3bd8;
+  --color-blue-deep: #1b37c8;
+  --color-blue-soft: #c9d3ff;
+  --color-lime: #cdfc3a;
+  --color-lime-shadow: #9cc419;
+  --color-ink: #0d1542;
+  --color-paper: #ffffff;
+  --color-mist: #eff1f7;
+  --color-muted: #5d6788;
+  --color-error: #d23c3c;
+  --color-positive: #0f7a50;
+  --color-negative-on-dark: #ffeaea;
+  --color-line: #dfe3ee;
+  --color-line-soft: #e4e7f0;
+  --color-line-dashed: #c9cfe2;
+  --color-avatar: #ffd9a8;
+  --color-chat-screen: #dbe4ff;
+  --color-art-lime-light: #f4ffc4;
+  --color-art-lime-mid: #b6e025;
+  --color-art-lime-dark: #8fb915;
+  --color-art-lime-shade: #5d7a08;
+  --color-art-periwinkle: #9fb0f5;
+  --color-art-paper-blue: #d9e0ff;
+  --color-art-plane-shade: #8ea0ef;
+  --color-grid-line: rgb(255 255 255 / 0.07);
+  --color-on-blue-border: rgb(255 255 255 / 0.55);
+  --color-on-blue-hover: rgb(255 255 255 / 0.12);
+  --color-on-dark-muted: rgb(255 255 255 / 0.75);
+  --color-on-dark-surface: rgb(255 255 255 / 0.1);
+  --color-glass: rgb(40 70 220 / 0.38);
+  --color-glass-border: rgb(255 255 255 / 0.4);
+  --color-focus-ring-soft: rgb(35 70 230 / 0.12);
+
+  --font-display: "Unbounded", "Arial Black", sans-serif;
+  --font-body: "Manrope", "Segoe UI", Arial, sans-serif;
+
+  --fs-2xs: 11px;
+  --fs-xs: 12px;
+  --fs-sm: 13.5px;
+  --fs-md: 14.5px;
+  --fs-base: 16px;
+  --fs-lg: 18px;
+  --fs-xl: 20px;
+  --fs-2xl: 24px;
+  --fs-3xl: 30px;
+  --fs-hero: clamp(44px, 10.6vw, 150px);
+  --fs-final: clamp(40px, 8.4vw, 116px);
+  --fs-section: clamp(24px, 3vw, 36px);
+  --fs-signup: clamp(28px, 3.6vw, 46px);
+  --fs-telegram: clamp(28px, 3.8vw, 50px);
+  --fs-tile-hero: clamp(26px, 3vw, 38px);
+  --fs-price: clamp(40px, 5vw, 58px);
+  --fs-plan: clamp(30px, 3vw, 40px);
+  --fs-plan-price: clamp(34px, 3.8vw, 48px);
+  --fs-score: 46px;
+
+  --radius-phone: 42px;
+  --radius-frame: 36px;
+  --radius-screen: 32px;
+  --radius-section: 30px;
+  --radius-plan: 28px;
+  --radius-frame-mobile: 26px;
+  --radius-tile: 26px;
+  --radius-card: 24px;
+  --radius-section-mobile: 22px;
+  --radius-lg: 20px;
+  --radius-card-sm: 18px;
+  --radius-md: 16px;
+  --radius-control: 14px;
+  --radius-input: 12px;
+  --radius-sm: 10px;
+  --radius-xs: 8px;
+  --radius-2xs: 6px;
+  --radius-notch: 3px;
+  --radius-pill: 999px;
+  --radius-round: 50%;
+
+  --grid-size: 56px;
+  --grid-pattern:
+    linear-gradient(var(--color-grid-line) 1px, transparent 1px),
+    linear-gradient(90deg, var(--color-grid-line) 1px, transparent 1px);
+
+  --shadow-lime-button: 0 8px 0 var(--color-lime-shadow);
+  --shadow-lime-button-hover: 0 6px 0 var(--color-lime-shadow);
+  --shadow-lime-button-active: 0 2px 0 var(--color-lime-shadow);
+  --shadow-float: 0 20px 40px rgb(8 20 90 / 0.25);
+  --shadow-sticker: 0 10px 20px rgb(8 20 90 / 0.25);
+  --shadow-object: drop-shadow(0 18px 22px rgb(8 20 90 / 0.35));
+  --shadow-phone: 0 30px 60px rgb(13 21 66 / 0.3);
+  --shadow-card: 0 10px 30px rgb(13 21 66 / 0.12);
+  --shadow-message: 0 2px 6px rgb(13 21 66 / 0.06);
+
+  /* Цвет фокуса переопределяется на светлых и лаймовых поверхностях, чтобы рамка оставалась контрастной. */
+  --focus-ring: var(--color-lime);
+
+  --duration-badge: 16s;
+  --duration-ticker: 26s;
+  --duration-press: 0.12s;
+  --duration-reveal: 0.25s;
+  --duration-expand: 0.45s;
+}
+
+:root {
+  /* Пастельные фоны и градиентные иконки — живые акценты поверх основной гаммы (VIBE-*). */
+  --vibe-pop: #ff4fb8;
+  --vibe-pop-shadow: #c92e86;
+  --vibe-mint: #e3fbef;
+  --vibe-peach: #fff2df;
+  --vibe-pink: #ffe9f5;
+  --vibe-lavender: #f0eaff;
+  --vibe-sky: #e2f4ff;
+  --vibe-lime: #f4ffd1;
+  --vibe-g-green: linear-gradient(135deg, #43e895, #12b76a);
+  --vibe-g-orange: linear-gradient(135deg, #ffc947, #ff8a3d);
+  --vibe-g-pink: linear-gradient(135deg, #ff86cc, #f0479d);
+  --vibe-g-purple: linear-gradient(135deg, #b893ff, #7b4dff);
+  --vibe-g-cyan: linear-gradient(135deg, #5fe0ff, #2a9bff);
+  --vibe-g-blue: linear-gradient(135deg, #6683ff, #2346e6);
+  --vibe-g-frame: linear-gradient(135deg, #cdfc3a, #43e895 55%, #5fe0ff);
+}
+
+:root {
+  --cab-bg: #f4f6fb;
+  --cab-blue-soft: #e8edff;
+  --cab-lime-soft: #f3ffd0;
+  --cab-lime-border: #e3f4a8;
+  --cab-line: #e3e7f1;
+  --cab-ok-soft: #e3f6ec;
+  --cab-bad-soft: #fdecec;
+  --cab-warn: #b36b00;
+  --cab-warn-soft: #fff3dc;
+  --cab-notice: #f0784f;
+  --cab-photo-ink: #2a3a8f;
+  --cab-photo-line: #e6ebf7;
+  --cab-photo-paper: #fbfcff;
+  --cab-mark-bg: rgb(210 60 60 / 0.15);
+  --cab-tone-peach: #ffe1c2;
+  --cab-tone-mint: #d9f5e6;
+  --cab-tone-rose: #ffe4e4;
+  --cab-tone-sky: #e3ebff;
+  --cab-tone-lilac: #f9e3ff;
+
+  --cab-side-width: 236px;
+  --cab-shadow-side: 12px 0 40px rgb(13 21 66 / 0.15);
+  --cab-shadow-toast: 0 12px 30px rgb(0 0 0 / 0.25);
+  --font-handwriting: "Segoe Print", "Comic Sans MS", cursive;
+}
+
+:root {
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+}
+
+:root {
+  --cab-tone-peach-strong: #c76a0a;
+  --cab-tone-mint-strong: #1a8f63;
+  --cab-tone-rose-strong: #d94a4a;
+  --cab-tone-sky-strong: #2f5be0;
+  --cab-tone-lilac-strong: #9446c9;
+  --cab-tone-teal-strong: #0d8591;
+  --cab-tone-teal: #d3f1f4;
+}
+
+:root {
+  --schedule-hour-height: 76px;
+  --schedule-time-width: 60px;
+  --schedule-day-min-width: 128px;
+  --schedule-today-bg: rgb(35 70 230 / 0.05);
+}
+
+:root {
+  --cab-chart-muted: #8b94b2;
+}
+
+:root {
+  --main-bg: #f8fbff;
+  --main-muted: #465575;
+  --main-panel: rgb(255 255 255 / 0.94);
+  --main-backdrop: rgb(255 255 255 / 0.48);
+  --main-line: #dce5f2;
+  --main-highlight: #e7f2ff;
+  --main-bar: #c6e0ff;
+  --main-timeline: #a9bce2;
+  --main-wave: #e6f2ff;
+}
+
+:root {
+  --schedule-page-bg: #f8faff;
+  --schedule-page-glow: #eaf5ff;
+  --schedule-grid-line: #e5ebf6;
+  --schedule-past-opacity: 0.83;
+  --schedule-edge-blue: #5b85fc;
+  --schedule-event-blue: #e7efff;
+  --schedule-edge-mint: #2ba775;
+  --schedule-event-mint: #def5e8;
+  --schedule-edge-peach: #f48d42;
+  --schedule-event-peach: #ffe4cf;
+  --schedule-edge-rose: #f05c70;
+  --schedule-event-rose: #ffe2e6;
+  --schedule-edge-lilac: #ae5bdb;
+  --schedule-event-lilac: #f8e4f6;
+  --schedule-edge-teal: #20a4a7;
+  --schedule-event-teal: #ddf5f4;
+}
+
+:root {
+  --lesson-panel-bg: #f8fafe;
+  --lesson-panel-line: #dfe6f3;
+  --lesson-panel-muted: #657293;
+  --lesson-panel-glow: #e7f1ff;
+  --lesson-panel-note: #fff5e6;
+  --lesson-panel-note-line: #f0d7b6;
+  --lesson-panel-overlay: rgb(16 27 70 / 0.24);
+  --lesson-panel-time: clamp(28px, 3vw, 40px);
+}
+
+:root {
+  --students-page-bg: #f9fbff;
+  --students-glow-blue: #eef8ff;
+  --students-glow-green: #f5fbe8;
+  --journal-line: #edf1f8;
+  --journal-divider: #dfe5f2;
+  --journal-today: #f5f8ff;
+  --journal-hover: #f4f8fd;
+  --journal-shadow: 0 8px 24px rgb(16 27 70 / 0.045);
+}
+
+/* Публичный лендинг: тема применяется только к layout и его порталам (LANDING-11). */
+[data-landing-theme] {
+  --landing-bg: #fafaff;
+  --landing-paper: #fff;
+  --landing-ink: #0b103b;
+  --landing-muted: #596487;
+  --landing-blue: #4a3ef3;
+  --landing-blue-hover: #3c32d9;
+  --landing-lime: #d9ff3f;
+  --landing-line: #e1e4f4;
+  --landing-sky: #eef0ff;
+  --landing-lilac: #eee7ff;
+  --landing-mint: #f5f9e2;
+  --landing-track: #e5dfff;
+  --landing-shadow: 0 14px 30px rgb(35 43 110 / .055);
+  --landing-shadow-hover: 0 16px 32px rgb(35 43 110 / .09);
+  --landing-button-shadow: 0 8px 24px rgb(49 85 240 / .12);
+  --landing-radius: 26px;
+  --landing-button-radius: var(--radius-pill);
+  --landing-hero-font: clamp(2.25rem, 4.6vw, 3.5rem);
+  --landing-section-font: clamp(1.875rem, 3vw, 2.25rem);
+  --landing-card-font: clamp(1.25rem, 1.9vw, 1.5rem);
+  --landing-ai-font: clamp(1.5rem, 2.8vw, 2.25rem);
+  --landing-mobile-hero-font: clamp(1.6rem, 8.3vw, 3.5rem);
+  --font-display: var(--font-body);
+  --color-blue: var(--landing-blue);
+  --color-blue-hover: var(--landing-blue-hover);
+  --color-ink: var(--landing-ink);
+  --color-muted: var(--landing-muted);
+  --color-lime: var(--landing-lime);
+  --focus-ring: var(--landing-blue);
+}
+
+/* FINANCE-UI-1: дополнительные цвета используются только на странице финансов. */
+:root {
+  --finance-expected-bg: #e4f4ff;
+  --finance-expected-line: #beddfa;
+  --finance-problem-bg: #fff0f4;
+  --finance-problem-line: #f4ccd9;
+  --finance-problem-ink: #b4233c;
+}
