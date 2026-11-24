@@ -1,15 +1,15 @@
 # TutorFlow
 
 - Рабочее пространство для независимых преподавателей, учеников и приглашённых взрослых. [О продукте](docs/product.md)
-- Сценарии работы преподавателя, ученика и взрослого. [Сценарии](docs/use-cases.md)
-- Правила поведения приложения. [Бизнес-правила](docs/business-rules.md)
-- Текущее состояние и ближайшие задачи. [Этапы](docs/stages.md)
+- Сценарии работы преподавателя, ученика и взрослого. [Сценарии](docs/use-cases/)
+- Правила поведения приложения. [Правила модулей](docs/modules/) и [будущие области](docs/planned-business-rules.md)
 
-## Локальный запуск
+- Важные технические решения. [Шаблон ADR](docs/templates/adr.md)
 
-Нужны Python из [backend/.python-version](backend/.python-version), Node.js 24, uv и Docker Compose.
+## Работа с проектом
 
-- Установка зависимостей и Chromium — `./scripts/dev.sh setup`.
-- API — `uv run --directory backend --locked uvicorn app.main:app --reload`.
-- Фронтенд — `npm --prefix frontend run dev`.
-- Полная проверка — `./scripts/dev.sh check`. Быстрая проверка перед PR — `python3 scripts/check.py pr`.
+Установка окружения, проверки и генерация выполняются через утилиты проекта.
+
+`./scripts/dev.sh --help` показывает назначение команд, режимы и результаты. Для входа в выбранную область следуй её AGENTS.md.
+
+API и frontend запускаются средствами своих манифестов. Требования к версиям указаны в локальных конфигурациях окружения.

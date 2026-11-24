@@ -1,16 +1,17 @@
 {
-  "targeted": ["uv", "run", "--directory", "backend", "--locked", "pytest", "-q"],
+  "targeted": {
+    "pytest": ["uv", "run", "--directory", "backend", "--locked", "pytest", "-q"],
+    "playwright": ["npm", "--prefix", "tests/e2e", "run", "test:e2e", "--"]
+  },
   "backend": {
     "pr": [
-      ["uv", "run", "--directory", "backend", "--locked", "ruff", "check", ".", "../scripts"],
-      ["uv", "run", "--directory", "backend", "--locked", "ruff", "format", "--check", ".", "../scripts"],
+      ["uv", "run", "--project", "backend", "--locked", "ruff", "check", "--config", "backend/pyproject.toml", "backend", "scripts"],
       ["uv", "run", "--directory", "backend", "--locked", "pyright"],
       ["uv", "run", "--directory", "backend", "--locked", "pytest", "-q", "tests/test_health.py", "tests/test_architecture.py"],
       ["python3", "-m", "unittest", "discover", "-s", "scripts", "-p", "test_*.py"]
     ],
     "all": [
-      ["uv", "run", "--directory", "backend", "--locked", "ruff", "check", ".", "../scripts"],
-      ["uv", "run", "--directory", "backend", "--locked", "ruff", "format", "--check", ".", "../scripts"],
+      ["uv", "run", "--project", "backend", "--locked", "ruff", "check", "--config", "backend/pyproject.toml", "backend", "scripts"],
       ["uv", "run", "--directory", "backend", "--locked", "pyright"],
       ["uv", "run", "--directory", "backend", "--locked", "pytest", "-q"],
       ["python3", "-m", "unittest", "discover", "-s", "scripts", "-p", "test_*.py"]
@@ -27,5 +28,30 @@
   "tests": {
     "pr": [["npm", "--prefix", "tests/e2e", "run", "test:e2e", "--", "--list"]],
     "all": [["npm", "--prefix", "tests/e2e", "run", "test:e2e"]]
+  },
+  "git": {
+    "actions": {
+      "add": "Новая возможность",
+      "change": "Изменение согласованного поведения",
+      "fix": "Исправление ошибки",
+      "refactor": "Изменение устройства с сохранением поведения",
+      "remove": "Удаление возможности или компонента",
+      "configure": "Настройка инструментов и окружения",
+      "document": "Только документация",
+      "test": "Только тесты"
+    },
+    "areas": {
+      "identity": "Аккаунты и аутентификация",
+      "scheduling": "Расписание",
+      "backend": "Общие компоненты backend",
+      "frontend": "Пользовательский интерфейс",
+      "deploy": "Развёртывание и эксплуатация",
+      "tooling": "Скрипты и процесс разработки",
+      "docs": "Документация",
+      "repo": "Репозиторий в целом"
+    },
+    "legacy_branches": {
+      "implement/uc-001-teacher-workspace": 11
+    }
   }
 }
