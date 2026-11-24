@@ -1,0 +1,42 @@
+name: CI
+on:
+  pull_request:
+  push:
+    branches: [main, dev]
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version-file: backend/.python-version
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24.20.0'
+          cache: npm
+          cache-dependency-path: |
+            frontend/package-lock.json
+            tests/e2e/package-lock.json
+      - uses: astral-sh/setup-uv@v6
+        with:
+          version: '0.12.7'
+          enable-cache: true
+          cache-dependency-glob: backend/uv.lock
+      - name: Install locked dependencies
+        run: |
+          uv sync --project backend --locked
+          npm --prefix frontend ci
+          npm --prefix tests/e2e ci
+          npm --prefix tests/e2e exec -- playwright install --with-deps chromium
+      - name: Pre-commit
+        run: uvx --from pre-commit==4.7.0 pre-commit run --all-files
+      - name: Verify TutorFlow
+        run: ./scripts/dev.sh check

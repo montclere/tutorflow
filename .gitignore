@@ -1,0 +1,30 @@
+# Локальные переменные окружения
+.env
+.env.*
+!/deploy/.env.example
+
+# Зависимости
+.venv/
+node_modules/
+
+# Кэши Python и TypeScript
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.ruff_cache/
+*.tsbuildinfo
+
+# Сборка и отчёты
+/.artifacts/
+/frontend/dist/
+/tests/e2e/playwright-report/
+/tests/e2e/test-results/
+coverage/
+.coverage
+.coverage.*
+htmlcov/
+*.log
+
+# Системные файлы
+.DS_Store
+Thumbs.db

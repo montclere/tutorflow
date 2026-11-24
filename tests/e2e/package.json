@@ -1,0 +1,12 @@
+{
+  "name": "tutorflow-e2e",
+  "private": true,
+  "type": "module",
+  "packageManager": "npm@11.19.0",
+  "scripts": {
+    "test:e2e": "playwright test"
+  },
+  "devDependencies": {
+    "@playwright/test": "1.65.1"
+  }
+}

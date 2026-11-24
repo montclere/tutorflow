@@ -1,0 +1,31 @@
+{
+  "targeted": ["uv", "run", "--directory", "backend", "--locked", "pytest", "-q"],
+  "backend": {
+    "pr": [
+      ["uv", "run", "--directory", "backend", "--locked", "ruff", "check", ".", "../scripts"],
+      ["uv", "run", "--directory", "backend", "--locked", "ruff", "format", "--check", ".", "../scripts"],
+      ["uv", "run", "--directory", "backend", "--locked", "pyright"],
+      ["uv", "run", "--directory", "backend", "--locked", "pytest", "-q", "tests/test_health.py", "tests/test_architecture.py"],
+      ["python3", "-m", "unittest", "discover", "-s", "scripts", "-p", "test_*.py"]
+    ],
+    "all": [
+      ["uv", "run", "--directory", "backend", "--locked", "ruff", "check", ".", "../scripts"],
+      ["uv", "run", "--directory", "backend", "--locked", "ruff", "format", "--check", ".", "../scripts"],
+      ["uv", "run", "--directory", "backend", "--locked", "pyright"],
+      ["uv", "run", "--directory", "backend", "--locked", "pytest", "-q"],
+      ["python3", "-m", "unittest", "discover", "-s", "scripts", "-p", "test_*.py"]
+    ]
+  },
+  "frontend": {
+    "pr": [["npm", "--prefix", "frontend", "run", "lint"], ["npm", "--prefix", "frontend", "run", "typecheck"], ["npm", "--prefix", "frontend", "run", "test:run"]],
+    "all": [["npm", "--prefix", "frontend", "run", "lint"], ["npm", "--prefix", "frontend", "run", "typecheck"], ["npm", "--prefix", "frontend", "run", "test:run"], ["npm", "--prefix", "frontend", "run", "build"]]
+  },
+  "deploy": {
+    "pr": [["sh", "deploy/scripts/check.sh"]],
+    "all": [["sh", "deploy/scripts/check.sh"]]
+  },
+  "tests": {
+    "pr": [["npm", "--prefix", "tests/e2e", "run", "test:e2e", "--", "--list"]],
+    "all": [["npm", "--prefix", "tests/e2e", "run", "test:e2e"]]
+  }
+}

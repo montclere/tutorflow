@@ -1,0 +1,19 @@
+services:
+  db:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_DB: tutorflow
+      POSTGRES_USER: tutorflow
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Укажите пароль локальной БД в deploy/.env}
+    ports:
+      - "127.0.0.1:${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: [CMD, pg_isready, -U, tutorflow, -d, tutorflow]
+      interval: 3s
+      timeout: 3s
+      retries: 15
+
+volumes:
+  pgdata:
