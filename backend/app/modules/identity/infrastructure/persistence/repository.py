@@ -214,3 +214,15 @@ class PostgresIdentityRepository:
                 .where(LoginSession.token_digest == digest, LoginSession.expires_at > now)
             )
         )
+
+    async def update_profile(
+        self, account_id: UUID, changes: dict[str, str | None]
+    ) -> Account | None:
+        statement = (
+            update(AccountRow)
+            .where(AccountRow.id == account_id)
+            .values(**changes)
+            .returning(AccountRow)
+        )
+
+        return to_account(await self.db.scalar(statement))

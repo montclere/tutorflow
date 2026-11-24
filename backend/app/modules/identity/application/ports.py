@@ -49,6 +49,11 @@ class IdentityRepository(Protocol):
 
     async def find_account_by_session(self, digest: str, now: datetime) -> Account | None: ...
 
+    async def update_profile(
+        self, account_id: UUID, changes: dict[str, str | None]
+    ) -> Account | None: ...
+
+
 class IdentityUnitOfWork(Protocol):
     def transaction(self) -> AbstractAsyncContextManager[IdentityRepository]: ...
 
