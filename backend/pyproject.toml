@@ -2,7 +2,16 @@
 name = "tutorflow-backend"
 version = "0.1.0"
 requires-python = ">=3.12,<3.13"
-dependencies = ["fastapi", "pydantic>=2,<3", "uvicorn"]
+dependencies = [
+    "alembic>=1.13,<2",
+    "argon2-cffi>=23,<26",
+    "email-validator>=2,<3",
+    "fastapi",
+    "psycopg[binary]>=3.2,<4",
+    "pydantic>=2,<3",
+    "sqlalchemy>=2,<3",
+    "uvicorn",
+]
 
 [dependency-groups]
 dev = ["httpx", "pyright", "pytest", "ruff"]
@@ -19,3 +28,4 @@ venv = ".venv"
 pythonpath = ["."]
 testpaths = ["tests"]
 addopts = "--strict-markers"
+markers = ["br_001: регистрация и доступ к кабинету", "br_075: единственная роль"]

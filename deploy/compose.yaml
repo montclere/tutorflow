@@ -15,5 +15,14 @@ services:
       timeout: 3s
       retries: 15
 
+  mailpit:
+    image: axllent/mailpit:v1.33.1
+    profiles: ["identity"]
+    environment:
+      MP_SMTP_DISABLE_RDNS: "true"
+    ports:
+      - "127.0.0.1:${IDENTITY_MAILPIT_PORT:-1025}:1025"
+      - "127.0.0.1:${IDENTITY_MAILPIT_UI_PORT:-8025}:8025"
+
 volumes:
   pgdata:

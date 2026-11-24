@@ -1,4 +1,15 @@
 {
   "schema": 1,
-  "rules": {}
+  "rules": {
+    "BR-001": [
+      "tests/test_identity.py::test_workspace_requires_a_session",
+      "tests/test_identity.py::test_registration_and_login_keep_the_same_account",
+      "tests/test_identity.py::test_challenge_is_single_use_and_cannot_assign_a_role",
+      "tests/test_identity.py::test_wrong_attempts_and_expired_codes_do_not_create_accounts",
+      "tests/test_identity.py::test_unknown_and_wrong_password_have_the_same_error_and_are_throttled"
+    ],
+    "BR-075": [
+      "tests/test_identity.py::test_registration_and_login_keep_the_same_account"
+    ]
+  }
 }
