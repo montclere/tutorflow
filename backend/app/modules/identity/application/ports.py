@@ -1,0 +1,89 @@
+"""Порты хранения, доставки и проверки паролей для сценариев Identity."""
+
+from contextlib import AbstractAsyncContextManager
+from datetime import datetime, timedelta
+from typing import Protocol
+from uuid import UUID
+
+from app.modules.identity.application.contracts import ContactInput, RegistrationDelivery
+from app.modules.identity.domain.entities import Account, Registration, Session
+from app.modules.identity.domain.values import Contact
+
+
+class IdentityRepository(Protocol):
+    async def find_account_for_update(self, account_id: UUID) -> Account | None: ...
+
+    async def find_account_by_contact(self, contact: Contact) -> Account | None: ...
+
+    async def add_account(self, account: Account) -> bool: ...
+
+    async def update_password_hash(self, account_id: UUID, digest: str) -> None: ...
+
+    async def save_registration(
+        self,
+        registration: Registration,
+        cooldown_before: datetime,
+        *,
+        delivery_enabled: bool = True,
+    ) -> UUID: ...
+
+    async def claim_registration_delivery(
+        self, challenge_id: UUID | None, now: datetime, retry_delay: timedelta, max_attempts: int
+    ) -> RegistrationDelivery | None: ...
+
+    async def mark_registration_delivered(self, delivery: RegistrationDelivery) -> None: ...
+
+    async def find_registration_for_update(self, registration_id: UUID) -> Registration | None: ...
+
+    async def save_attempts(self, registration: Registration) -> None: ...
+
+    async def remove_registration(self, registration_id: UUID) -> None: ...
+
+    async def consume_rate_window(
+        self, key: str, limit: int, now: datetime, reset_at: datetime
+    ) -> bool: ...
+
+    async def add_session(self, session: Session) -> None: ...
+
+    async def remove_session(self, digest: str) -> None: ...
+
+    async def find_account_by_session(self, digest: str, now: datetime) -> Account | None: ...
+
+class IdentityUnitOfWork(Protocol):
+    def transaction(self) -> AbstractAsyncContextManager[IdentityRepository]: ...
+
+
+class Passwords(Protocol):
+    def needs_rehash(self, digest: str) -> bool: ...
+
+    async def hash(self, password: str) -> str: ...
+
+    async def verify(self, digest: str, password: str) -> bool: ...
+
+
+class CodeDelivery(Protocol):
+    async def send(self, contact: Contact, code: str) -> None: ...
+
+
+class DeliveryUnavailable(Exception):
+    pass
+
+
+class IdentityTokens(Protocol):
+    def digest(self, purpose: str, *parts: str) -> str: ...
+
+    def registration_code(self, challenge_id: UUID) -> str: ...
+
+    def registration_digest(self, challenge_id: UUID, code: str) -> str: ...
+
+    def new_session_token(self) -> str: ...
+
+    def session_digest(self, token: str) -> str: ...
+
+    def csrf_token(self, token: str) -> str: ...
+
+    def matches_csrf(self, token: str, supplied: str) -> bool: ...
+
+
+class ContactNormalizer(Protocol):
+    def normalize(self, contact: ContactInput) -> Contact: ...
