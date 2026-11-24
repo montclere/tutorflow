@@ -35,7 +35,7 @@
 
 1. Скопируйте `deploy/.env.example` в `deploy/.env` и задайте пароль PostgreSQL. Запустите базу и перехватчик сообщений командой `docker compose --env-file deploy/.env -f deploy/compose.yaml --profile identity up -d db mailpit`.
 2. В окружении API задайте `IDENTITY_DATABASE_URL` с драйвером `postgresql+psycopg` и `IDENTITY_SECRET` со случайным значением, например сгенерированным через `openssl rand -hex 32`. Для локального Mailpit задайте `IDENTITY_LOCAL_MAILPIT=1`, а для HTTP на loopback — `IDENTITY_SECURE_COOKIE=0`.
-3. Примените миграции через `uv run --directory backend --locked alembic upgrade head` и запустите `uv run --directory backend --locked uvicorn app.main:app`. API откроется на `http://127.0.0.1:8000/docs`.
+3. Примените миграции через `uv run --directory backend --locked alembic upgrade head` и запустите `uv run --directory backend --locked uvicorn app.main:app`. API откроется на `http://127.0.0.1:8000/docs`. Запустите кабинет через `npm --prefix frontend run dev` и откройте `http://localhost:5173`. Vite проксирует API на порт 8000.
 4. В Mailpit на `http://127.0.0.1:8025` будут email-коды и локальные копии SMS-кодов. Для телефона используется адрес вида `sms-15551234567@tutorflow.invalid`.
 
 Для реальной отправки почты API использует `IDENTITY_SMTP_HOST`, `IDENTITY_SMTP_PORT`, `IDENTITY_SMTP_FROM`, `IDENTITY_SMTP_USER` и `IDENTITY_SMTP_PASSWORD`. Для SMS используются `IDENTITY_SMSC_API_KEY` и необязательный `IDENTITY_SMSC_SENDER`. В реальном окружении локальный режим выключен, Secure cookie включена, а прокси передаёт адрес клиента только из доверенного источника.
