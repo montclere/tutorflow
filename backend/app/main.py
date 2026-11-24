@@ -7,6 +7,8 @@ from pydantic import BaseModel
 
 from app.modules.identity.router import router
 from app.modules.identity.service import Identity
+from app.modules.scheduling.router import router as scheduling_router
+from app.modules.scheduling.service import Calendar
 
 
 class HealthStatus(BaseModel):
@@ -16,7 +18,9 @@ class HealthStatus(BaseModel):
 def create_app(identity: Identity | None = None) -> FastAPI:
     application = FastAPI(title="TutorFlow API")
     application.state.identity = identity
+    application.state.calendar = Calendar(identity.engine) if identity else None
     application.include_router(router)
+    application.include_router(scheduling_router)
 
     @application.get("/health")
     async def health() -> HealthStatus:

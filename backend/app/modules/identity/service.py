@@ -42,6 +42,7 @@ class Identity:
     def __init__(
         self, engine: Engine, secret: bytes, deliver: Delivery, *, secure_cookie: bool
     ):
+        self.engine = engine
         self.sessions = sessionmaker(engine, expire_on_commit=False)
         self.secret = secret
         self.deliver = deliver

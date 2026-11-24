@@ -4,8 +4,9 @@ from alembic import context
 from sqlalchemy import create_engine
 
 from app.modules.identity.models import IdentityBase
+from app.modules.scheduling.models import SchedulingBase
 
-target_metadata = IdentityBase.metadata
+target_metadata = [IdentityBase.metadata, SchedulingBase.metadata]
 
 
 def run_migrations() -> None:

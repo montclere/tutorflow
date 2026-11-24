@@ -13,6 +13,9 @@
     ],
     "BR-075": [
       "tests/test_identity.py::test_registration_and_login_keep_the_same_account"
+    ],
+    "BR-004": [
+      "tests/test_identity.py::test_new_calendar_block_uses_the_profile_timezone"
     ]
   }
 }

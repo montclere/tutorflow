@@ -9,8 +9,8 @@ from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 from email_validator import EmailNotValidError, validate_email
 from fastapi import APIRouter, BackgroundTasks, HTTPException, Request, Response
 from pydantic import BaseModel, ConfigDict, Field, SecretStr, model_validator
-from sqlalchemy import create_engine
 
+from app.database import database_engine
 from app.modules.identity.delivery import ContactKind, EnvironmentDelivery
 from app.modules.identity.models import Account
 from app.modules.identity.service import (
@@ -123,12 +123,15 @@ def contact_value(contact: Contact) -> str:
 
 @lru_cache(maxsize=1)
 def identity_from_environment() -> Identity:
-    url = os.environ.get("IDENTITY_DATABASE_URL")
     secret = os.environ.get("IDENTITY_SECRET", "")
-    if not url or len(secret.encode()) < 32:
+    if len(secret.encode()) < 32:
         raise HTTPException(503, "identity_unavailable")
+    try:
+        engine = database_engine()
+    except RuntimeError:
+        raise HTTPException(503, "identity_unavailable") from None
     return Identity(
-        create_engine(url, pool_pre_ping=True),
+        engine,
         secret.encode(),
         EnvironmentDelivery().send,
         secure_cookie=os.environ.get("IDENTITY_SECURE_COOKIE", "1") != "0",

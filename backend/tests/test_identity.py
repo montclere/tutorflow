@@ -1,24 +1,16 @@
-import os
-import secrets
-import subprocess
-import time
 from collections.abc import AsyncIterator, Iterator
 from dataclasses import dataclass, field
 from datetime import UTC, datetime, timedelta
-from pathlib import Path
 
 import pytest
-from alembic import command
-from alembic.config import Config
 from httpx import ASGITransport, AsyncClient
-from sqlalchemy import URL, Engine, create_engine, select, update
-from sqlalchemy.exc import OperationalError
-from sqlalchemy.schema import CreateSchema, DropSchema
+from sqlalchemy import Engine, select, update
 
 from app.main import app, create_app
 from app.modules.identity.delivery import ContactKind
 from app.modules.identity.models import Account, LoginSession, Registration
 from app.modules.identity.service import Identity
+from tests.postgres_testkit import migrated_schema, postgres_cluster
 
 pytestmark = pytest.mark.anyio
 PASSWORD = "a long teacher password"
@@ -40,79 +32,15 @@ def anyio_backend() -> str:
 
 
 @pytest.fixture(scope="session")
-def postgres_url() -> Iterator[URL | str]:
-    configured = os.environ.get("TEST_IDENTITY_DATABASE_URL")
-    if configured:
-        yield configured
-        return
-
-    password = secrets.token_urlsafe(24)
-    deployed = subprocess.run(
-        [
-            "docker",
-            "run",
-            "--rm",
-            "-d",
-            "-e",
-            "POSTGRES_PASSWORD",
-            "-p",
-            "127.0.0.1::5432",
-            "postgres:17-alpine",
-        ],
-        env={**os.environ, "POSTGRES_PASSWORD": password},
-        capture_output=True,
-        text=True,
-        check=True,
-    ).stdout.strip()
-    try:
-        mapping = subprocess.check_output(
-            ["docker", "port", deployed, "5432/tcp"], text=True
-        )
-        port = int(mapping.strip().rsplit(":", 1)[1])
-        yield URL.create(
-            "postgresql+psycopg", "postgres", password, "127.0.0.1", port, "postgres"
-        )
-    finally:
-        subprocess.run(
-            ["docker", "rm", "-f", deployed], check=True, capture_output=True
-        )
-
-
-@pytest.fixture(scope="session")
-def cluster(postgres_url: URL | str) -> Iterator[Engine]:
-    engine = create_engine(postgres_url)
-    try:
-        for attempt in range(80):
-            try:
-                with engine.connect():
-                    break
-            except OperationalError:
-                if attempt == 79:
-                    raise
-                time.sleep(0.25)
+def cluster() -> Iterator[Engine]:
+    with postgres_cluster() as engine:
         yield engine
-    finally:
-        engine.dispose()
 
 
 @pytest.fixture
 def database(cluster: Engine) -> Iterator[Engine]:
-    schema = f"identity_test_{secrets.token_hex(12)}"
-    with cluster.begin() as connection:
-        connection.execute(CreateSchema(schema))
-    engine = create_engine(
-        cluster.url, connect_args={"options": f"-csearch_path={schema}"}
-    )
-    try:
-        config = Config(str(Path(__file__).resolve().parents[1] / "alembic.ini"))
-        with engine.begin() as connection:
-            config.attributes["connection"] = connection
-            command.upgrade(config, "head")
+    with migrated_schema(cluster) as engine:
         yield engine
-    finally:
-        engine.dispose()
-        with cluster.begin() as connection:
-            connection.execute(DropSchema(schema, cascade=True))
 
 
 @pytest.fixture
@@ -327,3 +255,52 @@ async def test_profile_is_optional_owned_and_editable(client, identity, inbox):
         "/api/v1/me/profile", headers=headers, json={"display_name": None}
     )
     assert cleared.json() == {"display_name": None, "timezone": "Asia/Krasnoyarsk"}
+
+
+@pytest.mark.br_004
+async def test_new_calendar_block_uses_the_profile_timezone(client, identity, inbox):
+    auth = (await register(client, EMAIL, inbox)).json()
+    headers = {"x-csrf-token": auth["csrf_token"]}
+    data = {"local_start": "2026-12-01T10:00:00", "duration_minutes": 45}
+    utc = await client.post("/api/v1/me/calendar-blocks", json=data, headers=headers)
+    assert utc.status_code == 201
+    assert utc.json()["timezone"] == "UTC"
+    assert datetime.fromisoformat(utc.json()["starts_at"]) == datetime(
+        2026, 12, 1, 10, tzinfo=UTC
+    )
+
+    saved = await client.patch(
+        "/api/v1/me/profile", json={"timezone": "Asia/Krasnoyarsk"}, headers=headers
+    )
+    assert saved.status_code == 200
+    local = await client.post("/api/v1/me/calendar-blocks", json=data, headers=headers)
+    assert local.status_code == 201
+    assert local.json()["timezone"] == "Asia/Krasnoyarsk"
+    assert datetime.fromisoformat(local.json()["starts_at"]) == datetime(
+        2026, 12, 1, 3, tzinfo=UTC
+    )
+
+    changed = await client.patch(
+        "/api/v1/me/profile", json={"timezone": "Europe/Berlin"}, headers=headers
+    )
+    assert changed.status_code == 200
+    for invalid in ("2026-10-25T02:30:00", "2026-03-29T02:30:00"):
+        rejected = await client.post(
+            "/api/v1/me/calendar-blocks",
+            json={**data, "local_start": invalid},
+            headers=headers,
+        )
+        assert rejected.status_code == 422
+        assert rejected.json() == {"detail": "invalid_local_start"}
+
+    blocks = (await client.get("/api/v1/me/calendar-blocks")).json()
+    assert {block["id"]: block for block in blocks} == {
+        utc.json()["id"]: utc.json(),
+        local.json()["id"]: local.json(),
+    }
+
+    async with AsyncClient(
+        transport=ASGITransport(app=create_app(identity)), base_url="https://test"
+    ) as second:
+        await register(second, PHONE, inbox)
+        assert (await second.get("/api/v1/me/calendar-blocks")).json() == []
