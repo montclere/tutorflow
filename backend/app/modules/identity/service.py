@@ -9,7 +9,7 @@ from uuid import UUID, uuid4
 
 from argon2 import PasswordHasher
 from argon2.exceptions import InvalidHashError, VerificationError
-from sqlalchemy import Engine, case, delete, or_, select
+from sqlalchemy import Engine, case, delete, or_, select, update
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.orm import Session, sessionmaker
 
@@ -256,3 +256,18 @@ class Identity:
                     LoginSession.token_digest == self._token_digest(token)
                 )
             )
+
+    def update_profile(
+        self, account_id: UUID, changes: dict[str, str | None]
+    ) -> Account:
+        with self.sessions.begin() as db:
+            statement = (
+                update(Account)
+                .where(Account.id == account_id)
+                .values(**changes)
+                .returning(Account)
+            )
+            account = db.scalar(statement)
+            if account is None:
+                raise IdentityError("authentication_required")
+            return account

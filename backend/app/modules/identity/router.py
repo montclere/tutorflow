@@ -4,10 +4,11 @@ import re
 from functools import lru_cache
 from typing import Annotated, NoReturn
 from uuid import UUID
+from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
 from email_validator import EmailNotValidError, validate_email
 from fastapi import APIRouter, BackgroundTasks, HTTPException, Request, Response
-from pydantic import BaseModel, ConfigDict, Field, SecretStr
+from pydantic import BaseModel, ConfigDict, Field, SecretStr, model_validator
 from sqlalchemy import create_engine
 
 from app.modules.identity.delivery import ContactKind, EnvironmentDelivery
@@ -43,6 +44,33 @@ class CompleteRegistration(Input):
 
 class Login(StartRegistration):
     password: Annotated[SecretStr, Field(min_length=1, max_length=128)]
+
+
+class ProfilePatch(Input):
+    display_name: Annotated[str | None, Field(max_length=120)] = None
+    timezone: Annotated[str | None, Field(max_length=80)] = None
+
+    @model_validator(mode="after")
+    def validate_patch(self):
+        if not self.model_fields_set:
+            raise ValueError("Укажите хотя бы одно поле")
+        if self.display_name is not None:
+            name = self.display_name.strip()
+            if not name or any(not char.isprintable() for char in name):
+                raise ValueError("Некорректное отображаемое имя")
+            self.display_name = name
+        if self.timezone is not None:
+            try:
+                ZoneInfo(self.timezone)
+            except (ZoneInfoNotFoundError, ValueError):
+                raise ValueError("Неизвестный часовой пояс") from None
+        return self
+
+
+class Profile(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+    display_name: str | None
+    timezone: str | None
 
 
 class AccountView(BaseModel):
@@ -259,3 +287,21 @@ def logout(request: Request, response: Response) -> None:
 def me(request: Request) -> AccountView:
     _, _, account = authenticated(request)
     return account_view(account)
+
+
+@router.get("/me/profile")
+def profile(request: Request) -> Profile:
+    _, _, account = authenticated(request)
+    return Profile.model_validate(account)
+
+
+@router.patch("/me/profile")
+def change_profile(command: ProfilePatch, request: Request) -> Profile:
+    require_json(request)
+    identity, _, account = authenticated(request, csrf=True)
+    changes = command.model_dump(exclude_unset=True)
+    try:
+        updated = identity.update_profile(account.id, changes)
+    except IdentityError as exc:
+        raise_identity_error(exc)
+    return Profile.model_validate(updated)

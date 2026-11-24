@@ -283,3 +283,47 @@ async def test_unknown_and_wrong_password_have_the_same_error_and_are_throttled(
         "/api/v1/auth/login", json={"login_contact": EMAIL, "password": PASSWORD}
     )
     assert limited.status_code == 429
+
+
+@pytest.mark.br_002
+async def test_profile_is_optional_owned_and_editable(client, identity, inbox):
+    first = (await register(client, EMAIL, inbox)).json()
+    assert (await client.get("/api/v1/me/profile")).json() == {
+        "display_name": None,
+        "timezone": None,
+    }
+    assert (await client.get("/api/v1/auth/csrf")).json()["csrf_token"] == first[
+        "csrf_token"
+    ]
+    denied = await client.patch(
+        "/api/v1/me/profile", json={"display_name": "Чужое имя"}
+    )
+    assert denied.status_code == 403
+    assert (await client.get("/api/v1/me/profile")).json()["display_name"] is None
+    headers = {"x-csrf-token": first["csrf_token"]}
+    updated = await client.patch(
+        "/api/v1/me/profile",
+        headers=headers,
+        json={"display_name": "  Анна  ", "timezone": "Asia/Krasnoyarsk"},
+    )
+    assert updated.json() == {"display_name": "Анна", "timezone": "Asia/Krasnoyarsk"}
+    for payload in (
+        {"timezone": "Wrong/Zone"},
+        {"account_id": first["account"]["id"]},
+        {},
+    ):
+        invalid = await client.patch(
+            "/api/v1/me/profile", headers=headers, json=payload
+        )
+        assert invalid.status_code == 422
+
+    async with AsyncClient(
+        transport=ASGITransport(app=create_app(identity)), base_url="https://test"
+    ) as second:
+        await register(second, PHONE, inbox)
+        assert (await second.get("/api/v1/me/profile")).json()["display_name"] is None
+
+    cleared = await client.patch(
+        "/api/v1/me/profile", headers=headers, json={"display_name": None}
+    )
+    assert cleared.json() == {"display_name": None, "timezone": "Asia/Krasnoyarsk"}
