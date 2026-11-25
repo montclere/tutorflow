@@ -1,6 +1,7 @@
 name: Пользовательский сценарий
 description: Родительская задача для бизнес-правил одного UC
 title: "[UC-XXX] "
+type: Feature
 body:
   - type: textarea
     id: outcome

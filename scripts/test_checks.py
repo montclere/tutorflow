@@ -6,6 +6,106 @@ from unittest.mock import patch
 import check
 
 
+class GitHubContractTest(unittest.TestCase):
+    def setUp(self):
+        self.repository = "tutor-flow-org/tutorflow"
+        self.issue = {
+            "number": 12,
+            "title": "Настроить процесс",
+            "body": (
+                "## Результат\n\nПроцесс настроен.\n\n## Критерии приёмки\n\n- Проверки проходят."
+            ),
+        }
+        self.pull = {
+            "number": 13,
+            "title": self.issue["title"],
+            "head": {"ref": "configure/tooling/issue-12", "sha": "a" * 40},
+            "base": {"ref": "dev"},
+            "body": (
+                f"## Задача\n\n[Issue #12](https://github.com/{self.repository}/issues/12)\n\n"
+                "## Результат\n\nПроцесс настроен.\n\n- Добавлены проверки.\n\n"
+                "## Проверки\n\n- [x] Авторское ревью проведено."
+            ),
+        }
+
+    def test_valid_task_and_pr(self):
+        self.assertTrue(check.validate_issue(self.issue))
+        self.assertTrue(check.validate_pull_request(self.pull, self.issue, self.repository))
+
+    def test_missing_fields_placeholders_and_wrong_requirement(self):
+        for issue in (
+            self.issue | {"body": ""},
+            self.issue
+            | {"body": "## Результат\n_No response_\n## Критерии приёмки\n<!-- TODO -->"},
+            self.issue | {"title": "[UC-999] Отсутствует"},
+        ):
+            with self.subTest(issue=issue), self.assertRaises(ValueError):
+                check.validate_issue(issue)
+
+    def test_wrong_issue_url_title_branch_base_and_unfinished_checks(self):
+        for pull in (
+            self.pull | {"title": "Произвольное название"},
+            self.pull | {"body": self.pull["body"].replace("/issues/12", "/issues/11")},
+            self.pull | {"body": self.pull["body"].replace(self.repository, "other/repo")},
+            self.pull | {"head": {"ref": "configure/tooling/issue-15"}},
+            self.pull | {"base": {"ref": "main"}},
+            self.pull | {"body": self.pull["body"].replace("[x]", "[ ]")},
+        ):
+            with self.subTest(pull=pull), self.assertRaises(ValueError):
+                check.validate_pull_request(pull, self.issue, self.repository)
+
+    def test_br_requires_native_parent_and_matching_uc(self):
+        rule = self.issue | {"title": "[BR-001] identity — Вход"}
+
+        with self.assertRaisesRegex(ValueError, "Sub-issues"):
+            check.validate_issue(rule)
+
+        parent = self.issue | {"title": "[UC-001] Преподаватель начинает работу"}
+
+        self.assertTrue(check.validate_issue(rule | {"parent": parent}))
+
+        with self.assertRaises(ValueError):
+            check.validate_issue(
+                rule | {"parent": parent | {"title": "[UC-002] Ошибочный родитель"}}
+            )
+
+    def test_bot_route_requires_real_identity_and_same_repository(self):
+        bot = self.pull | {
+            "title": "Bump dependencies",
+            "user": {"login": "dependabot[bot]", "id": 49699333, "type": "Bot"},
+            "head": {"ref": "dependabot/uv/backend/all", "repo": {"full_name": self.repository}},
+        }
+
+        self.assertTrue(check.validate_pull_request(bot, {}, self.repository))
+
+        for pull in (
+            bot | {"user": bot["user"] | {"id": 123}},
+            bot | {"user": bot["user"] | {"type": "User"}},
+            bot | {"head": bot["head"] | {"repo": {"full_name": "fork/repo"}}},
+        ):
+            with self.subTest(pull=pull):
+                self.assertFalse(check.dependabot_pr(pull, self.repository))
+
+    def test_new_head_rejects_stale_result(self):
+        with (
+            patch.object(check, "github_json", return_value=self.pull),
+            self.assertRaisesRegex(ValueError, "Head PR"),
+        ):
+            check.check_github_pr(self.repository, 13, expected_head="b" * 40)
+
+    def test_commit_cannot_reference_unrelated_issue(self):
+        commit = {"commit": {"message": "configure(tooling): настройка (Issue #15)"}}
+
+        with (
+            patch.object(check, "github_json", side_effect=[self.pull, [commit]]),
+            patch.object(
+                check, "github_issue", side_effect=[self.issue, self.issue | {"number": 15}]
+            ),
+            self.assertRaisesRegex(ValueError, "не входит"),
+        ):
+            check.check_github_pr(self.repository, 13)
+
+
 class RuleCheckTest(unittest.TestCase):
     def test_missing_mapping_is_an_error(self):
         with (
@@ -306,9 +406,12 @@ class GitPolicyTest(unittest.TestCase):
     def test_legacy_branch_is_allowed_only_for_its_existing_pr(self):
         name = "implement/uc-001-teacher-workspace"
 
-        self.assertTrue(check.check_branch_name(name, pull_request=11))
+        policy = check.git_policy() | {"legacy_branches": {name: 11}}
 
-        for number in (None, 12):
+        with patch.object(check, "git_policy", return_value=policy):
+            self.assertTrue(check.check_branch_name(name, pull_request=11))
+
+        for number in (None, 11, 12):
             with self.subTest(number=number), self.assertRaises(ValueError):
                 check.check_branch_name(name, pull_request=number)
 
@@ -349,6 +452,7 @@ class GitPolicyTest(unittest.TestCase):
         render = renderer["pull_request"]
         primary = {
             "number": 4,
+            "body": "## Результат\n\nКабинет.\n\n## Критерии приёмки\n\n- Вход проверен.",
             "title": "[UC-001] Преподаватель начинает работу",
             "url": "https://github.com/montclere/tutorflow/issues/4",
         }

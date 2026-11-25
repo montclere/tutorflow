@@ -7,7 +7,13 @@ import subprocess
 import sys
 from pathlib import Path
 
-from check import check_branch_name, validate_commit_message
+from check import (
+    check_branch_name,
+    dependabot_pr,
+    validate_commit_message,
+    validate_issue,
+    validate_pull_request,
+)
 from specification import CASE_DOCUMENTS, RULE_PATTERN, find_requirement, read_documents
 
 
@@ -70,9 +76,12 @@ def use_case(identifier):
 
 
 def issue(kind, data):
-    identifier = line(data.get("id"), "id")
+    identifier = line(data.get("id"), "id") if kind != "task" else None
 
-    if kind == "uc":
+    if kind == "task":
+        title = line(data.get("title"), "title")
+        default_outcome = line(data.get("outcome"), "outcome")
+    elif kind == "uc":
         title, default_outcome = use_case(identifier)
     else:
         if not re.fullmatch(r"BR-[0-9]{3}", identifier):
@@ -93,11 +102,22 @@ def issue(kind, data):
         section("Критерии приёмки", bullet_list(lines(data, "acceptance", required=True))),
     ]
 
-    for key, heading in [("dependencies", "Зависимости"), ("scope", "Границы")]:
+    if data.get("dependencies"):
+        raise ValueError("Зависимости указываются через Relationships GitHub")
+
+    for key, heading in [("scope", "Границы")]:
         if values := lines(data, key):
             blocks.append(section(heading, bullet_list(values)))
 
-    return {"title": f"[{identifier}] {title}", "body": "\n\n".join(blocks)}
+    output = {
+        "title": f"[{identifier}] {title}" if identifier else title,
+        "body": "\n\n".join(blocks),
+    }
+
+    if kind != "br":
+        validate_issue(output)
+
+    return output
 
 
 def pr_context(repository, number, base, head):
@@ -156,7 +176,7 @@ def primary_issue(data, repository, context):
             raise ValueError("issue: укажите номер родительского или самостоятельного Issue")
 
         return gh_json(
-            "issue", "view", str(number), "--repo", repository, "--json", "number,title,url"
+            "issue", "view", str(number), "--repo", repository, "--json", "number,title,url,body"
         )
 
     numbers = data.get("issues", context["issues"])
@@ -197,7 +217,17 @@ def primary_issue(data, repository, context):
     if len(parents) != 1:
         raise ValueError("Нужен один Issue на поток. Укажите его номер в поле issue")
 
-    return next(iter(parents.values()))
+    primary = next(iter(parents.values()))
+
+    return gh_json(
+        "issue",
+        "view",
+        str(primary["number"]),
+        "--repo",
+        repository,
+        "--json",
+        "number,title,url,body",
+    )
 
 
 def pull_request(data, repository, context):
@@ -264,7 +294,28 @@ def pull_request(data, repository, context):
         ),
     ]
 
-    return {"title": title, "body": "\n\n".join(blocks)}
+    output = {"title": title, "body": "\n\n".join(blocks)}
+    branch = (
+        branch_name({"action": "add", "uc": uc})["branch"]
+        if uc
+        else branch_name({"action": "configure", "area": "tooling", "issue": primary["number"]})[
+            "branch"
+        ]
+    )
+
+    validate_pull_request(
+        output
+        | {
+            "number": 1,
+            "draft": not all(checklist.values()),
+            "head": {"ref": branch},
+            "base": {"ref": "dev"},
+        },
+        primary,
+        repository,
+    )
+
+    return output
 
 
 def branch_name(data):
@@ -317,7 +368,8 @@ def main():
             "Ветка: action и uc; для других задач action, area и issue.\n"
             "Merge: number; заголовок и ссылка читаются из GitHub.\n"
             "UC: id, acceptance; необязательно outcome, scope.\n"
-            "BR: id, title, acceptance; необязательно outcome, dependencies, scope.\n"
+            "BR: id, title, acceptance; необязательно outcome, scope. Связи — через GitHub.\n"
+            "Task: title, outcome, acceptance; необязательно scope.\n"
             "PR: uc или title, outcome, changes, checks, extra_checks.\n"
             "Родительский Issue определяется по задачам из коммитов или Development.\n"
             "Для явного выбора передайте номер в поле issue.\n"
@@ -326,7 +378,7 @@ def main():
         ),
     )
 
-    parser.add_argument("kind", choices=("uc", "br", "pr", "branch", "merge"))
+    parser.add_argument("kind", choices=("uc", "br", "task", "pr", "branch", "merge"))
     parser.add_argument("input", help="JSON-файл с полями или - для stdin")
     parser.add_argument("--repository", help="Репозиторий GitHub для PR")
     parser.add_argument("--pull-request", type=int, help="Номер существующего PR")
@@ -351,9 +403,12 @@ def main():
         if type(number) is not int or number <= 0:
             raise ValueError("number: укажите положительный номер PR")
 
-        metadata = gh_json(
-            "pr", "view", str(number), "--repo", repository, "--json", "number,title,url"
-        )
+        pull = gh_json("api", f"repos/{repository}/pulls/{number}")
+        metadata = {"number": number, "title": pull["title"], "url": pull["html_url"]}
+
+        if dependabot_pr(pull, repository):
+            metadata["title"] = "Обновление зависимостей"
+
         output = merge_message(metadata)
     elif args.kind == "pr":
         repository = (

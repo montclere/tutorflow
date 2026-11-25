@@ -1,0 +1,23 @@
+name: Техническая задача
+description: Законченное изменение инфраструктуры, кода или процесса
+type: Task
+body:
+  - type: textarea
+    id: outcome
+    attributes:
+      label: Результат
+      description: Что изменится и для кого?
+    validations:
+      required: true
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Критерии приёмки
+      description: Как проверить законченный результат?
+    validations:
+      required: true
+  - type: textarea
+    id: scope
+    attributes:
+      label: Границы
+      description: Какие ограничения важны для этой задачи?
