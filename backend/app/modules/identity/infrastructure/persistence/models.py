@@ -38,7 +38,7 @@ class Registration(IdentityBase):
     __table_args__ = (
         CheckConstraint(
             "(role = 'teacher' AND invitation_id IS NULL) "
-            "OR (role = 'student' AND invitation_id IS NOT NULL)",
+            "OR (role IN ('student', 'adult') AND invitation_id IS NOT NULL)",
             name="ck_identity_registration_purpose",
         ),
         CheckConstraint(

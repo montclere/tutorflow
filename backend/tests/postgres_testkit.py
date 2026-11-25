@@ -93,16 +93,18 @@ def migration_config() -> Config:
     return Config(str(Path(__file__).resolve().parents[1] / "alembic.ini"))
 
 
-def upgrade(connection: Connection, revision: str) -> None:
+def change_revision(connection: Connection, revision: str, *, downgrade: bool = False) -> None:
     config = migration_config()
     config.attributes["connection"] = connection
 
-    command.upgrade(config, revision)
+    operation = command.downgrade if downgrade else command.upgrade
+
+    operation(config, revision)
 
 
-async def migrate(engine: AsyncEngine, revision: str) -> None:
+async def migrate(engine: AsyncEngine, revision: str, *, downgrade: bool = False) -> None:
     async with engine.begin() as connection:
-        await connection.run_sync(upgrade, revision)
+        await connection.run_sync(change_revision, revision, downgrade=downgrade)
 
 
 def compare_schema(connection: Connection) -> None:

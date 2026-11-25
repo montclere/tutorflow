@@ -2,7 +2,7 @@
 
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
-from app.modules.students.domain.policies import StudentPolicy
+from app.modules.students.domain.policies import AdultAccessPolicy, StudentPolicy
 
 
 class StudentSettings(BaseSettings):
@@ -14,3 +14,4 @@ class StudentSettings(BaseSettings):
         frozen=True,
     )
     policy: StudentPolicy = StudentPolicy()
+    adult_policy: AdultAccessPolicy = AdultAccessPolicy()

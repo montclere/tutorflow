@@ -5,6 +5,7 @@ from datetime import datetime
 from uuid import UUID
 
 from app.modules.students.domain.entities import StudentCard
+from app.modules.students.domain.values import Money
 
 
 INVITATION_TOKEN_LENGTH = 43
@@ -31,3 +32,36 @@ class InvitationPreview:
     teacher_name: str | None
     welcome: str | None
     expires_at: datetime
+
+
+@dataclass(frozen=True)
+class AdultInvitationPreview:
+    teacher_id: UUID
+    teacher_name: str | None
+    student_name: str
+    welcome: str | None
+    expires_at: datetime
+
+
+@dataclass(frozen=True)
+class AdultStudent:
+    card_id: UUID
+    student_name: str
+    teacher_id: UUID
+    teacher_name: str | None
+    archived: bool
+
+
+@dataclass(frozen=True)
+class AdultLearningProfile:
+    id: UUID
+    subject: str | None
+    price: Money
+
+
+@dataclass(frozen=True)
+class StudentCardSummary:
+    id: UUID
+    teacher_id: UUID
+    name: str
+    archived: bool
