@@ -1,19 +1,24 @@
 """Интеграционные проверки правил аккаунта через HTTP и PostgreSQL."""
 
 from asyncio import CancelledError, Event, create_task, gather, wait_for
-from collections.abc import AsyncIterator
-from dataclasses import dataclass, field
 from datetime import UTC, datetime, timedelta
 from uuid import UUID, uuid4
 
 import pytest
 from httpx import ASGITransport, AsyncClient
 from sqlalchemy import select, update
-from sqlalchemy.ext.asyncio import AsyncEngine
 from sqlalchemy.ext.asyncio import AsyncSession as Session
-from tests.postgres_testkit import migrated_schema, postgres_cluster
+from tests.identity_testkit import (
+    EMAIL,
+    IDENTITY_SECRET,
+    PASSWORD,
+    PHONE,
+    finish,
+    register,
+    start,
+)
 
-from app.composition import Services, build_services
+from app.composition import build_services
 from app.main import app, create_app
 from app.modules.identity.application.ports import DeliveryUnavailable
 from app.modules.identity.domain.entities import Account as DomainAccount
@@ -27,78 +32,6 @@ from app.modules.identity.infrastructure.persistence.models import (
 
 
 pytestmark = pytest.mark.anyio
-PASSWORD = "a long teacher password"
-IDENTITY_SECRET = b"test-secret-for-identity-integration"
-EMAIL = {"type": "email", "value": "teacher@example.com"}
-PHONE = {"type": "phone", "value": "+15551234567"}
-
-
-@dataclass
-class Inbox:
-    messages: list[tuple[ContactKind, str, str]] = field(default_factory=list)
-
-    async def send(self, contact: Contact, code: str) -> None:
-        self.messages.append((contact.kind, contact.value, code))
-
-
-@pytest.fixture(scope="session")
-def anyio_backend() -> str:
-    return "asyncio"
-
-
-@pytest.fixture(scope="session")
-async def cluster() -> AsyncIterator[AsyncEngine]:
-    async with postgres_cluster() as engine:
-        yield engine
-
-
-@pytest.fixture
-async def database(cluster: AsyncEngine) -> AsyncIterator[AsyncEngine]:
-    async with migrated_schema(cluster) as engine:
-        yield engine
-
-
-@pytest.fixture
-def inbox() -> Inbox:
-    return Inbox()
-
-
-@pytest.fixture
-async def services(database: AsyncEngine, inbox: Inbox) -> Services:
-    return await build_services(database, IDENTITY_SECRET, inbox, secure_cookie=True)
-
-
-@pytest.fixture
-async def client(services: Services) -> AsyncIterator[AsyncClient]:
-    async with AsyncClient(
-        transport=ASGITransport(app=create_app(services)), base_url="https://test"
-    ) as client:
-        yield client
-
-
-async def start(client: AsyncClient, contact: dict[str, str]) -> str:
-    response = await client.post("/api/v1/auth/registrations", json={"login_contact": contact})
-
-    assert response.status_code == 202
-    assert response.headers["cache-control"] == "no-store"
-
-    return response.json()["challenge_id"]
-
-
-async def finish(client: AsyncClient, challenge: str, code: str, **extra: str):
-    return await client.post(
-        "/api/v1/auth/registrations/complete",
-        json={"challenge_id": challenge, "code": code, "password": PASSWORD, **extra},
-    )
-
-
-async def register(client: AsyncClient, contact: dict[str, str], inbox: Inbox):
-    challenge = await start(client, contact)
-    response = await finish(client, challenge, inbox.messages[-1][2])
-
-    assert response.status_code == 201, response.text
-
-    return response
 
 
 @pytest.mark.br_001
