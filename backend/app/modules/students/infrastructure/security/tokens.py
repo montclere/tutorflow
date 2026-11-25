@@ -13,7 +13,7 @@ INVITATION_TOKEN_BYTES = 32
 
 
 class SecureInvitationTokens:
-    def __init__(self, secret: bytes):
+    def __init__(self, secret: bytes) -> None:
         if len(secret) < INVITATION_MINIMUM_SECRET_BYTES:
             raise ValueError("Недостаточная длина секрета приглашений")
 

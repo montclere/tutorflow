@@ -17,7 +17,7 @@ from app.modules.students.infrastructure.persistence.repository import PostgresS
 
 
 class PostgresStudentsUnitOfWork:
-    def __init__(self, engine: AsyncEngine, registration: RegistrationService):
+    def __init__(self, engine: AsyncEngine, registration: RegistrationService) -> None:
         self.sessions = async_sessionmaker(engine, expire_on_commit=False)
         self.registration = registration
 
@@ -33,7 +33,7 @@ class PostgresStudentsUnitOfWork:
 class StudentRateLimits:
     def __init__(
         self, limits: RateLimitService, policy: StudentPolicy, registration: RegistrationService
-    ):
+    ) -> None:
         self.limits = limits
         self.policy = policy
         self.clock = registration.clock

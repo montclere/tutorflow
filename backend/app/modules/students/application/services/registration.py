@@ -16,7 +16,7 @@ class StudentRegistrationService:
         identity: InvitedRegistration,
         invitations: InvitationService,
         connections: ConnectionService,
-    ):
+    ) -> None:
         self.persistence = persistence
         self.identity = identity
         self.invitations = invitations

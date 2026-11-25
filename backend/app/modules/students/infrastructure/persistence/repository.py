@@ -44,7 +44,7 @@ def connection_value(row: ConnectionRow | None) -> Connection | None:
 
 
 class PostgresStudentsRepository:
-    def __init__(self, db: AsyncSession):
+    def __init__(self, db: AsyncSession) -> None:
         self.db = db
 
     async def add_card(self, card: StudentCard) -> None:

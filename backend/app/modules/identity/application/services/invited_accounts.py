@@ -11,7 +11,7 @@ from app.modules.identity.public import PublicProfile, StudentRegistrationProof,
 
 
 class InvitedAccountService:
-    def __init__(self, repository: IdentityRepository, registration: RegistrationService):
+    def __init__(self, repository: IdentityRepository, registration: RegistrationService) -> None:
         self.repository = repository
         self.registration = registration
 

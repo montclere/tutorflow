@@ -16,7 +16,7 @@ from app.modules.students.domain.exceptions import StudentError
 
 
 class CardService:
-    def __init__(self, persistence: StudentsUnitOfWork):
+    def __init__(self, persistence: StudentsUnitOfWork) -> None:
         self.persistence = persistence
 
     async def create(self, actor: Actor, name: str, notes: str | None) -> CardDetails:

@@ -11,7 +11,7 @@ from app.modules.students.domain.values import Money
 
 
 class LearningProfileService:
-    def __init__(self, persistence: StudentsUnitOfWork):
+    def __init__(self, persistence: StudentsUnitOfWork) -> None:
         self.persistence = persistence
 
     async def save(

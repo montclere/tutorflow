@@ -20,7 +20,7 @@ from app.modules.students.domain.exceptions import StudentError
 
 
 class ConnectionService:
-    def __init__(self, persistence: StudentsUnitOfWork, invitations: InvitationService):
+    def __init__(self, persistence: StudentsUnitOfWork, invitations: InvitationService) -> None:
         self.persistence = persistence
         self.invitations = invitations
 

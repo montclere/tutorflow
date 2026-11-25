@@ -27,7 +27,7 @@ class InvitationService:
         requests: StudentRequests,
         policy: StudentPolicy,
         clock: Callable[[], datetime],
-    ):
+    ) -> None:
         self.persistence = persistence
         self.tokens = tokens
         self.requests = requests
