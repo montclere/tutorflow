@@ -50,8 +50,6 @@
       "docs": "Документация",
       "repo": "Репозиторий в целом"
     },
-    "legacy_branches": {
-      "implement/uc-001-teacher-workspace": 11
-    }
+    "legacy_branches": {}
   }
 }

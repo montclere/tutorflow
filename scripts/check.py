@@ -8,11 +8,12 @@ import sys
 from pathlib import Path
 from tempfile import NamedTemporaryFile
 
-from specification import business_rule_ids, find_requirement
+from specification import RULE_PATTERN, business_rule_ids, find_requirement
 
 
 ROOT = Path(__file__).resolve().parents[1]
 LOG_DIR = ROOT / ".artifacts/logs"
+DEPENDABOT_USER_ID = 49699333
 
 
 def run(command, label):
@@ -238,6 +239,278 @@ def check_branch_name(name, *, pull_request=None):
     return True
 
 
+def sections(body, headings):
+    clean = re.sub(r"<!--.*?-->", "", body or "", flags=re.DOTALL)
+    result = {}
+
+    for heading in headings:
+        match = re.search(
+            rf"^#{{2,3}} {re.escape(heading)}[ \t]*\n(.*?)(?=^#{{1,3}} |\Z)",
+            clean,
+            re.MULTILINE | re.DOTALL,
+        )
+
+        if not match or match[1].strip() in ("", "_No response_"):
+            raise ValueError(f"Заполните раздел «{heading}»")
+
+        result[heading] = match[1].strip()
+
+    return result
+
+
+def validate_issue(issue):
+    parts = sections(issue.get("body"), ("Результат", "Критерии приёмки"))
+
+    if not re.search(r"^- \S", parts["Критерии приёмки"], re.MULTILINE):
+        raise ValueError("Критерии приёмки должны быть списком проверяемых результатов")
+
+    title = issue["title"]
+    identifier = re.match(r"^\[((?:UC|BR)-\d{3})\] ", title)
+
+    if not identifier:
+        if not re.search(r"[А-ЯЁа-яё]", title) or re.match(r"^\[(?:UC|BR)-", title):
+            raise ValueError("Укажите корректный UC/BR-ID или русское название технической задачи")
+
+        return True
+
+    _, content = find_requirement(ROOT, identifier[1])
+
+    if identifier[1].startswith("UC-"):
+        name = content.splitlines()[0].split(" — ", 1)[1]
+
+        if title != f"[{identifier[1]}] {name}":
+            raise ValueError("Название UC должно соответствовать документу сценария")
+    else:
+        rule = RULE_PATTERN.fullmatch(content)
+        parent = issue.get("parent")
+
+        if not rule or not parent:
+            raise ValueError("BR должен иметь родительский UC через Sub-issues")
+
+        validate_issue(parent)
+
+        if not any(
+            parent["title"].startswith(f"[UC-{uc.removeprefix('UC-')}]")
+            for uc in rule[4].split("/")
+        ):
+            raise ValueError("Родительский UC не соответствует бизнес-правилу")
+
+        if not title.startswith(f"[{identifier[1]}] {rule[3].split('/')[0]} — "):
+            raise ValueError("Название BR должно содержать область правила")
+
+    return True
+
+
+def dependabot_pr(pull, repository):
+    return (
+        pull.get("user", {}).get("login") == "dependabot[bot]"
+        and pull.get("user", {}).get("id") == DEPENDABOT_USER_ID
+        and pull.get("user", {}).get("type") == "Bot"
+        and pull.get("head", {}).get("repo", {}).get("full_name") == repository
+        and pull.get("head", {}).get("ref", "").startswith("dependabot/")
+    )
+
+
+def validate_pull_request(pull, issue, repository):
+    if pull["base"]["ref"] != "dev":
+        raise ValueError("Рабочий PR должен быть направлен в dev")
+
+    if dependabot_pr(pull, repository):
+        if not pull.get("title", "").startswith("Bump ") or not pull.get("body", "").strip():
+            raise ValueError("Dependabot: ожидается стандартное описание обновления")
+
+        return True
+
+    validate_issue(issue)
+
+    if issue.get("parent"):
+        raise ValueError(
+            "Основная задача PR должна быть родительским UC или самостоятельной задачей"
+        )
+
+    check_branch_name(pull["head"]["ref"], pull_request=pull["number"])
+
+    parts = sections(pull.get("body"), ("Задача", "Результат", "Проверки"))
+    links = re.findall(r"https://github\.com/([^\s)]+/[^\s)]+)/issues/([1-9]\d*)", parts["Задача"])
+
+    if links != [(repository, str(issue["number"]))]:
+        raise ValueError("В разделе Задача нужна одна ссылка на основной Issue этого репозитория")
+
+    expected_title = re.sub(r"^\[(UC-\d{3})\] ", r"\1: ", issue["title"])
+
+    if pull["title"] != expected_title:
+        raise ValueError(f"Ожидается заголовок PR: {expected_title}")
+
+    if not re.search(r"^- \[[ xX]\] \S", parts["Проверки"], re.MULTILINE):
+        raise ValueError("Проверки должны быть чеклистом")
+
+    if not pull.get("draft") and re.search(r"^- \[ \]", parts["Проверки"], re.MULTILINE):
+        raise ValueError("Незавершённые проверки требуют черновика PR")
+
+    if not re.search(r"^- \S", parts["Результат"], re.MULTILINE):
+        raise ValueError("Перечислите конкретные изменения в разделе Результат")
+
+    branch = pull["head"]["ref"]
+    uc = re.match(r"^\[(UC-\d{3})\]", issue["title"])
+
+    if branch not in git_policy()["legacy_branches"]:
+        expected = uc[1].lower() if uc else f"issue-{issue['number']}"
+
+        if not branch.endswith(f"/{expected}"):
+            raise ValueError("Ветка должна соответствовать основной задаче PR")
+
+    return True
+
+
+def github_json(endpoint):
+    return json.loads(subprocess.check_output(["gh", "api", endpoint], text=True))
+
+
+def github_issue(repository, number):
+    issue = github_json(f"repos/{repository}/issues/{number}")
+
+    if "pull_request" in issue:
+        raise ValueError(f"Issue #{number} является PR")
+
+    if re.match(r"^\[BR-", issue["title"]):
+        issue["parent"] = github_json(f"repos/{repository}/issues/{number}/parent")
+
+    return issue
+
+
+def check_github_pr(repository, number, *, expected_head=None):
+    pull = github_json(f"repos/{repository}/pulls/{number}")
+
+    if expected_head is not None and pull["head"]["sha"] != expected_head:
+        raise ValueError("Head PR изменился; требуется проверка актуального коммита")
+
+    if dependabot_pr(pull, repository):
+        return validate_pull_request(pull, {}, repository)
+
+    parts = sections(pull.get("body"), ("Задача",))
+    references = re.findall(r"/issues/([1-9]\d*)", parts["Задача"])
+
+    if len(references) != 1:
+        raise ValueError("В PR нужна ровно одна основная задача")
+
+    primary = github_issue(repository, int(references[0]))
+
+    validate_pull_request(pull, primary, repository)
+
+    checked_commits = 0
+
+    for page in range(1, 101):
+        commits = github_json(f"repos/{repository}/pulls/{number}/commits?per_page=100&page={page}")
+
+        for commit in commits:
+            checked_commits += 1
+            message = commit["commit"]["message"].strip()
+
+            validate_commit_message(message)
+
+            for reference in set(re.findall(r"Issue #([1-9]\d*)", message)):
+                task = github_issue(repository, int(reference))
+
+                validate_issue(task)
+
+                if (
+                    task["number"] != primary["number"]
+                    and task.get("parent", {}).get("number") != primary["number"]
+                ):
+                    raise ValueError(f"Issue #{reference} не входит в основной UC PR")
+
+        if len(commits) < 100:
+            break
+    else:
+        raise ValueError("Слишком большой PR для проверки контракта")
+
+    if checked_commits != pull.get("commits", checked_commits):
+        raise ValueError("GitHub вернул неполный список коммитов PR")
+
+    return True
+
+
+def publish_contract_status(repository, sha, state):
+    payload = {
+        "state": state,
+        "context": "relationships",
+        "description": {
+            "pending": "Проверяются актуальные связи Issues и PR",
+            "success": "Issues, PR, связи и коммиты проверены",
+            "failure": "Нарушен контракт: см. workflow GitHub contracts",
+        }[state],
+        "target_url": f"https://github.com/{repository}/actions/workflows/contracts.yml",
+    }
+
+    subprocess.run(
+        ["gh", "api", f"repos/{repository}/statuses/{sha}", "--method", "POST", "--input", "-"],
+        input=json.dumps(payload),
+        text=True,
+        check=True,
+    )
+
+
+def check_github_event(repository, event_path, *, publish=False):
+    event = json.loads(event_path.read_text())
+    failures = []
+
+    if event.get("issue"):
+        try:
+            validate_issue(github_issue(repository, event["issue"]["number"]))
+        except ValueError as exc:
+            failures.append(f"Issue #{event['issue']['number']}: {exc}")
+
+    pulls = []
+    audit_number = event.get("inputs", {}).get("pull_request", "")
+
+    if audit_number and not re.fullmatch(r"[1-9]\d*", str(audit_number)):
+        raise ValueError("Для аудита укажите положительный номер PR")
+
+    if audit_number:
+        pulls = [github_json(f"repos/{repository}/pulls/{audit_number}")]
+    elif event.get("pull_request"):
+        pulls = [github_json(f"repos/{repository}/pulls/{event['number']}")]
+    else:
+        for page in range(1, 101):
+            batch = github_json(f"repos/{repository}/pulls?state=open&per_page=100&page={page}")
+
+            pulls.extend(batch)
+
+            if len(batch) < 100:
+                break
+
+    for pull in pulls:
+        if pull["state"] != "open" and not audit_number:
+            continue
+
+        error = None
+
+        if publish:
+            publish_contract_status(repository, pull["head"]["sha"], "pending")
+
+        try:
+            check_github_pr(repository, pull["number"], expected_head=pull["head"]["sha"])
+        except (ValueError, subprocess.CalledProcessError) as exc:
+            error = str(exc)
+
+            failures.append(f"PR #{pull['number']}: {error}")
+
+        current = github_json(f"repos/{repository}/pulls/{pull['number']}")
+
+        if current["head"]["sha"] != pull["head"]["sha"]:
+            raise ValueError("Head PR изменился во время проверки; результат не опубликован")
+
+        if publish:
+            publish_contract_status(
+                repository, pull["head"]["sha"], "failure" if error else "success"
+            )
+
+    if failures:
+        raise ValueError("\n".join(failures))
+
+    return True
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     modes = parser.add_subparsers(dest="mode", required=True)
@@ -265,6 +538,24 @@ def main():
     commits.add_argument("--base", required=True)
     commits.add_argument("--head", default="HEAD")
 
+    github = modes.add_parser(
+        "github", help="Проверить актуальный контракт Issue или PR через GitHub API."
+    )
+
+    github.add_argument("kind", choices=("issue", "pr"))
+    github.add_argument("number", type=int)
+    github.add_argument("--repository", required=True)
+    github.add_argument("--head", help="Ожидаемый SHA, чтобы не принять устаревшую проверку")
+
+    events = modes.add_parser(
+        "github-event",
+        help="Проверить событие и связи PR; публикация из доверенного workflow.",
+    )
+
+    events.add_argument("path", type=Path)
+    events.add_argument("--repository", required=True)
+    events.add_argument("--publish", action="store_true")
+
     modes.add_parser("locate", help="Найти источник UC/BR по ID.").add_argument("ids", nargs="+")
 
     modes.add_parser("rule", help="Выполнить проверки выбранных BR.").add_argument("ids", nargs="+")
@@ -276,6 +567,15 @@ def main():
     )
 
     args = parser.parse_args()
+
+    if args.mode == "github-event":
+        return check_github_event(args.repository, args.path, publish=args.publish)
+
+    if args.mode == "github":
+        if args.kind == "issue":
+            return validate_issue(github_issue(args.repository, args.number))
+
+        return check_github_pr(args.repository, args.number, expected_head=args.head)
 
     if args.mode == "git-policy":
         for group, values in git_policy().items():

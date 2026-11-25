@@ -44,10 +44,14 @@ case "${1:-help}" in
   check git-policy            Допустимые действия и области Git.
   check branch-name NAME      Проверить имя рабочей ветки.
   check commit-range --base R Проверить сообщения новых коммитов.
+  check github issue|pr N --repository OWNER/REPO
+                              Проверить актуальный контракт задачи или PR.
+  check github-event FILE --repository OWNER/REPO
+                              Проверить событие и связи открытых PR.
   check changed --base REF    Проверить затронутые области.
   format [all|code|docs]       Применить форматирование.
   format-check [all|code|docs] Проверить форматирование, для документов также связи.
-  github uc|br|pr FILE.json    Сформировать заголовок и описание без публикации.
+  github uc|br|task|pr FILE.json Сформировать заголовок и описание без публикации.
   github branch FILE.json      Сформировать имя ветки.
   github merge FILE.json       Сформировать сообщение merge-коммита.
   check --help                Параметры механизма проверок.

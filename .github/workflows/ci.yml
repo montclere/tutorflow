@@ -1,8 +1,9 @@
 name: CI
 on:
   pull_request:
+    types: [opened, synchronize, reopened, edited, ready_for_review, converted_to_draft]
   push:
-    branches: [main, dev]
+    branches: [dev]
   workflow_dispatch:
 permissions:
   contents: read
@@ -14,31 +15,21 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
           fetch-depth: 0
           persist-credentials: false
-      - name: Validate Git policy
-        if: github.event_name == 'pull_request'
-        env:
-          PR_BRANCH: ${{ github.head_ref }}
-          PR_NUMBER: ${{ github.event.pull_request.number }}
-          BASE_SHA: ${{ github.event.pull_request.base.sha }}
-          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
-        run: |
-          ./scripts/dev.sh check branch-name "$PR_BRANCH" --pull-request "$PR_NUMBER"
-          ./scripts/dev.sh check commit-range --base "$BASE_SHA" --head "$HEAD_SHA"
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0
         with:
           python-version-file: backend/.python-version
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1
         with:
           node-version: '24.20.0'
           cache: npm
           cache-dependency-path: |
             frontend/package-lock.json
             tests/e2e/package-lock.json
-      - uses: astral-sh/setup-uv@v6
+      - uses: astral-sh/setup-uv@1db35dd8eee11c5894872e0b383ae6c406cf738d
         with:
           version: '0.12.7'
           enable-cache: true
@@ -53,3 +44,42 @@ jobs:
         run: uvx --from pre-commit==4.7.0 pre-commit run --all-files
       - name: Verify TutorFlow
         run: ./scripts/dev.sh check
+      - name: Upload failure diagnostics
+        if: failure()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        with:
+          name: failure-diagnostics
+          retention-days: 7
+          if-no-files-found: ignore
+          path: |
+            .artifacts/logs/*.log
+            tests/e2e/playwright-report/
+            tests/e2e/test-results/
+  contract:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: read
+      issues: read
+      pull-requests: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - name: Check live PR contract
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPOSITORY: ${{ github.repository }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: ./scripts/dev.sh check github pr "$PR_NUMBER" --repository "$REPOSITORY" --head "$HEAD_SHA"
+  dependency-review:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - uses: actions/dependency-review-action@bbc44d14a204704ccc493733616cd1e93a0321ec

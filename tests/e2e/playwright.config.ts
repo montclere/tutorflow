@@ -7,7 +7,9 @@ const gracefulShutdown = { signal: "SIGTERM", timeout: 10_000 } as const;
 
 export default defineConfig({
   testDir: ".",
-  use: { baseURL },
+  reporter: [["list"], ["html", { outputFolder: "playwright-report", open: "never" }]],
+  outputDir: "test-results",
+  use: { baseURL, trace: "retain-on-failure", screenshot: "only-on-failure" },
   webServer: [
     {
       command: "uv run --directory backend --locked python -m tests.e2e_server",

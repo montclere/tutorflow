@@ -1,6 +1,7 @@
 name: Бизнес-правило
 description: Проверяемое правило TutorFlow в рамках пользовательского сценария
 title: "[BR-XXX] "
+type: Task
 body:
   - type: textarea
     id: outcome
@@ -17,12 +18,10 @@ body:
     validations:
       required: true
   - type: textarea
-    id: deps
-    attributes:
-      label: Зависимости
-      description: Укажи связанные блокирующие задачи, если они есть.
-  - type: textarea
     id: scope
     attributes:
       label: Границы
       description: Укажи исключения из объёма задачи, если они нужны.
+  - type: markdown
+    attributes:
+      value: Родительский UC укажи через Sub-issues, блокировки — через Relationships.
