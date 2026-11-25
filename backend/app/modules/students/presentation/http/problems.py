@@ -7,6 +7,11 @@ from app.shared.presentation.problems import ProblemResponse, problem_response, 
 
 
 STUDENT_STATUSES = {
+    "adult_required": 403,
+    "adult_limit_reached": 409,
+    "adult_already_connected": 409,
+    "adult_connection_not_found": 404,
+    "adult_invitation_not_found": 404,
     "teacher_required": 403,
     "student_required": 403,
     "student_card_not_found": 404,

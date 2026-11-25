@@ -14,7 +14,7 @@ from app.modules.identity.presentation.http.session import (
 )
 from app.modules.identity.public import Actor, InvitedSession
 from app.modules.scheduling.application.calendar import Calendar
-from app.modules.students.application.services.collection import StudentServices
+from app.modules.students.application.services.collection import AdultServices, StudentServices
 
 
 async def resolve_services(request: Request) -> Services:
@@ -82,3 +82,7 @@ async def set_invited_session(
     request: Request, response: Response, session: InvitedSession
 ) -> None:
     (await identity_session(request)).set_cookie(response, session)
+
+
+async def adult_services(request: Request) -> AdultServices:
+    return (await resolve_services(request)).adults

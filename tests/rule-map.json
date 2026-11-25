@@ -170,6 +170,86 @@
         "tests/test_students_api.py::test_invitation_rate_limit_and_validation_do_not_disclose_tokens",
         "tests/test_students_domain.py::test_invitation_belongs_to_one_active_card"
       ]
+    },
+    "BR-082": {
+      "pytest": [
+        "tests/test_adult_access_storage.py::test_database_rejects_third_slot_duplicate_account_and_wrong_card_owner",
+        "tests/test_adult_access_domain.py::test_active_invitations_reserve_available_capacity",
+        "tests/test_adult_access_domain.py::test_capacity_cannot_exceed_storage_guarantee",
+        "tests/test_adult_access_api.py::test_independent_invites_reissue_revoke_and_capacity",
+        "tests/test_adult_access_api.py::test_concurrent_invitation_generation_cannot_create_unbounded_rows",
+        "tests/test_adult_access_api.py::test_two_adults_join_concurrently_and_existing_adult_has_multiple_children",
+        "tests/test_adult_access_api.py::test_race_for_last_slot_rolls_back_losing_registration",
+        "tests/test_adult_access_api.py::test_configured_lower_limit_and_single_connection_pool"
+      ]
+    },
+    "BR-083": {
+      "pytest": [
+        "tests/test_adult_access_storage.py::test_database_rejects_third_slot_duplicate_account_and_wrong_card_owner",
+        "tests/test_adult_access_domain.py::test_active_invitations_reserve_available_capacity",
+        "tests/test_adult_access_api.py::test_independent_invites_reissue_revoke_and_capacity",
+        "tests/test_adult_access_api.py::test_concurrent_invitation_generation_cannot_create_unbounded_rows",
+        "tests/test_adult_access_api.py::test_invalidation_during_hashing_creates_no_adult",
+        "tests/test_adult_access_api.py::test_expired_invitations_release_places_without_accumulating_rows",
+        "tests/test_adult_access_api.py::test_invitation_mutations_are_scoped_to_owner_and_card"
+      ]
+    },
+    "BR-084": {
+      "pytest": [
+        "tests/test_adult_access_storage.py::test_upgrade_preserves_teacher_and_student_confirmations",
+        "tests/test_adult_access_api.py::test_adult_registers_views_price_and_updates_only_own_profile",
+        "tests/test_adult_access_api.py::test_invitation_roles_and_codes_cannot_be_swapped"
+      ]
+    },
+    "BR-013": {
+      "pytest": [
+        "tests/test_adult_access_api.py::test_adult_registers_views_price_and_updates_only_own_profile",
+        "tests/test_adult_access_api.py::test_concurrent_invitation_generation_cannot_create_unbounded_rows",
+        "tests/test_adult_access_api.py::test_invitation_mutations_are_scoped_to_owner_and_card"
+      ]
+    },
+    "BR-014": {
+      "pytest": [
+        "tests/test_adult_access_api.py::test_adult_registers_views_price_and_updates_only_own_profile",
+        "tests/test_adult_access_api.py::test_invitation_roles_and_codes_cannot_be_swapped",
+        "tests/test_adult_access_api.py::test_invitation_mutations_are_scoped_to_owner_and_card"
+      ]
+    },
+    "BR-017": {
+      "pytest": [
+        "tests/test_adult_access_api.py::test_adult_registers_views_price_and_updates_only_own_profile",
+        "tests/test_adult_access_api.py::test_invitation_roles_and_codes_cannot_be_swapped"
+      ]
+    },
+    "BR-018": {
+      "pytest": [
+        "tests/test_adult_access_api.py::test_adult_registers_views_price_and_updates_only_own_profile"
+      ]
+    },
+    "BR-086": {
+      "pytest": [
+        "tests/test_adult_access_api.py::test_adult_registers_views_price_and_updates_only_own_profile",
+        "tests/test_adult_access_api.py::test_two_adults_join_concurrently_and_existing_adult_has_multiple_children",
+        "tests/test_adult_access_api.py::test_race_for_last_slot_rolls_back_losing_registration",
+        "tests/test_adult_access_api.py::test_invalidation_during_hashing_creates_no_adult",
+        "tests/test_adult_access_api.py::test_final_claim_failure_rolls_back_account_and_session",
+        "tests/test_adult_access_api.py::test_configured_lower_limit_and_single_connection_pool"
+      ]
+    },
+    "BR-015": {
+      "pytest": [
+        "tests/test_adult_access_api.py::test_two_adults_join_concurrently_and_existing_adult_has_multiple_children"
+      ]
+    },
+    "BR-016": {
+      "pytest": [
+        "tests/test_adult_access_api.py::test_two_adults_join_concurrently_and_existing_adult_has_multiple_children"
+      ]
+    },
+    "BR-085": {
+      "pytest": [
+        "tests/test_adult_access_api.py::test_disconnect_archive_and_delete_preserve_independent_accounts_and_child"
+      ]
     }
   }
 }
