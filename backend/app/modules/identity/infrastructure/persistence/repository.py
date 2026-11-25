@@ -51,11 +51,13 @@ class PostgresIdentityRepository:
 
         return [PublicProfile(row.id, row.display_name, row.timezone) for row in rows]
 
-    async def find_student_profile_for_update(self, account_id: UUID) -> PublicProfile | None:
+    async def find_public_profile_for_update(
+        self, account_id: UUID, role: Role
+    ) -> PublicProfile | None:
         row = (
             await self.db.execute(
                 select(AccountRow.id, AccountRow.display_name, AccountRow.timezone)
-                .where(AccountRow.id == account_id, AccountRow.role == Role.STUDENT)
+                .where(AccountRow.id == account_id, AccountRow.role == role)
                 .with_for_update()
             )
         ).one_or_none()

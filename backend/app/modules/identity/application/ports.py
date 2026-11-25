@@ -7,7 +7,7 @@ from uuid import UUID
 
 from app.modules.identity.application.contracts import ContactInput, RegistrationDelivery
 from app.modules.identity.domain.entities import Account, Registration, Session
-from app.modules.identity.domain.values import Contact
+from app.modules.identity.domain.values import Contact, Role
 from app.modules.identity.public import PublicProfile
 
 
@@ -16,7 +16,9 @@ class IdentityRepository(Protocol):
 
     async def list_public_profiles(self, account_ids: list[UUID]) -> list[PublicProfile]: ...
 
-    async def find_student_profile_for_update(self, account_id: UUID) -> PublicProfile | None: ...
+    async def find_public_profile_for_update(
+        self, account_id: UUID, role: Role
+    ) -> PublicProfile | None: ...
 
     async def find_account_for_update(self, account_id: UUID) -> Account | None: ...
 

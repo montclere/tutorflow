@@ -12,7 +12,7 @@ from app.modules.identity.presentation.http.session import (
     SECURE_SESSION_COOKIE,
     IdentityHttpSession,
 )
-from app.modules.identity.public import Actor, StudentSession
+from app.modules.identity.public import Actor, InvitedSession
 from app.modules.scheduling.application.calendar import Calendar
 from app.modules.students.application.services.collection import StudentServices
 
@@ -78,7 +78,7 @@ async def previous_session(request: Request) -> str | None:
     return (await identity_session(request)).token(request)
 
 
-async def set_student_session(
-    request: Request, response: Response, session: StudentSession
+async def set_invited_session(
+    request: Request, response: Response, session: InvitedSession
 ) -> None:
     (await identity_session(request)).set_cookie(response, session)

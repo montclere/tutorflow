@@ -4,6 +4,7 @@ from dataclasses import dataclass
 from datetime import timedelta
 
 from app.modules.identity.domain.exceptions import IdentityError
+from app.modules.identity.domain.values import INVITED_ROLES, Role
 
 
 REGISTRATION_CODE_DIGITS = 8
@@ -61,3 +62,8 @@ def validate_password(password: str, *, registering: bool) -> None:
 def validate_registration_code(code: str) -> None:
     if len(code) != REGISTRATION_CODE_DIGITS or not code.isascii() or not code.isdigit():
         raise IdentityError("challenge_invalid")
+
+
+def require_invited_role(role: Role) -> None:
+    if role not in INVITED_ROLES:
+        raise IdentityError("invalid_registration_role")

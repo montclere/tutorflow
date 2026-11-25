@@ -6,6 +6,10 @@ from starlette.types import ASGIApp, Message, Receive, Scope, Send
 from app.shared.presentation.problems import problem_response, request_id
 
 
+def request_ip(request: Request) -> str:
+    return request.client.host if request.client else "unknown"
+
+
 def require_json(request: Request) -> None:
     media_type = request.headers.get("content-type", "").split(";", 1)[0].strip().lower()
 

@@ -28,6 +28,7 @@ from app.modules.identity.presentation.http.session import (
     LOCAL_SESSION_COOKIE,
     SECURE_SESSION_COOKIE,
 )
+from app.modules.identity.public import Role
 from app.modules.scheduling.application.calendar import Calendar
 from app.modules.scheduling.infrastructure.repository import PostgresCalendarRepository
 from app.modules.students.application.services.cards import CardService
@@ -35,7 +36,7 @@ from app.modules.students.application.services.collection import StudentServices
 from app.modules.students.application.services.connections import ConnectionService
 from app.modules.students.application.services.invitations import InvitationService
 from app.modules.students.application.services.profiles import LearningProfileService
-from app.modules.students.application.services.registration import StudentRegistrationService
+from app.modules.students.application.services.registration import InvitedRegistrationService
 from app.modules.students.domain.policies import StudentPolicy
 from app.modules.students.infrastructure.security.tokens import SecureInvitationTokens
 from app.modules.students.infrastructure.settings import StudentSettings
@@ -127,8 +128,8 @@ async def build_services(
         LearningProfileService(student_persistence),
         invitation_service,
         connection_service,
-        StudentRegistrationService(
-            student_persistence, registration, invitation_service, connection_service
+        InvitedRegistrationService(
+            student_persistence, registration, invitation_service, connection_service, Role.STUDENT
         ),
     )
 

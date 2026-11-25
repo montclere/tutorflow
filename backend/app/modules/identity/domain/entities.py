@@ -5,7 +5,7 @@ from dataclasses import dataclass, field, replace
 from datetime import datetime
 from uuid import UUID
 
-from app.modules.identity.domain.values import Contact, Profile, Role
+from app.modules.identity.domain.values import INVITED_ROLES, Contact, Profile, Role
 
 
 @dataclass(frozen=True)
@@ -30,9 +30,11 @@ class Registration:
     invitation_id: UUID | None = None
 
     def __post_init__(self) -> None:
-        if (self.role is Role.STUDENT) != (self.invitation_id is not None) or self.role not in (
-            Role.TEACHER,
-            Role.STUDENT,
+        if not (
+            self.role is Role.TEACHER
+            and self.invitation_id is None
+            or self.role in INVITED_ROLES
+            and self.invitation_id is not None
         ):
             raise ValueError("Некорректное назначение регистрации")
 

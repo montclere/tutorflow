@@ -14,6 +14,12 @@ from starlette.responses import JSONResponse
 
 MAX_VALIDATION_ERRORS = 20
 DESCRIPTIONS = {
+    "adult_required": "Операция доступна приглашённому взрослому.",
+    "adult_limit_reached": "Нет свободных мест для взрослых.",
+    "adult_already_connected": "Аккаунт уже подключён к этой карточке.",
+    "adult_connection_not_found": "Подключение взрослого недоступно.",
+    "adult_invitation_not_found": "Приглашение взрослого недоступно.",
+    "invalid_registration_role": "Назначение регистрации недопустимо.",
     "request_too_large": "Размер запроса превышает допустимый предел.",
     "student_required": "Приглашение предназначено аккаунту ученика.",
     "student_card_not_found": "Карточка недоступна.",
@@ -84,6 +90,8 @@ SAFE_LOCATIONS = {
     "welcome",
     "token",
     "card_id",
+    "invitation_id",
+    "account_id",
     "profile_id",
     "include_archived",
     "kind",

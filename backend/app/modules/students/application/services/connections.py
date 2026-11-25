@@ -27,7 +27,7 @@ class ConnectionService:
     async def connect(
         self, unit: StudentsTransaction, card: StudentCard, invitation: Invitation, account_id: UUID
     ) -> Connection:
-        if await unit.accounts.lock_student(account_id) is None:
+        if await unit.accounts.lock_profile(account_id, Role.STUDENT) is None:
             raise StudentError("student_required")
 
         invitation.require_for(card, self.invitations.clock())
@@ -73,7 +73,7 @@ class ConnectionService:
             ):
                 raise StudentError("student_connection_not_found")
 
-            await unit.accounts.lock_student(connection.account_id)
+            await unit.accounts.lock_profile(connection.account_id, Role.STUDENT)
             await unit.students.delete_connection(card.id)
             await unit.students.revoke_invitation(card.id)
 

@@ -11,7 +11,7 @@ from app.dependencies import (
     profile_service,
     read_actor,
     registration_service,
-    set_student_session,
+    set_invited_session,
     student_services,
     write_actor,
 )
@@ -38,6 +38,6 @@ router.include_router(calendar_router(calendar_service, read_actor, write_actor)
 
 router.include_router(
     students_router(
-        student_services, read_actor, write_actor, previous_session, set_student_session
+        student_services, read_actor, write_actor, previous_session, set_invited_session
     )
 )

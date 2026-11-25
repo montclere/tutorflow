@@ -7,7 +7,11 @@ from typing import Protocol
 from uuid import UUID
 
 from app.modules.identity.public import InvitedAccounts
-from app.modules.students.application.contracts import CardDetails
+from app.modules.students.application.contracts import (
+    AdultLearningProfile,
+    CardDetails,
+    StudentCardSummary,
+)
 from app.modules.students.domain.entities import (
     Connection,
     Invitation,
@@ -66,10 +70,51 @@ class StudentsRepository(Protocol):
     ) -> list[tuple[Connection, bool]]: ...
 
 
+class AdultAccessRepository(Protocol):
+    async def count_connections(self, card_id: UUID) -> int: ...
+
+    async def add_connection(self, connection: Connection) -> None: ...
+
+    async def find_connection(self, card_id: UUID, account_id: UUID) -> Connection | None: ...
+
+    async def list_connections(self, card_id: UUID) -> list[Connection]: ...
+
+    async def find_card_for_update(self, card_id: UUID, account_id: UUID) -> StudentCard | None: ...
+
+    async def delete_connection(self, card_id: UUID, account_id: UUID) -> bool: ...
+
+    async def list_student_cards(
+        self, account_id: UUID, after_id: UUID | None, limit: int
+    ) -> list[StudentCardSummary]: ...
+
+    async def list_learning_profiles(
+        self, card_id: UUID, after_id: UUID | None, limit: int
+    ) -> list[AdultLearningProfile]: ...
+
+    async def purge_expired_invitations(self, card_id: UUID) -> None: ...
+
+    async def list_invitations(self, card_id: UUID) -> list[Invitation]: ...
+
+    async def save_invitation(self, invitation: Invitation) -> None: ...
+
+    async def find_invitation(self, digest: str) -> Invitation | None: ...
+
+    async def find_card_invitation(
+        self, card_id: UUID, invitation_id: UUID
+    ) -> Invitation | None: ...
+
+    async def revoke_invitation(self, card_id: UUID, invitation_id: UUID) -> None: ...
+
+    async def revoke_invitations(self, card_id: UUID) -> None: ...
+
+    async def consume_invitation(self, invitation_id: UUID) -> bool: ...
+
+
 @dataclass(frozen=True)
 class StudentsTransaction:
     students: StudentsRepository
     accounts: InvitedAccounts
+    adults: AdultAccessRepository
 
 
 class StudentsUnitOfWork(Protocol):
@@ -86,3 +131,22 @@ class StudentRequests(Protocol):
     async def access(self, ip: str) -> None: ...
 
     async def issue(self, teacher_id: UUID) -> None: ...
+
+
+class CardInvitationAccess(Protocol):
+    @property
+    def requests(self) -> StudentRequests: ...
+
+    async def get_active(
+        self, unit: StudentsTransaction, token: str
+    ) -> tuple[StudentCard, Invitation]: ...
+
+
+class ConnectionAcceptance(Protocol):
+    async def connect(
+        self, unit: StudentsTransaction, card: StudentCard, invitation: Invitation, account_id: UUID
+    ) -> Connection: ...
+
+
+class InvitationLookup(Protocol):
+    async def find_invitation(self, digest: str) -> Invitation | None: ...

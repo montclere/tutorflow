@@ -1,4 +1,4 @@
-"""Сервис подтверждения контакта и регистрации преподавателя."""
+"""Подтверждение контакта и регистрация аккаунтов."""
 
 from collections.abc import Callable
 from datetime import datetime
@@ -20,11 +20,12 @@ from app.modules.identity.domain.entities import Account, Registration
 from app.modules.identity.domain.exceptions import IdentityError
 from app.modules.identity.domain.policies import (
     IdentityPolicy,
+    require_invited_role,
     validate_password,
     validate_registration_code,
 )
 from app.modules.identity.domain.values import ContactKind, Role
-from app.modules.identity.public import StudentRegistrationProof
+from app.modules.identity.public import InvitedRegistrationProof
 
 
 class RegistrationService:
@@ -54,15 +55,21 @@ class RegistrationService:
     async def start(self, contact: ContactInput, ip: str) -> UUID:
         return await self._start(contact, ip, None)
 
-    async def start_student(self, kind: str, contact: str, invitation_id: UUID, ip: str) -> UUID:
+    async def start_invited(
+        self, kind: str, contact: str, invitation_id: UUID, ip: str, *, role: Role
+    ) -> UUID:
+        require_invited_role(role)
+
         try:
             value = ContactInput(ContactKind(kind), contact)
         except ValueError:
             raise IdentityError("invalid_contact") from None
 
-        return await self._start(value, ip, invitation_id)
+        return await self._start(value, ip, invitation_id, role)
 
-    async def _start(self, contact: ContactInput, ip: str, invitation_id: UUID | None) -> UUID:
+    async def _start(
+        self, contact: ContactInput, ip: str, invitation_id: UUID | None, role: Role = Role.TEACHER
+    ) -> UUID:
         normalized = self.contacts.normalize(contact)
         now = self.clock()
 
@@ -86,7 +93,7 @@ class RegistrationService:
                 now,
                 now + self.policy.code_lifetime,
                 self.policy.code_attempts,
-                Role.STUDENT if invitation_id is not None else Role.TEACHER,
+                role,
                 invitation_id,
             )
 
@@ -172,15 +179,15 @@ class RegistrationService:
         challenge_id: UUID,
         code: str,
         invitation_id: UUID | None = None,
+        *,
+        role: Role = Role.TEACHER,
     ) -> Registration | None:
         challenge = await repository.find_registration_for_update(challenge_id)
 
         if challenge is None or not challenge.is_active(self.clock()):
             return None
 
-        expected_role = Role.STUDENT if invitation_id is not None else Role.TEACHER
-
-        if challenge.role is not expected_role or challenge.invitation_id != invitation_id:
+        if challenge.role is not role or challenge.invitation_id != invitation_id:
             return None
 
         if challenge.matches(self.security.registration_digest(challenge_id, code)):
@@ -190,20 +197,31 @@ class RegistrationService:
 
         return None
 
-    async def prepare_student(
-        self, challenge_id: UUID, code: str, password: str, invitation_id: UUID, ip: str
-    ) -> StudentRegistrationProof:
+    async def prepare_invited(
+        self,
+        challenge_id: UUID,
+        code: str,
+        password: str,
+        invitation_id: UUID,
+        ip: str,
+        *,
+        role: Role,
+    ) -> InvitedRegistrationProof:
+        require_invited_role(role)
+
         validate_password(password, registering=True)
         validate_registration_code(code)
 
         await self.rate_limits.check("confirm-ip", ip, self.policy.confirmation_ip, self.clock())
 
         async with self.persistence.transaction() as repository:
-            challenge = await self.verify_code(repository, challenge_id, code, invitation_id)
+            challenge = await self.verify_code(
+                repository, challenge_id, code, invitation_id, role=role
+            )
 
         if challenge is None:
             raise IdentityError("challenge_invalid")
 
         digest = await self.passwords.hash(password)
 
-        return StudentRegistrationProof(challenge_id, invitation_id, code, digest)
+        return InvitedRegistrationProof(challenge_id, invitation_id, code, digest, role)

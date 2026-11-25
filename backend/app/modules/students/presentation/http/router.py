@@ -4,10 +4,10 @@ from collections.abc import Awaitable, Callable
 from typing import Annotated
 from uuid import UUID
 
-from fastapi import APIRouter, BackgroundTasks, Depends, Query, Request, Response
+from fastapi import APIRouter, BackgroundTasks, Depends, Request, Response
 
-from app.modules.identity.public import Actor, StudentSession
-from app.modules.students.application.contracts import DEFAULT_PAGE_SIZE, PAGE_MAX_SIZE, CardDetails
+from app.modules.identity.public import Actor, InvitedSession
+from app.modules.students.application.contracts import DEFAULT_PAGE_SIZE, CardDetails
 from app.modules.students.application.services.collection import StudentServices
 from app.modules.students.domain.entities import LearningProfile
 from app.modules.students.domain.values import Money
@@ -18,23 +18,21 @@ from app.modules.students.presentation.http.schemas import (
     ChallengeView,
     ConnectionView,
     InvitationView,
+    InvitedRegistrationComplete,
+    InvitedRegistrationStart,
     Page,
+    PageSize,
     PreviewView,
     Price,
     ProfileInput,
     ProfileView,
     PublicProfileView,
-    StudentComplete,
     StudentSessionView,
-    StudentStart,
     TeacherView,
     Token,
     Welcome,
 )
-from app.shared.presentation.http import require_json
-
-
-PageSize = Annotated[int, Query(ge=1, le=PAGE_MAX_SIZE)]
+from app.shared.presentation.http import request_ip, require_json
 
 
 def card_view(details: CardDetails) -> CardView:
@@ -62,16 +60,12 @@ def profile_view(profile: LearningProfile) -> ProfileView:
     )
 
 
-def client_ip(request: Request) -> str:
-    return request.client.host if request.client else "unknown"
-
-
 def students_router(
     get_services: Callable[[Request], Awaitable[StudentServices]],
     read_actor: Callable[[Request], Awaitable[Actor]],
     write_actor: Callable[[Request], Awaitable[Actor]],
     previous_session: Callable[[Request], Awaitable[str | None]],
-    set_session: Callable[[Request, Response, StudentSession], Awaitable[None]],
+    set_session: Callable[[Request, Response, InvitedSession], Awaitable[None]],
 ) -> APIRouter:
     router = APIRouter(tags=["Ученики"])
 
@@ -278,7 +272,9 @@ def students_router(
         require_json(request)
 
         return PreviewView.model_validate(
-            await services.invitations.preview(command.token.get_secret_value(), client_ip(request))
+            await services.invitations.preview(
+                command.token.get_secret_value(), request_ip(request)
+            )
         )
 
 
@@ -293,14 +289,14 @@ def students_router(
 
         return ConnectionView.model_validate(
             await services.connections.accept(
-                actor, command.token.get_secret_value(), client_ip(request)
+                actor, command.token.get_secret_value(), request_ip(request)
             )
         )
 
 
     @router.post("/student-invitations/registrations", status_code=202)
     async def start_student_registration(
-        command: StudentStart,
+        command: InvitedRegistrationStart,
         request: Request,
         background: BackgroundTasks,
         services: Annotated[StudentServices, Depends(get_services)],
@@ -311,7 +307,7 @@ def students_router(
             command.token.get_secret_value(),
             command.kind,
             command.contact.get_secret_value(),
-            client_ip(request),
+            request_ip(request),
         )
 
         background.add_task(services.registration.deliver_pending, challenge)
@@ -321,7 +317,7 @@ def students_router(
 
     @router.post("/student-invitations/registrations/complete", status_code=201)
     async def complete_student_registration(
-        command: StudentComplete,
+        command: InvitedRegistrationComplete,
         request: Request,
         response: Response,
         services: Annotated[StudentServices, Depends(get_services)],
@@ -333,7 +329,7 @@ def students_router(
             command.challenge_id,
             command.code.get_secret_value(),
             command.password.get_secret_value(),
-            client_ip(request),
+            request_ip(request),
             await previous_session(request),
         )
 

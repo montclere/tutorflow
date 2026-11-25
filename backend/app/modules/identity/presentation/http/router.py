@@ -24,7 +24,7 @@ from app.modules.identity.presentation.http.schemas import (
     StartRegistration,
 )
 from app.modules.identity.presentation.http.session import IdentityHttpSession, raise_identity_error
-from app.shared.presentation.http import require_json
+from app.shared.presentation.http import request_ip, require_json
 
 
 def account_view(account: Account) -> AccountView:
@@ -36,10 +36,6 @@ def account_view(account: Account) -> AccountView:
             {"type": account.contact.kind.value, "value": account.contact.value}
         ),
     )
-
-
-def request_ip(request: Request) -> str:
-    return request.client.host if request.client else "unknown"
 
 
 def session_view(response: Response, session: IdentityHttpSession, result: SignedIn) -> SessionView:
