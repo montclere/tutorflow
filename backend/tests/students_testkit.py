@@ -67,3 +67,57 @@ async def signup(client: AsyncClient, inbox: Inbox, token: str, address: str) ->
     assert result.status_code == 201, result.text
 
     return {"x-csrf-token": result.json()["csrf_token"]}
+
+
+async def adult_invitation(client, headers, card_id):
+    response = await client.post(
+        f"{BASE}/students/cards/{card_id}/adult-invitations",
+        json={"welcome": "Здравствуйте"},
+        headers=headers,
+    )
+
+    assert response.status_code == 201, response.text
+
+    return response.json()
+
+
+async def adult_start(client, token, contact, kind="email"):
+    response = await client.post(
+        f"{BASE}/adult-invitations/registrations",
+        json={"token": token, "kind": kind, "contact": contact},
+    )
+
+    assert response.status_code == 202, response.text
+
+    return response.json()["challenge_id"]
+
+
+async def adult_finish(client, token, challenge, code):
+    return await client.post(
+        f"{BASE}/adult-invitations/registrations/complete",
+        json={"token": token, "challenge_id": challenge, "code": code, "password": PASSWORD},
+    )
+
+
+async def register_adult(client, inbox, token, address, kind="email"):
+    challenge = await adult_start(client, token, address, kind)
+    response = await adult_finish(client, token, challenge, inbox.messages[-1][2])
+
+    assert response.status_code == 201, response.text
+    assert response.json()["role"] == "adult"
+    assert all(
+        value in response.headers["set-cookie"].lower()
+        for value in ["secure", "httponly", "samesite=lax"]
+    )
+
+    return {"x-csrf-token": response.json()["csrf_token"]}
+
+
+async def accept_adult(client, headers, token):
+    return await client.post(
+        f"{BASE}/adult-invitations/accept", json={"token": token}, headers=headers
+    )
+
+
+async def preview_adult_invitation(client, token):
+    return await client.post(f"{BASE}/adult-invitations/preview", json={"token": token})

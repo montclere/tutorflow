@@ -8,7 +8,7 @@ from app.modules.identity.application.contracts import SignedIn
 from app.modules.identity.application.services.sessions import SessionService
 from app.modules.identity.domain.exceptions import IdentityError
 from app.modules.identity.presentation.http.schemas import AuthenticatedSession
-from app.modules.identity.public import Actor, InvitedSession
+from app.modules.identity.public import Actor, InvitedSession, Principal, Role
 from app.shared.presentation.problems import ProblemResponse, problem_response, request_id
 
 
@@ -25,6 +25,7 @@ IDENTITY_STATUSES = {
     "invalid_password": 422,
     "identity_busy": 503,
     "invalid_registration_role": 403,
+    "role_not_enabled": 403,
 }
 
 
@@ -66,10 +67,17 @@ class IdentityHttpSession:
 
         return AuthenticatedSession(token, account)
 
-    async def actor(self, request: Request, *, csrf: bool = False) -> Actor:
+    async def principal(self, request: Request, *, csrf: bool = False) -> Principal:
         account = (await self.authenticate(request, csrf=csrf)).account
 
-        return Actor(account.id, account.role, account.profile.timezone)
+        return Principal(account.id, account.profile.timezone)
+
+    async def actor(self, request: Request, *, role: Role, csrf: bool = False) -> Actor:
+        account = (await self.authenticate(request, csrf=csrf)).account
+
+        account.require_role(role)
+
+        return Actor(account.id, role, account.profile.timezone)
 
     def set_cookie(self, response: Response, result: SignedIn | InvitedSession) -> None:
         response.set_cookie(

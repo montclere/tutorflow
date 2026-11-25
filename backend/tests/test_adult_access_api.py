@@ -8,75 +8,30 @@ import pytest
 from sqlalchemy import func, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 from tests.identity_testkit import PASSWORD
-from tests.students_testkit import card, client_for, invitation, signup, teacher
+from tests.students_testkit import accept_adult as accept
+from tests.students_testkit import adult_finish as finish
+from tests.students_testkit import adult_invitation as issue
+from tests.students_testkit import adult_start as begin
+from tests.students_testkit import card, client_for, invitation, register_adult, signup, teacher
+from tests.students_testkit import preview_adult_invitation as preview
 
-from app.modules.identity.infrastructure.persistence.models import Account, LoginSession
+from app.modules.identity.infrastructure.persistence.models import (
+    Account,
+    AccountRole,
+    LoginSession,
+)
 from app.modules.students.infrastructure.persistence.adult_models import (
-    AdultConnection,
     AdultInvitation,
 )
 from app.modules.students.infrastructure.persistence.adult_repository import (
     PostgresAdultAccessRepository,
 )
 from app.modules.students.infrastructure.persistence.models import Connection
+from app.modules.students.infrastructure.persistence.models import Connection as AdultConnection
 
 
 pytestmark = pytest.mark.anyio
 BASE = "/api/v1"
-
-
-async def issue(client, headers, card_id):
-    response = await client.post(
-        f"{BASE}/students/cards/{card_id}/adult-invitations",
-        json={"welcome": "Здравствуйте"},
-        headers=headers,
-    )
-
-    assert response.status_code == 201, response.text
-
-    return response.json()
-
-
-async def begin(client, token, contact, kind="email"):
-    response = await client.post(
-        f"{BASE}/adult-invitations/registrations",
-        json={"token": token, "kind": kind, "contact": contact},
-    )
-
-    assert response.status_code == 202, response.text
-
-    return response.json()["challenge_id"]
-
-
-async def finish(client, token, challenge, code):
-    return await client.post(
-        f"{BASE}/adult-invitations/registrations/complete",
-        json={"token": token, "challenge_id": challenge, "code": code, "password": PASSWORD},
-    )
-
-
-async def register_adult(client, inbox, token, address, kind="email"):
-    challenge = await begin(client, token, address, kind)
-    response = await finish(client, token, challenge, inbox.messages[-1][2])
-
-    assert response.status_code == 201, response.text
-    assert response.json()["role"] == "adult"
-    assert all(
-        value in response.headers["set-cookie"].lower()
-        for value in ["secure", "httponly", "samesite=lax"]
-    )
-
-    return {"x-csrf-token": response.json()["csrf_token"]}
-
-
-async def accept(client, headers, token):
-    return await client.post(
-        f"{BASE}/adult-invitations/accept", json={"token": token}, headers=headers
-    )
-
-
-async def preview(client, token):
-    return await client.post(f"{BASE}/adult-invitations/preview", json={"token": token})
 
 
 @pytest.mark.br_013
@@ -301,7 +256,9 @@ async def test_two_adults_join_concurrently_and_existing_adult_has_multiple_chil
     async with AsyncSession(database) as db:
         assert (
             await db.scalar(
-                select(func.count()).select_from(Account).where(Account.role == "adult")
+                select(func.count())
+                .select_from(Account)
+                .where(Account.role_assignments.any(AccountRole.role == "adult"))
             )
             == 2
         )
@@ -334,7 +291,9 @@ async def test_race_for_last_slot_rolls_back_losing_registration(client, inbox, 
     async with AsyncSession(database) as db:
         assert (
             await db.scalar(
-                select(func.count()).select_from(Account).where(Account.role == "adult")
+                select(func.count())
+                .select_from(Account)
+                .where(Account.role_assignments.any(AccountRole.role == "adult"))
             )
             == 2
         )
@@ -344,7 +303,7 @@ async def test_race_for_last_slot_rolls_back_losing_registration(client, inbox, 
                 select(func.count())
                 .select_from(LoginSession)
                 .join(Account)
-                .where(Account.role == "adult")
+                .where(Account.role_assignments.any(AccountRole.role == "adult"))
             )
             == 2
         )
@@ -359,13 +318,12 @@ async def test_invitation_roles_and_codes_cannot_be_swapped(client, inbox, servi
     child_link = await invitation(client, headers, item["id"])
     adult_link = await issue(client, headers, item["id"])
 
-    assert (await accept(client, headers, adult_link["token"])).status_code == 403
     assert (await preview(client, child_link)).status_code == 400
 
     async with client_for(services) as child, client_for(services) as adult:
         child_headers = await signup(child, inbox, child_link, "child@example.com")
 
-        assert (await accept(child, child_headers, adult_link["token"])).status_code == 403
+        assert (await accept(child, child_headers, adult_link["token"])).status_code == 409
 
         challenge = await begin(adult, adult_link["token"], "adult@example.com")
         code = inbox.messages[-1][2]
@@ -390,14 +348,14 @@ async def test_invitation_roles_and_codes_cannot_be_swapped(client, inbox, servi
         response = await finish(adult, adult_link["token"], challenge, code)
 
         assert response.status_code == 201
-        assert (await adult.get(f"{BASE}/me")).json()["role"] == "adult"
+        assert (await adult.get(f"{BASE}/me")).json()["roles"] == ["adult"]
         assert (
             await adult.post(
                 f"{BASE}/student-invitations/accept",
                 json={"token": child_link},
                 headers={"x-csrf-token": response.json()["csrf_token"]},
             )
-        ).status_code == 403
+        ).status_code == 400
 
 
 @pytest.mark.br_083
@@ -463,7 +421,12 @@ async def test_invalidation_during_hashing_creates_no_adult(
         assert result.status_code == 400, result.text
 
     async with AsyncSession(database) as db:
-        assert await db.scalar(select(Account.id).where(Account.role == "adult")) is None
+        assert (
+            await db.scalar(
+                select(Account.id).where(Account.role_assignments.any(AccountRole.role == "adult"))
+            )
+            is None
+        )
         assert await db.scalar(select(func.count()).select_from(AdultConnection)) == 0
 
 
@@ -484,7 +447,9 @@ async def test_final_claim_failure_rolls_back_account_and_session(
 
         assert (
             await repository.db.scalar(
-                select(func.count()).select_from(Account).where(Account.role == "adult")
+                select(func.count())
+                .select_from(Account)
+                .where(Account.role_assignments.any(AccountRole.role == "adult"))
             )
             == 1
         )
@@ -493,7 +458,7 @@ async def test_final_claim_failure_rolls_back_account_and_session(
                 select(func.count())
                 .select_from(LoginSession)
                 .join(Account)
-                .where(Account.role == "adult")
+                .where(Account.role_assignments.any(AccountRole.role == "adult"))
             )
             == 1
         )
@@ -512,7 +477,12 @@ async def test_final_claim_failure_rolls_back_account_and_session(
     assert reached
 
     async with AsyncSession(database) as db:
-        assert await db.scalar(select(Account.id).where(Account.role == "adult")) is None
+        assert (
+            await db.scalar(
+                select(Account.id).where(Account.role_assignments.any(AccountRole.role == "adult"))
+            )
+            is None
+        )
         assert await db.scalar(select(func.count()).select_from(LoginSession)) == 1
         assert await db.get(AdultInvitation, UUID(link["id"])) is not None
 

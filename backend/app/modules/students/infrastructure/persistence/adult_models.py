@@ -7,8 +7,6 @@ from sqlalchemy import (
     CheckConstraint,
     DateTime,
     ForeignKey,
-    ForeignKeyConstraint,
-    Index,
     SmallInteger,
     String,
     UniqueConstraint,
@@ -20,26 +18,6 @@ from app.shared.infrastructure.database import metadata
 
 class AdultAccessBase(DeclarativeBase):
     metadata = metadata
-
-
-class AdultConnection(AdultAccessBase):
-    __tablename__ = "students_adult_connections"
-    __table_args__ = (
-        ForeignKeyConstraint(
-            ["card_id", "teacher_id"],
-            ["students_cards.id", "students_cards.teacher_id"],
-            ondelete="CASCADE",
-        ),
-        UniqueConstraint("card_id", "slot", name="uq_adult_connection_slot"),
-        CheckConstraint("slot BETWEEN 1 AND 2", name="ck_adult_connection_slot"),
-        Index("ix_adult_connection_listing", "account_id", "card_id"),
-    )
-    card_id: Mapped[UUID] = mapped_column(primary_key=True)
-    account_id: Mapped[UUID] = mapped_column(
-        ForeignKey("identity_accounts.id", ondelete="CASCADE"), primary_key=True
-    )
-    teacher_id: Mapped[UUID] = mapped_column()
-    slot: Mapped[int] = mapped_column(SmallInteger)
 
 
 class AdultInvitation(AdultAccessBase):

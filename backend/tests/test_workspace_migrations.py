@@ -10,6 +10,7 @@ from scripts.maintenance import Maintenance, main
 from sqlalchemy import delete, insert, select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession as Session
+from tests.identity_testkit import seed_account
 from tests.postgres_testkit import check_schema, migrate, migrated_schema, postgres_cluster
 
 from app.composition import build_services
@@ -51,15 +52,15 @@ async def test_upgrade_preserves_data_and_enforces_workspace_ownership():
         async with migrated_schema(cluster, "0002") as engine:
             async with Session(engine) as db:
                 async with db.begin():
-                    await db.execute(
-                        insert(Account).values(
-                            id=owner_id,
-                            contact_kind="email",
-                            contact="teacher@example.com",
-                            verified_at=now,
-                            password_hash="old-hash",
-                            role="teacher",
-                        )
+                    await seed_account(
+                        db,
+                        account_id=owner_id,
+                        contact_kind="email",
+                        contact="teacher@example.com",
+                        verified_at=now,
+                        password_hash="old-hash",
+                        role="teacher",
+                        legacy=True,
                     )
                     await db.execute(insert(CalendarBlock).values(**values))
                     await db.execute(
@@ -123,15 +124,14 @@ async def test_purge_batches_expired_rows_and_preserves_live_records():
         async with migrated_schema(cluster) as engine:
             async with Session(engine) as db:
                 async with db.begin():
-                    await db.execute(
-                        insert(Account).values(
-                            id=owner_id,
-                            contact_kind="email",
-                            contact="teacher@example.com",
-                            verified_at=now,
-                            password_hash="old-hash",
-                            role="teacher",
-                        )
+                    await seed_account(
+                        db,
+                        account_id=owner_id,
+                        contact_kind="email",
+                        contact="teacher@example.com",
+                        verified_at=now,
+                        password_hash="old-hash",
+                        role="teacher",
                     )
 
                     for name, expiry in (

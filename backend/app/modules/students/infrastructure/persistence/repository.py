@@ -3,7 +3,7 @@
 from datetime import datetime
 from uuid import UUID
 
-from sqlalchemy import delete, func, select, update
+from sqlalchemy import and_, delete, func, select, update
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -79,7 +79,11 @@ class PostgresStudentsRepository:
         query = (
             select(CardRow)
             .join(ConnectionRow, ConnectionRow.card_id == CardRow.id)
-            .where(CardRow.id == card_id, ConnectionRow.account_id == account_id)
+            .where(
+                CardRow.id == card_id,
+                ConnectionRow.account_id == account_id,
+                ConnectionRow.role == "student",
+            )
             .with_for_update(of=CardRow)
         )
         row = await self.db.scalar(query)
@@ -101,7 +105,10 @@ class PostgresStudentsRepository:
     ) -> list[CardDetails]:
         query = (
             select(CardRow, ConnectionRow.account_id)
-            .outerjoin(ConnectionRow, ConnectionRow.card_id == CardRow.id)
+            .outerjoin(
+                ConnectionRow,
+                and_(ConnectionRow.card_id == CardRow.id, ConnectionRow.role == "student"),
+            )
             .where(CardRow.teacher_id == teacher_id)
         )
 
@@ -214,7 +221,13 @@ class PostgresStudentsRepository:
         return await self.db.scalar(statement) is not None
 
     async def find_connection(self, card_id: UUID) -> Connection | None:
-        return connection_value(await self.db.get(ConnectionRow, card_id))
+        return connection_value(
+            await self.db.scalar(
+                select(ConnectionRow).where(
+                    ConnectionRow.card_id == card_id, ConnectionRow.role == "student"
+                )
+            )
+        )
 
     async def find_teacher_connection(
         self, teacher_id: UUID, account_id: UUID
@@ -222,7 +235,9 @@ class PostgresStudentsRepository:
         return connection_value(
             await self.db.scalar(
                 select(ConnectionRow).where(
-                    ConnectionRow.teacher_id == teacher_id, ConnectionRow.account_id == account_id
+                    ConnectionRow.teacher_id == teacher_id,
+                    ConnectionRow.account_id == account_id,
+                    ConnectionRow.role == "student",
                 )
             )
         )
@@ -233,13 +248,19 @@ class PostgresStudentsRepository:
                 card_id=connection.card_id,
                 teacher_id=connection.teacher_id,
                 account_id=connection.account_id,
+                role="student",
+                slot=0,
             )
         )
 
         await self.db.flush()
 
     async def delete_connection(self, card_id: UUID) -> None:
-        await self.db.execute(delete(ConnectionRow).where(ConnectionRow.card_id == card_id))
+        await self.db.execute(
+            delete(ConnectionRow).where(
+                ConnectionRow.card_id == card_id, ConnectionRow.role == "student"
+            )
+        )
 
     async def list_connections(
         self, account_id: UUID, after_id: UUID | None, limit: int
@@ -247,7 +268,7 @@ class PostgresStudentsRepository:
         query = (
             select(ConnectionRow, CardRow.archived)
             .join(CardRow, CardRow.id == ConnectionRow.card_id)
-            .where(ConnectionRow.account_id == account_id)
+            .where(ConnectionRow.account_id == account_id, ConnectionRow.role == "student")
         )
 
         if after_id is not None:

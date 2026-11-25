@@ -6,7 +6,7 @@ from uuid import UUID
 
 from fastapi import APIRouter, BackgroundTasks, Depends, Request, Response
 
-from app.modules.identity.public import Actor, InvitedSession
+from app.modules.identity.public import Actor, InvitedSession, Principal
 from app.modules.students.application.contracts import DEFAULT_PAGE_SIZE, CardDetails
 from app.modules.students.application.services.collection import StudentServices
 from app.modules.students.domain.entities import LearningProfile
@@ -32,7 +32,7 @@ from app.modules.students.presentation.http.schemas import (
     Token,
     Welcome,
 )
-from app.shared.presentation.http import request_ip, require_json
+from app.shared.presentation.http import RequestAccess, request_ip, require_json
 
 
 def card_view(details: CardDetails) -> CardView:
@@ -62,8 +62,9 @@ def profile_view(profile: LearningProfile) -> ProfileView:
 
 def students_router(
     get_services: Callable[[Request], Awaitable[StudentServices]],
-    read_actor: Callable[[Request], Awaitable[Actor]],
-    write_actor: Callable[[Request], Awaitable[Actor]],
+    teacher: RequestAccess[Actor],
+    student: RequestAccess[Actor],
+    principal: RequestAccess[Principal],
     previous_session: Callable[[Request], Awaitable[str | None]],
     set_session: Callable[[Request, Response, InvitedSession], Awaitable[None]],
 ) -> APIRouter:
@@ -74,7 +75,7 @@ def students_router(
     async def create_card(
         command: CardCreate,
         request: Request,
-        actor: Annotated[Actor, Depends(write_actor)],
+        actor: Annotated[Actor, Depends(teacher.write)],
         services: Annotated[StudentServices, Depends(get_services)],
     ) -> CardView:
         require_json(request)
@@ -84,7 +85,7 @@ def students_router(
 
     @router.get("/students/cards")
     async def list_cards(
-        actor: Annotated[Actor, Depends(read_actor)],
+        actor: Annotated[Actor, Depends(teacher.read)],
         services: Annotated[StudentServices, Depends(get_services)],
         limit: PageSize = DEFAULT_PAGE_SIZE,
         after_id: UUID | None = None,
@@ -101,7 +102,7 @@ def students_router(
     @router.get("/students/cards/{card_id}")
     async def get_card(
         card_id: UUID,
-        actor: Annotated[Actor, Depends(read_actor)],
+        actor: Annotated[Actor, Depends(teacher.read)],
         services: Annotated[StudentServices, Depends(get_services)],
     ) -> CardView:
         return card_view(await services.cards.get(actor, card_id))
@@ -112,7 +113,7 @@ def students_router(
         card_id: UUID,
         command: CardPatch,
         request: Request,
-        actor: Annotated[Actor, Depends(write_actor)],
+        actor: Annotated[Actor, Depends(teacher.write)],
         services: Annotated[StudentServices, Depends(get_services)],
     ) -> CardView:
         require_json(request)
@@ -125,7 +126,7 @@ def students_router(
     @router.post("/students/cards/{card_id}/archive")
     async def archive_card(
         card_id: UUID,
-        actor: Annotated[Actor, Depends(write_actor)],
+        actor: Annotated[Actor, Depends(teacher.write)],
         services: Annotated[StudentServices, Depends(get_services)],
     ) -> CardView:
         return card_view(await services.cards.archive(actor, card_id, True))
@@ -134,7 +135,7 @@ def students_router(
     @router.post("/students/cards/{card_id}/restore")
     async def restore_card(
         card_id: UUID,
-        actor: Annotated[Actor, Depends(write_actor)],
+        actor: Annotated[Actor, Depends(teacher.write)],
         services: Annotated[StudentServices, Depends(get_services)],
     ) -> CardView:
         return card_view(await services.cards.archive(actor, card_id, False))
@@ -143,7 +144,7 @@ def students_router(
     @router.delete("/students/cards/{card_id}", status_code=204)
     async def delete_card(
         card_id: UUID,
-        actor: Annotated[Actor, Depends(write_actor)],
+        actor: Annotated[Actor, Depends(teacher.write)],
         services: Annotated[StudentServices, Depends(get_services)],
     ) -> None:
         await services.cards.delete(actor, card_id)
@@ -152,7 +153,7 @@ def students_router(
     @router.get("/students/cards/{card_id}/account")
     async def account_profile(
         card_id: UUID,
-        actor: Annotated[Actor, Depends(read_actor)],
+        actor: Annotated[Actor, Depends(teacher.read)],
         services: Annotated[StudentServices, Depends(get_services)],
     ) -> PublicProfileView:
         return PublicProfileView.model_validate(
@@ -165,7 +166,7 @@ def students_router(
         card_id: UUID,
         command: ProfileInput,
         request: Request,
-        actor: Annotated[Actor, Depends(write_actor)],
+        actor: Annotated[Actor, Depends(teacher.write)],
         services: Annotated[StudentServices, Depends(get_services)],
     ) -> ProfileView:
         require_json(request)
@@ -187,7 +188,7 @@ def students_router(
         profile_id: UUID,
         command: ProfileInput,
         request: Request,
-        actor: Annotated[Actor, Depends(write_actor)],
+        actor: Annotated[Actor, Depends(teacher.write)],
         services: Annotated[StudentServices, Depends(get_services)],
     ) -> ProfileView:
         require_json(request)
@@ -206,7 +207,7 @@ def students_router(
     @router.get("/students/cards/{card_id}/profiles")
     async def list_profiles(
         card_id: UUID,
-        actor: Annotated[Actor, Depends(read_actor)],
+        actor: Annotated[Actor, Depends(teacher.read)],
         services: Annotated[StudentServices, Depends(get_services)],
         limit: PageSize = DEFAULT_PAGE_SIZE,
         after_id: UUID | None = None,
@@ -223,7 +224,7 @@ def students_router(
     async def get_profile(
         card_id: UUID,
         profile_id: UUID,
-        actor: Annotated[Actor, Depends(read_actor)],
+        actor: Annotated[Actor, Depends(teacher.read)],
         services: Annotated[StudentServices, Depends(get_services)],
     ) -> ProfileView:
         return profile_view(await services.profiles.get(actor, card_id, profile_id))
@@ -233,7 +234,7 @@ def students_router(
     async def delete_profile(
         card_id: UUID,
         profile_id: UUID,
-        actor: Annotated[Actor, Depends(write_actor)],
+        actor: Annotated[Actor, Depends(teacher.write)],
         services: Annotated[StudentServices, Depends(get_services)],
     ) -> None:
         await services.profiles.delete(actor, card_id, profile_id)
@@ -244,7 +245,7 @@ def students_router(
         card_id: UUID,
         command: Welcome,
         request: Request,
-        actor: Annotated[Actor, Depends(write_actor)],
+        actor: Annotated[Actor, Depends(teacher.write)],
         services: Annotated[StudentServices, Depends(get_services)],
     ) -> InvitationView:
         require_json(request)
@@ -257,7 +258,7 @@ def students_router(
     @router.delete("/students/cards/{card_id}/invitation", status_code=204)
     async def revoke_invitation(
         card_id: UUID,
-        actor: Annotated[Actor, Depends(write_actor)],
+        actor: Annotated[Actor, Depends(teacher.write)],
         services: Annotated[StudentServices, Depends(get_services)],
     ) -> None:
         await services.invitations.revoke(actor, card_id)
@@ -282,7 +283,7 @@ def students_router(
     async def accept_invitation(
         command: Token,
         request: Request,
-        actor: Annotated[Actor, Depends(write_actor)],
+        actor: Annotated[Principal, Depends(principal.write)],
         services: Annotated[StudentServices, Depends(get_services)],
     ) -> ConnectionView:
         require_json(request)
@@ -340,7 +341,7 @@ def students_router(
 
     @router.get("/me/teachers")
     async def list_teachers(
-        actor: Annotated[Actor, Depends(read_actor)],
+        actor: Annotated[Actor, Depends(student.read)],
         services: Annotated[StudentServices, Depends(get_services)],
         limit: PageSize = DEFAULT_PAGE_SIZE,
         after_id: UUID | None = None,
@@ -356,7 +357,16 @@ def students_router(
     @router.delete("/students/cards/{card_id}/connection", status_code=204)
     async def disconnect(
         card_id: UUID,
-        actor: Annotated[Actor, Depends(write_actor)],
+        actor: Annotated[Actor, Depends(teacher.write)],
+        services: Annotated[StudentServices, Depends(get_services)],
+    ) -> None:
+        await services.connections.disconnect(actor, card_id)
+
+
+    @router.delete("/me/teachers/{card_id}/connection", status_code=204)
+    async def disconnect_student(
+        card_id: UUID,
+        actor: Annotated[Actor, Depends(student.write)],
         services: Annotated[StudentServices, Depends(get_services)],
     ) -> None:
         await services.connections.disconnect(actor, card_id)

@@ -52,7 +52,7 @@ async def test_registration_and_login_keep_the_same_account(
     response = await register(client, contact, inbox)
     auth = response.json()
 
-    assert auth["account"]["role"] == "teacher"
+    assert auth["account"]["roles"] == ["teacher"]
     assert auth["account"]["login_contact"] == contact
     assert auth["account"]["workspace_id"] == auth["account"]["id"]
     assert inbox.messages[-1][:2] == (contact["type"], contact["value"])
@@ -116,7 +116,7 @@ async def test_challenge_is_single_use_and_cannot_assign_a_role(client, inbox):
     created = await finish(client, challenge, code)
 
     assert created.status_code == 201
-    assert created.json()["account"]["role"] == "teacher"
+    assert created.json()["account"]["roles"] == ["teacher"]
     assert (await finish(client, challenge, code)).json()["code"] == "challenge_invalid"
 
 
@@ -468,7 +468,7 @@ async def test_cancelling_transaction_rolls_back_and_releases_connection(service
     account = DomainAccount(
         identifier,
         Contact(ContactKind.EMAIL, "cancelled@example.com"),
-        Role.TEACHER,
+        frozenset({Role.TEACHER}),
         "test-hash",
         datetime.now(UTC),
     )

@@ -7,6 +7,8 @@ from app.shared.presentation.problems import ProblemResponse, problem_response, 
 
 
 STUDENT_STATUSES = {
+    "self_connection_forbidden": 409,
+    "authentication_required": 401,
     "adult_required": 403,
     "adult_limit_reached": 409,
     "adult_already_connected": 409,

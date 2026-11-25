@@ -19,6 +19,7 @@ from app.modules.identity.domain.values import (
     TIMEZONE_MAX_LENGTH,
     ContactKind,
     ProfileChange,
+    Role,
 )
 
 
@@ -47,6 +48,7 @@ class CompleteRegistration(Input):
 
 
 class Login(StartRegistration):
+    role: Role | None = None
     password: Annotated[SecretStr, Field(min_length=1, max_length=PASSWORD_MAX_LENGTH)]
 
 
@@ -74,7 +76,7 @@ class Profile(BaseModel):
 
 class AccountView(BaseModel):
     id: UUID
-    role: str
+    roles: list[Role]
     login_contact: Contact
     workspace_id: UUID
 

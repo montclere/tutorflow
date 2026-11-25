@@ -9,10 +9,8 @@ from app.modules.students.application.contracts import AdultLearningProfile, Stu
 from app.modules.students.domain.entities import Connection, Invitation, StudentCard
 from app.modules.students.domain.exceptions import StudentError
 from app.modules.students.domain.values import MAX_ADULT_CONNECTIONS, Money
-from app.modules.students.infrastructure.persistence.adult_models import (
-    AdultConnection,
-    AdultInvitation,
-)
+from app.modules.students.infrastructure.persistence.adult_models import AdultInvitation
+from app.modules.students.infrastructure.persistence.models import Connection as AdultConnection
 from app.modules.students.infrastructure.persistence.models import LearningProfile
 from app.modules.students.infrastructure.persistence.models import StudentCard as CardRow
 from app.modules.students.infrastructure.persistence.repository import card_value
@@ -50,7 +48,7 @@ class PostgresAdultAccessRepository:
             await self.db.scalar(
                 select(func.count())
                 .select_from(AdultConnection)
-                .where(AdultConnection.card_id == card_id)
+                .where(AdultConnection.card_id == card_id, AdultConnection.role == "adult")
             )
         ) or 0
 
@@ -63,19 +61,26 @@ class PostgresAdultAccessRepository:
                 teacher_id=connection.teacher_id,
                 account_id=connection.account_id,
                 slot=slot,
+                role="adult",
             )
         )
         await self.db.flush()
 
     async def find_connection(self, card_id: UUID, account_id: UUID) -> Connection | None:
-        row = await self.db.get(AdultConnection, (card_id, account_id))
+        row = await self.db.scalar(
+            select(AdultConnection).where(
+                AdultConnection.card_id == card_id,
+                AdultConnection.account_id == account_id,
+                AdultConnection.role == "adult",
+            )
+        )
 
         return connection_value(row) if row else None
 
     async def list_connections(self, card_id: UUID) -> list[Connection]:
         rows = await self.db.scalars(
             select(AdultConnection)
-            .where(AdultConnection.card_id == card_id)
+            .where(AdultConnection.card_id == card_id, AdultConnection.role == "adult")
             .order_by(AdultConnection.account_id)
         )
 
@@ -85,7 +90,11 @@ class PostgresAdultAccessRepository:
         row = await self.db.scalar(
             select(CardRow)
             .join(AdultConnection, AdultConnection.card_id == CardRow.id)
-            .where(CardRow.id == card_id, AdultConnection.account_id == account_id)
+            .where(
+                CardRow.id == card_id,
+                AdultConnection.account_id == account_id,
+                AdultConnection.role == "adult",
+            )
             .with_for_update(of=CardRow)
         )
 
@@ -94,7 +103,11 @@ class PostgresAdultAccessRepository:
     async def delete_connection(self, card_id: UUID, account_id: UUID) -> bool:
         statement = (
             delete(AdultConnection)
-            .where(AdultConnection.card_id == card_id, AdultConnection.account_id == account_id)
+            .where(
+                AdultConnection.card_id == card_id,
+                AdultConnection.account_id == account_id,
+                AdultConnection.role == "adult",
+            )
             .returning(AdultConnection.card_id)
         )
 
@@ -106,7 +119,7 @@ class PostgresAdultAccessRepository:
         query = (
             select(CardRow.id, CardRow.teacher_id, CardRow.name, CardRow.archived)
             .join(AdultConnection, AdultConnection.card_id == CardRow.id)
-            .where(AdultConnection.account_id == account_id)
+            .where(AdultConnection.account_id == account_id, AdultConnection.role == "adult")
         )
 
         if after_id is not None:

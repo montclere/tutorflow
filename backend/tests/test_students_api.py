@@ -20,7 +20,11 @@ from tests.students_testkit import (
 )
 
 from app.main import create_app
-from app.modules.identity.infrastructure.persistence.models import Account, LoginSession
+from app.modules.identity.infrastructure.persistence.models import (
+    Account,
+    AccountRole,
+    LoginSession,
+)
 from app.modules.identity.infrastructure.persistence.repository import PostgresIdentityRepository
 from app.modules.students.infrastructure.persistence.models import (
     Connection,
@@ -139,7 +143,7 @@ async def test_student_registration_profile_archive_and_delete_keep_accounts(
         student_headers = await signup(student, inbox, token, "student@example.com")
         identity = (await student.get(f"{BASE}/me")).json()
 
-        assert identity["role"] == "student"
+        assert identity["roles"] == ["student"]
         assert (await student.get(f"{BASE}/me/teachers")).json()["items"][0]["teacher_id"] == item[
             "teacher_id"
         ]
@@ -167,7 +171,7 @@ async def test_student_registration_profile_archive_and_delete_keep_accounts(
         ).status_code == 200
         assert (
             await student.delete(
-                f"{BASE}/students/cards/{item['id']}/connection", headers=student_headers
+                f"{BASE}/me/teachers/{item['id']}/connection", headers=student_headers
             )
         ).status_code == 204
         assert (
@@ -221,7 +225,9 @@ async def test_one_invitation_registers_at_most_one_account_under_concurrency(
     async with AsyncSession(database) as db:
         assert (
             await db.scalar(
-                select(func.count()).select_from(Account).where(Account.role == "student")
+                select(func.count())
+                .select_from(Account)
+                .where(Account.role_assignments.any(AccountRole.role == "student"))
             )
             == 1
         )
@@ -231,7 +237,7 @@ async def test_one_invitation_registers_at_most_one_account_under_concurrency(
                 select(func.count())
                 .select_from(LoginSession)
                 .join(Account, LoginSession.account_id == Account.id)
-                .where(Account.role == "student")
+                .where(Account.role_assignments.any(AccountRole.role == "student"))
             )
             == 1
         )
@@ -344,7 +350,9 @@ async def test_existing_student_joins_teachers_and_concurrent_cards_do_not_dupli
         async with AsyncSession(database) as db:
             assert (
                 await db.scalar(
-                    select(func.count()).select_from(Account).where(Account.role == "student")
+                    select(func.count())
+                    .select_from(Account)
+                    .where(Account.role_assignments.any(AccountRole.role == "student"))
                 )
                 == 1
             )
@@ -353,7 +361,7 @@ async def test_existing_student_joins_teachers_and_concurrent_cards_do_not_dupli
 
 @pytest.mark.br_008
 @pytest.mark.br_012
-async def test_student_challenge_cannot_create_teacher_or_change_existing_role(
+async def test_student_challenge_cannot_create_teacher_or_allow_self_connection(
     client, inbox, services, database
 ):
     headers = await teacher(client, inbox, "teacher@example.com")
@@ -363,8 +371,9 @@ async def test_student_challenge_cannot_create_teacher_or_change_existing_role(
         f"{BASE}/student-invitations/accept", json={"token": token}, headers=headers
     )
 
-    assert rejected.status_code == 403
-    assert (await client.get(f"{BASE}/me")).json()["role"] == "teacher"
+    assert rejected.status_code == 409
+    assert rejected.json()["code"] == "self_connection_forbidden"
+    assert (await client.get(f"{BASE}/me")).json()["roles"] == ["teacher"]
 
     async with client_for(services) as student:
         challenge = await student_start(student, token, "student@example.com")
@@ -392,12 +401,14 @@ async def test_student_challenge_cannot_create_teacher_or_change_existing_role(
         actual = await student_finish(student, token, challenge, code)
 
         assert actual.status_code == 201, actual.text
-        assert (await student.get(f"{BASE}/me")).json()["role"] == "student"
+        assert (await student.get(f"{BASE}/me")).json()["roles"] == ["student"]
 
     async with AsyncSession(database) as db:
         assert (
             await db.scalar(
-                select(func.count()).select_from(Account).where(Account.role == "teacher")
+                select(func.count())
+                .select_from(Account)
+                .where(Account.role_assignments.any(AccountRole.role == "teacher"))
             )
             == 1
         )
@@ -491,7 +502,9 @@ async def test_failure_at_final_invitation_claim_rolls_back_account_and_session(
 
         assert (
             await repository.db.scalar(
-                select(func.count()).select_from(Account).where(Account.role == "student")
+                select(func.count())
+                .select_from(Account)
+                .where(Account.role_assignments.any(AccountRole.role == "student"))
             )
             == 1
         )
@@ -500,7 +513,7 @@ async def test_failure_at_final_invitation_claim_rolls_back_account_and_session(
                 select(func.count())
                 .select_from(LoginSession)
                 .join(Account, Account.id == LoginSession.account_id)
-                .where(Account.role == "student")
+                .where(Account.role_assignments.any(AccountRole.role == "student"))
             )
             == 1
         )
@@ -520,7 +533,14 @@ async def test_failure_at_final_invitation_claim_rolls_back_account_and_session(
     assert reached
 
     async with AsyncSession(database) as db:
-        assert await db.scalar(select(Account.id).where(Account.role == "student")) is None
+        assert (
+            await db.scalar(
+                select(Account.id).where(
+                    Account.role_assignments.any(AccountRole.role == "student")
+                )
+            )
+            is None
+        )
         assert await db.scalar(select(Connection.card_id)) is None
         assert await db.scalar(select(func.count()).select_from(LoginSession)) == 1
 
@@ -624,7 +644,7 @@ async def test_student_login_reuses_account_and_scoped_code_cannot_move_to_anoth
 
         assert result.status_code == 200, result.text
         assert result.json()["account"]["id"] == account_id
-        assert result.json()["account"]["role"] == "student"
+        assert result.json()["account"]["roles"] == ["student"]
         assert len((await student.get(f"{BASE}/me/teachers")).json()["items"]) == 1
         assert (await student.get(f"{BASE}/me/calendar-blocks")).status_code == 403
 

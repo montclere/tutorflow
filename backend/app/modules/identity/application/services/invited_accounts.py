@@ -18,6 +18,14 @@ class InvitedAccountService:
     async def lock_profile(self, account_id: UUID, role: Role) -> PublicProfile | None:
         return await self.repository.find_public_profile_for_update(account_id, role)
 
+    async def activate_role(self, account_id: UUID, role: Role) -> PublicProfile | None:
+        profile = await self.repository.find_public_profile_for_update(account_id)
+
+        if profile is not None:
+            await self.repository.add_role(account_id, role, self.registration.clock())
+
+        return profile
+
     async def profile(self, account_id: UUID) -> PublicProfile | None:
         return await self.repository.find_public_profile(account_id)
 
@@ -37,7 +45,9 @@ class InvitedAccountService:
             raise IdentityError("challenge_invalid")
 
         now = self.registration.clock()
-        account = Account(uuid4(), challenge.contact, proof.role, proof.password_hash, now)
+        account = Account(
+            uuid4(), challenge.contact, frozenset({proof.role}), proof.password_hash, now
+        )
 
         if not await self.repository.add_account(account):
             raise IdentityError("challenge_invalid")

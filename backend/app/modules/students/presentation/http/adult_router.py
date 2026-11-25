@@ -6,7 +6,7 @@ from uuid import UUID
 
 from fastapi import APIRouter, BackgroundTasks, Depends, Request, Response
 
-from app.modules.identity.public import Actor, InvitedSession
+from app.modules.identity.public import Actor, InvitedSession, Principal
 from app.modules.students.application.contracts import DEFAULT_PAGE_SIZE
 from app.modules.students.application.services.collection import AdultServices
 from app.modules.students.presentation.http.schemas import (
@@ -27,13 +27,14 @@ from app.modules.students.presentation.http.schemas import (
     Token,
     Welcome,
 )
-from app.shared.presentation.http import request_ip, require_json
+from app.shared.presentation.http import RequestAccess, request_ip, require_json
 
 
 def adult_access_router(
     get_services: Callable[[Request], Awaitable[AdultServices]],
-    read_actor: Callable[[Request], Awaitable[Actor]],
-    write_actor: Callable[[Request], Awaitable[Actor]],
+    teacher: RequestAccess[Actor],
+    adult: RequestAccess[Actor],
+    principal: RequestAccess[Principal],
     previous_session: Callable[[Request], Awaitable[str | None]],
     set_session: Callable[[Request, Response, InvitedSession], Awaitable[None]],
 ) -> APIRouter:
@@ -45,7 +46,7 @@ def adult_access_router(
         card_id: UUID,
         command: Welcome,
         request: Request,
-        actor: Annotated[Actor, Depends(write_actor)],
+        actor: Annotated[Actor, Depends(teacher.write)],
         services: Annotated[AdultServices, Depends(get_services)],
     ) -> InvitationView:
         require_json(request)
@@ -60,7 +61,7 @@ def adult_access_router(
     @router.get("/students/cards/{card_id}/adult-invitations")
     async def invitations(
         card_id: UUID,
-        actor: Annotated[Actor, Depends(read_actor)],
+        actor: Annotated[Actor, Depends(teacher.read)],
         services: Annotated[AdultServices, Depends(get_services)],
     ) -> list[InvitationSummary]:
         return [
@@ -73,7 +74,7 @@ def adult_access_router(
     async def revoke(
         card_id: UUID,
         invitation_id: UUID,
-        actor: Annotated[Actor, Depends(write_actor)],
+        actor: Annotated[Actor, Depends(teacher.write)],
         services: Annotated[AdultServices, Depends(get_services)],
     ) -> None:
         await services.invitations.revoke(actor, card_id, invitation_id)
@@ -85,7 +86,7 @@ def adult_access_router(
     async def reissue(
         card_id: UUID,
         invitation_id: UUID,
-        actor: Annotated[Actor, Depends(write_actor)],
+        actor: Annotated[Actor, Depends(teacher.write)],
         services: Annotated[AdultServices, Depends(get_services)],
     ) -> InvitationView:
         invitation = await services.invitations.reissue(actor, card_id, invitation_id)
@@ -98,7 +99,7 @@ def adult_access_router(
     @router.get("/students/cards/{card_id}/adults")
     async def adults(
         card_id: UUID,
-        actor: Annotated[Actor, Depends(read_actor)],
+        actor: Annotated[Actor, Depends(teacher.read)],
         services: Annotated[AdultServices, Depends(get_services)],
     ) -> list[PublicProfileView]:
         return [
@@ -111,7 +112,7 @@ def adult_access_router(
     async def remove_adult(
         card_id: UUID,
         account_id: UUID,
-        actor: Annotated[Actor, Depends(write_actor)],
+        actor: Annotated[Actor, Depends(teacher.write)],
         services: Annotated[AdultServices, Depends(get_services)],
     ) -> None:
         await services.connections.disconnect_owned(actor, card_id, account_id)
@@ -134,7 +135,7 @@ def adult_access_router(
     async def accept(
         command: Token,
         request: Request,
-        actor: Annotated[Actor, Depends(write_actor)],
+        actor: Annotated[Principal, Depends(principal.write)],
         services: Annotated[AdultServices, Depends(get_services)],
     ) -> ConnectionView:
         require_json(request)
@@ -192,7 +193,7 @@ def adult_access_router(
 
     @router.get("/me/students")
     async def students(
-        actor: Annotated[Actor, Depends(read_actor)],
+        actor: Annotated[Actor, Depends(adult.read)],
         services: Annotated[AdultServices, Depends(get_services)],
         limit: PageSize = DEFAULT_PAGE_SIZE,
         after_id: UUID | None = None,
@@ -208,7 +209,7 @@ def adult_access_router(
     @router.get("/me/students/{card_id}/profiles")
     async def profiles(
         card_id: UUID,
-        actor: Annotated[Actor, Depends(read_actor)],
+        actor: Annotated[Actor, Depends(adult.read)],
         services: Annotated[AdultServices, Depends(get_services)],
         limit: PageSize = DEFAULT_PAGE_SIZE,
         after_id: UUID | None = None,
@@ -229,7 +230,7 @@ def adult_access_router(
     @router.delete("/me/students/{card_id}/connection", status_code=204)
     async def disconnect(
         card_id: UUID,
-        actor: Annotated[Actor, Depends(write_actor)],
+        actor: Annotated[Actor, Depends(adult.write)],
         services: Annotated[AdultServices, Depends(get_services)],
     ) -> None:
         await services.connections.disconnect(actor, card_id)

@@ -107,7 +107,7 @@
         "tests/test_students_api.py::test_student_registration_profile_archive_and_delete_keep_accounts",
         "tests/test_students_api.py::test_one_invitation_registers_at_most_one_account_under_concurrency",
         "tests/test_students_api.py::test_invitation_invalidated_during_hashing_creates_no_account",
-        "tests/test_students_api.py::test_student_challenge_cannot_create_teacher_or_change_existing_role",
+        "tests/test_students_api.py::test_student_challenge_cannot_create_teacher_or_allow_self_connection",
         "tests/test_students_api.py::test_disconnect_then_new_account_uses_same_card_and_old_account_remains",
         "tests/test_students_api.py::test_failure_at_final_invitation_claim_rolls_back_account_and_session",
         "tests/test_students_api.py::test_code_expiring_after_account_insert_rolls_back_registration",
@@ -161,7 +161,7 @@
         "tests/test_students_api.py::test_one_invitation_registers_at_most_one_account_under_concurrency",
         "tests/test_students_api.py::test_invitation_invalidated_during_hashing_creates_no_account",
         "tests/test_students_api.py::test_existing_student_joins_teachers_and_concurrent_cards_do_not_duplicate",
-        "tests/test_students_api.py::test_student_challenge_cannot_create_teacher_or_change_existing_role",
+        "tests/test_students_api.py::test_student_challenge_cannot_create_teacher_or_allow_self_connection",
         "tests/test_students_api.py::test_reissue_archive_restore_and_csrf_keep_revoked_tokens_invalid",
         "tests/test_students_api.py::test_failure_at_final_invitation_claim_rolls_back_account_and_session",
         "tests/test_students_domain.py::test_invitation_rechecks_expiry_and_consumption",
@@ -249,6 +249,26 @@
     "BR-085": {
       "pytest": [
         "tests/test_adult_access_api.py::test_disconnect_archive_and_delete_preserve_independent_accounts_and_child"
+      ]
+    },
+    "BR-087": {
+      "pytest": [
+        "tests/test_account_roles_api.py::test_one_identity_has_independent_teacher_student_and_adult_contexts",
+        "tests/test_account_roles_api.py::test_teacher_activation_is_explicit_csrf_protected_and_idempotent"
+      ]
+    },
+    "BR-088": {
+      "pytest": [
+        "tests/test_account_roles_api.py::test_teacher_can_parent_own_child_but_cannot_be_own_student",
+        "tests/test_account_roles_api.py::test_student_and_parent_of_same_card_are_exclusive_in_both_orders",
+        "tests/test_account_roles_api.py::test_racing_student_and_parent_acceptance_creates_only_one_relation"
+      ]
+    },
+    "BR-089": {
+      "pytest": [
+        "tests/test_account_roles_api.py::test_one_identity_has_independent_teacher_student_and_adult_contexts",
+        "tests/test_account_roles_api.py::test_teacher_activation_is_explicit_csrf_protected_and_idempotent",
+        "tests/test_account_roles_api.py::test_final_invitation_failure_rolls_back_new_role_and_preserves_account"
       ]
     }
   }

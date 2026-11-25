@@ -7,13 +7,14 @@ import pytest
 from sqlalchemy import insert, select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
+from tests.identity_testkit import seed_account
 from tests.postgres_testkit import check_schema, migrate, migrated_schema
 
-from app.modules.identity.infrastructure.persistence.models import Account, Registration
+from app.modules.identity.infrastructure.persistence.models import Registration
 from app.modules.students.infrastructure.persistence.adult_models import (
-    AdultConnection,
     AdultInvitation,
 )
+from app.modules.students.infrastructure.persistence.models import Connection as AdultConnection
 from app.modules.students.infrastructure.persistence.models import StudentCard
 
 
@@ -29,15 +30,14 @@ async def test_database_rejects_third_slot_duplicate_account_and_wrong_card_owne
 
     async with AsyncSession(database) as db, db.begin():
         for account_id in [owner, other_owner, *adults]:
-            await db.execute(
-                insert(Account).values(
-                    id=account_id,
-                    role="teacher" if account_id in [owner, other_owner] else "adult",
-                    contact_kind="email",
-                    contact=f"{account_id}@example.com",
-                    password_hash="hash",
-                    verified_at=now,
-                )
+            await seed_account(
+                db,
+                account_id=account_id,
+                role="teacher" if account_id in [owner, other_owner] else "adult",
+                contact_kind="email",
+                contact=f"{account_id}@example.com",
+                password_hash="hash",
+                verified_at=now,
             )
 
         for card_id in (card, second_card):
@@ -45,14 +45,14 @@ async def test_database_rejects_third_slot_duplicate_account_and_wrong_card_owne
 
         await db.execute(
             insert(AdultConnection).values(
-                card_id=second_card, teacher_id=owner, account_id=adults[0], slot=1
+                role="adult", card_id=second_card, teacher_id=owner, account_id=adults[0], slot=1
             )
         )
 
         for slot, account_id in enumerate(adults[:2], 1):
             await db.execute(
                 insert(AdultConnection).values(
-                    card_id=card, teacher_id=owner, account_id=account_id, slot=slot
+                    role="adult", card_id=card, teacher_id=owner, account_id=account_id, slot=slot
                 )
             )
 
@@ -66,7 +66,11 @@ async def test_database_rejects_third_slot_duplicate_account_and_wrong_card_owne
             async with AsyncSession(database) as db, db.begin():
                 await db.execute(
                     insert(AdultConnection).values(
-                        card_id=target_card, teacher_id=teacher_id, account_id=account_id, slot=slot
+                        role="adult",
+                        card_id=target_card,
+                        teacher_id=teacher_id,
+                        account_id=account_id,
+                        slot=slot,
                     )
                 )
 

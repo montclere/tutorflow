@@ -7,14 +7,16 @@ from app.composition import Services, services_from_environment
 from app.modules.identity.application.services.authentication import AuthenticationService
 from app.modules.identity.application.services.profiles import ProfileService
 from app.modules.identity.application.services.registration import RegistrationService
+from app.modules.identity.application.services.roles import RoleService
 from app.modules.identity.presentation.http.session import (
     LOCAL_SESSION_COOKIE,
     SECURE_SESSION_COOKIE,
     IdentityHttpSession,
 )
-from app.modules.identity.public import Actor, InvitedSession
+from app.modules.identity.public import Actor, InvitedSession, Principal, Role
 from app.modules.scheduling.application.calendar import Calendar
 from app.modules.students.application.services.collection import AdultServices, StudentServices
+from app.shared.presentation.http import RequestAccess
 
 
 async def resolve_services(request: Request) -> Services:
@@ -62,12 +64,46 @@ async def calendar_service(request: Request) -> Calendar:
     return (await resolve_services(request)).calendar
 
 
-async def read_actor(request: Request) -> Actor:
-    return await (await authenticated_session(request)).actor(request)
+async def teacher_reader(request: Request) -> Actor:
+    return await (await authenticated_session(request)).actor(request, role=Role.TEACHER)
 
 
-async def write_actor(request: Request) -> Actor:
-    return await (await authenticated_session(request)).actor(request, csrf=True)
+async def teacher_writer(request: Request) -> Actor:
+    return await (await authenticated_session(request)).actor(request, role=Role.TEACHER, csrf=True)
+
+
+async def student_reader(request: Request) -> Actor:
+    return await (await authenticated_session(request)).actor(request, role=Role.STUDENT)
+
+
+async def student_writer(request: Request) -> Actor:
+    return await (await authenticated_session(request)).actor(request, role=Role.STUDENT, csrf=True)
+
+
+async def adult_reader(request: Request) -> Actor:
+    return await (await authenticated_session(request)).actor(request, role=Role.ADULT)
+
+
+async def adult_writer(request: Request) -> Actor:
+    return await (await authenticated_session(request)).actor(request, role=Role.ADULT, csrf=True)
+
+
+async def principal_reader(request: Request) -> Principal:
+    return await (await authenticated_session(request)).principal(request)
+
+
+async def principal_writer(request: Request) -> Principal:
+    return await (await authenticated_session(request)).principal(request, csrf=True)
+
+
+teacher_access = RequestAccess(teacher_reader, teacher_writer)
+student_access = RequestAccess(student_reader, student_writer)
+adult_access = RequestAccess(adult_reader, adult_writer)
+principal_access = RequestAccess(principal_reader, principal_writer)
+
+
+async def role_service(request: Request) -> RoleService:
+    return (await resolve_services(request)).identity.roles
 
 
 async def student_services(request: Request) -> StudentServices:

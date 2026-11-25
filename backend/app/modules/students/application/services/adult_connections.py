@@ -2,7 +2,7 @@
 
 from uuid import UUID
 
-from app.modules.identity.public import Actor, PublicProfile, Role
+from app.modules.identity.public import Actor, Principal, PublicProfile, Role
 from app.modules.students.application.contracts import AdultLearningProfile, AdultStudent
 from app.modules.students.application.ports import StudentsTransaction, StudentsUnitOfWork
 from app.modules.students.application.services.access import (
@@ -30,8 +30,13 @@ class AdultConnectionService:
     async def connect(
         self, unit: StudentsTransaction, card: StudentCard, invitation: Invitation, account_id: UUID
     ) -> Connection:
-        if await unit.accounts.lock_profile(account_id, Role.ADULT) is None:
-            raise StudentError("adult_required")
+        student = await unit.students.find_connection(card.id)
+
+        if student is not None and student.account_id == account_id:
+            raise StudentError("self_connection_forbidden")
+
+        if await unit.accounts.activate_role(account_id, Role.ADULT) is None:
+            raise StudentError("authentication_required")
 
         invitation.require_for(card, self.invitations.clock())
         self.policy.require_connection_space(await unit.adults.count_connections(card.id))
@@ -48,9 +53,7 @@ class AdultConnectionService:
 
         return connection
 
-    async def accept(self, actor: Actor, token: str, ip: str) -> Connection:
-        require_adult(actor)
-
+    async def accept(self, actor: Principal, token: str, ip: str) -> Connection:
         await self.invitations.requests.access(ip)
 
         async with self.persistence.transaction() as unit:

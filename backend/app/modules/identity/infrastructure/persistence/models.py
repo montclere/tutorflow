@@ -4,7 +4,7 @@ from datetime import datetime
 from uuid import UUID
 
 from sqlalchemy import CheckConstraint, DateTime, ForeignKey, Integer, String, UniqueConstraint
-from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
+from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 
 from app.shared.infrastructure.database import metadata
 
@@ -13,11 +13,24 @@ class IdentityBase(DeclarativeBase):
     metadata = metadata
 
 
+class AccountRole(IdentityBase):
+    __tablename__ = "identity_account_roles"
+    __table_args__ = (
+        CheckConstraint(
+            "role IN ('teacher', 'student', 'adult')", name="ck_identity_account_role_value"
+        ),
+    )
+    account_id: Mapped[UUID] = mapped_column(
+        ForeignKey("identity_accounts.id", ondelete="CASCADE"), primary_key=True
+    )
+    role: Mapped[str] = mapped_column(String(10), primary_key=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+
+
 class Account(IdentityBase):
     __tablename__ = "identity_accounts"
     __table_args__ = (
         UniqueConstraint("contact_kind", "contact", name="uq_identity_account_contact"),
-        CheckConstraint("role IN ('teacher', 'student', 'adult')", name="ck_identity_account_role"),
         CheckConstraint(
             "contact_kind IN ('email', 'phone')", name="ck_identity_account_contact_kind"
         ),
@@ -28,7 +41,9 @@ class Account(IdentityBase):
     contact: Mapped[str] = mapped_column(String(254))
     verified_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
     password_hash: Mapped[str] = mapped_column(String(255))
-    role: Mapped[str] = mapped_column(String(10))
+    role_assignments: Mapped[list[AccountRole]] = relationship(
+        lazy="selectin", cascade="all, delete-orphan"
+    )
     display_name: Mapped[str | None] = mapped_column(String(120))
     timezone: Mapped[str | None] = mapped_column(String(80))
 

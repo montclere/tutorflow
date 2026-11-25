@@ -1,9 +1,18 @@
 """HTTP-проверки, общие для модулей приложения."""
 
+from collections.abc import Awaitable, Callable
+from dataclasses import dataclass
+
 from fastapi import HTTPException, Request
 from starlette.types import ASGIApp, Message, Receive, Scope, Send
 
 from app.shared.presentation.problems import problem_response, request_id
+
+
+@dataclass(frozen=True)
+class RequestAccess[T]:
+    read: Callable[[Request], Awaitable[T]]
+    write: Callable[[Request], Awaitable[T]]
 
 
 def request_ip(request: Request) -> str:

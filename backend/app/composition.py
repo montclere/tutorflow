@@ -13,6 +13,7 @@ from app.modules.identity.application.services.authentication import Authenticat
 from app.modules.identity.application.services.profiles import ProfileService
 from app.modules.identity.application.services.rate_limits import RateLimitService
 from app.modules.identity.application.services.registration import RegistrationService
+from app.modules.identity.application.services.roles import RoleService
 from app.modules.identity.application.services.sessions import SessionService
 from app.modules.identity.domain.policies import IdentityPolicy
 from app.modules.identity.infrastructure.delivery.sender import (
@@ -52,6 +53,7 @@ class IdentityServices:
     authentication: AuthenticationService
     sessions: SessionService
     profiles: ProfileService
+    roles: RoleService
 
 
 @dataclass(frozen=True)
@@ -157,7 +159,13 @@ async def build_services(
     )
 
     return Services(
-        IdentityServices(registration, authentication, sessions, ProfileService(persistence)),
+        IdentityServices(
+            registration,
+            authentication,
+            sessions,
+            ProfileService(persistence),
+            RoleService(persistence, now_utc),
+        ),
         Calendar(PostgresCalendarRepository(engine)),
         secure_cookie,
         engine,

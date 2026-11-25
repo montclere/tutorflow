@@ -14,6 +14,8 @@ from starlette.responses import JSONResponse
 
 MAX_VALIDATION_ERRORS = 20
 DESCRIPTIONS = {
+    "role_not_enabled": "Этот кабинет ещё не подключён к аккаунту.",
+    "self_connection_forbidden": "Нельзя быть собственным учеником или взрослым самого себя.",
     "adult_required": "Операция доступна приглашённому взрослому.",
     "adult_limit_reached": "Нет свободных мест для взрослых.",
     "adult_already_connected": "Аккаунт уже подключён к этой карточке.",

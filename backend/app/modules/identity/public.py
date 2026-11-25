@@ -19,6 +19,12 @@ from app.modules.identity.domain.values import Role as Role
 
 
 @dataclass(frozen=True)
+class Principal:
+    account_id: UUID
+    timezone: str | None
+
+
+@dataclass(frozen=True)
 class Actor:
     account_id: UUID
     role: Role
@@ -53,6 +59,8 @@ class InvitedSession:
 
 class InvitedAccounts(Protocol):
     async def lock_profile(self, account_id: UUID, role: Role) -> PublicProfile | None: ...
+
+    async def activate_role(self, account_id: UUID, role: Role) -> PublicProfile | None: ...
 
     async def profile(self, account_id: UUID) -> PublicProfile | None: ...
 

@@ -158,7 +158,9 @@ class RegistrationService:
 
             if challenge is not None:
                 now = self.clock()
-                account = Account(uuid4(), challenge.contact, Role.TEACHER, password_hash, now)
+                account = Account(
+                    uuid4(), challenge.contact, frozenset({Role.TEACHER}), password_hash, now
+                )
                 created = await repository.add_account(account)
 
                 await repository.remove_registration(challenge_id)
