@@ -23,7 +23,8 @@ from app.modules.identity.domain.policies import (
     validate_password,
     validate_registration_code,
 )
-from app.modules.identity.domain.values import Role
+from app.modules.identity.domain.values import ContactKind, Role
+from app.modules.identity.public import StudentRegistrationProof
 
 
 class RegistrationService:
@@ -51,6 +52,17 @@ class RegistrationService:
         self.contacts = contacts
 
     async def start(self, contact: ContactInput, ip: str) -> UUID:
+        return await self._start(contact, ip, None)
+
+    async def start_student(self, kind: str, contact: str, invitation_id: UUID, ip: str) -> UUID:
+        try:
+            value = ContactInput(ContactKind(kind), contact)
+        except ValueError:
+            raise IdentityError("invalid_contact") from None
+
+        return await self._start(value, ip, invitation_id)
+
+    async def _start(self, contact: ContactInput, ip: str, invitation_id: UUID | None) -> UUID:
         normalized = self.contacts.normalize(contact)
         now = self.clock()
 
@@ -74,11 +86,23 @@ class RegistrationService:
                 now,
                 now + self.policy.code_lifetime,
                 self.policy.code_attempts,
+                Role.STUDENT if invitation_id is not None else Role.TEACHER,
+                invitation_id,
             )
 
-            return await repository.save_registration(
+            stored_id = await repository.save_registration(
                 registration, now - self.policy.code_cooldown, delivery_enabled=may_register
             )
+
+            if invitation_id is not None or stored_id != challenge_id:
+                stored = await repository.find_registration_for_update(stored_id)
+
+                if stored is None or (
+                    stored.role != registration.role or stored.invitation_id != invitation_id
+                ):
+                    raise IdentityError("identity_busy")
+
+            return stored_id
 
     async def deliver_pending(self, challenge_id: UUID | None = None) -> bool:
         async with self.persistence.transaction() as repository:
@@ -115,7 +139,7 @@ class RegistrationService:
         await self.rate_limits.check("confirm-ip", ip, self.policy.confirmation_ip, now)
 
         async with self.persistence.transaction() as repository:
-            challenge = await self._verify_code(repository, challenge_id, code)
+            challenge = await self.verify_code(repository, challenge_id, code)
 
         if challenge is None:
             raise IdentityError("challenge_invalid")
@@ -123,7 +147,7 @@ class RegistrationService:
         password_hash = await self.passwords.hash(password)
 
         async with self.persistence.transaction() as repository:
-            challenge = await self._verify_code(repository, challenge_id, code)
+            challenge = await self.verify_code(repository, challenge_id, code)
 
             if challenge is not None:
                 now = self.clock()
@@ -133,16 +157,30 @@ class RegistrationService:
                 await repository.remove_registration(challenge_id)
 
                 if created:
-                    return await self.sessions.create(repository, account, previous_token, now)
+                    if not challenge.is_active(self.clock()):
+                        raise IdentityError("challenge_invalid")
+
+                    return await self.sessions.create(
+                        repository, account, previous_token, self.clock()
+                    )
 
         raise IdentityError("challenge_invalid")
 
-    async def _verify_code(
-        self, repository: IdentityRepository, challenge_id: UUID, code: str
+    async def verify_code(
+        self,
+        repository: IdentityRepository,
+        challenge_id: UUID,
+        code: str,
+        invitation_id: UUID | None = None,
     ) -> Registration | None:
         challenge = await repository.find_registration_for_update(challenge_id)
 
         if challenge is None or not challenge.is_active(self.clock()):
+            return None
+
+        expected_role = Role.STUDENT if invitation_id is not None else Role.TEACHER
+
+        if challenge.role is not expected_role or challenge.invitation_id != invitation_id:
             return None
 
         if challenge.matches(self.security.registration_digest(challenge_id, code)):
@@ -151,3 +189,21 @@ class RegistrationService:
         await repository.save_attempts(challenge.reject_code())
 
         return None
+
+    async def prepare_student(
+        self, challenge_id: UUID, code: str, password: str, invitation_id: UUID, ip: str
+    ) -> StudentRegistrationProof:
+        validate_password(password, registering=True)
+        validate_registration_code(code)
+
+        await self.rate_limits.check("confirm-ip", ip, self.policy.confirmation_ip, self.clock())
+
+        async with self.persistence.transaction() as repository:
+            challenge = await self.verify_code(repository, challenge_id, code, invitation_id)
+
+        if challenge is None:
+            raise IdentityError("challenge_invalid")
+
+        digest = await self.passwords.hash(password)
+
+        return StudentRegistrationProof(challenge_id, invitation_id, code, digest)

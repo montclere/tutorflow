@@ -33,6 +33,14 @@ class PostgresIdentityRepository:
     def __init__(self, db: DatabaseSession):
         self.db = db
 
+    async def find_account(self, account_id: UUID) -> Account | None:
+        return to_account(await self.db.get(AccountRow, account_id))
+
+    async def list_accounts(self, account_ids: list[UUID]) -> list[Account]:
+        rows = await self.db.scalars(select(AccountRow).where(AccountRow.id.in_(account_ids)))
+
+        return [account for row in rows if (account := to_account(row)) is not None]
+
     async def find_account_for_update(self, account_id: UUID) -> Account | None:
         row = await self.db.scalar(
             select(AccountRow).where(AccountRow.id == account_id).with_for_update()
@@ -80,6 +88,8 @@ class PostgresIdentityRepository:
     ) -> UUID:
         values = {
             "id": registration.id,
+            "role": registration.role,
+            "invitation_id": registration.invitation_id,
             "code_digest": registration.code_digest,
             "sent_at": registration.sent_at,
             "expires_at": registration.expires_at,
@@ -162,6 +172,8 @@ class PostgresIdentityRepository:
             row.sent_at,
             row.expires_at,
             row.remaining_attempts,
+            Role(row.role),
+            row.invitation_id,
         )
 
     async def save_attempts(self, registration: Registration) -> None:

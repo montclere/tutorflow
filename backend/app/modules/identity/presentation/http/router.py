@@ -55,7 +55,7 @@ def identity_router(
     get_authentication: Callable[[Request], Awaitable[AuthenticationService]],
     get_profile: Callable[[Request], Awaitable[ProfileService]],
 ) -> APIRouter:
-    router = APIRouter(tags=["Аккаунт преподавателя"])
+    router = APIRouter(tags=["Аккаунт"])
 
 
     @router.post("/auth/registrations", status_code=202)
