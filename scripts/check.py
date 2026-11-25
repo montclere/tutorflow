@@ -316,8 +316,8 @@ def validate_pull_request(pull, issue, repository):
         raise ValueError("Рабочий PR должен быть направлен в dev")
 
     if dependabot_pr(pull, repository):
-        if not pull.get("title", "").startswith("Bump ") or not pull.get("body", "").strip():
-            raise ValueError("Dependabot: ожидается стандартное описание обновления")
+        if not pull.get("title", "").strip() or not pull.get("body", "").strip():
+            raise ValueError("Dependabot: заполните заголовок и описание обновления")
 
         return True
 

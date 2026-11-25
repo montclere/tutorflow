@@ -76,7 +76,19 @@ class GitHubContractTest(unittest.TestCase):
             "head": {"ref": "dependabot/uv/backend/all", "repo": {"full_name": self.repository}},
         }
 
-        self.assertTrue(check.validate_pull_request(bot, {}, self.repository))
+        for title in (
+            "Bump dependencies",
+            "build(deps): bump the python group in /backend with 2 updates",
+            "build(deps-dev): bump @types/node from 24.19.2 to 26.6.6",
+        ):
+            with self.subTest(title=title):
+                self.assertTrue(
+                    check.validate_pull_request(bot | {"title": title}, {}, self.repository)
+                )
+
+        for pull in (bot | {"title": " "}, bot | {"body": " "}):
+            with self.subTest(pull=pull), self.assertRaisesRegex(ValueError, "Dependabot"):
+                check.validate_pull_request(pull, {}, self.repository)
 
         for pull in (
             bot | {"user": bot["user"] | {"id": 123}},
