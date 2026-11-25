@@ -1,5 +1,5 @@
 version = 1
-revision = 3
+revision = 5
 requires-python = "==3.12.*"
 
 [[package]]
@@ -607,10 +607,10 @@ requires-dist = [
     { name = "fastapi" },
     { name = "httpx", specifier = ">=0.28,<1" },
     { name = "prometheus-client", specifier = ">=0.24,<1" },
-    { name = "psycopg", extras = ["binary"], specifier = ">=3.2,<4" },
+    { name = "psycopg", extras = ["binary"], specifier = ">=3.3.9,<4" },
     { name = "pydantic", specifier = ">=2,<3" },
     { name = "pydantic-settings", specifier = ">=2.12,<3" },
-    { name = "sqlalchemy", extras = ["asyncio"], specifier = ">=2,<3" },
+    { name = "sqlalchemy", extras = ["asyncio"], specifier = ">=2.1.9,<3" },
     { name = "structlog", specifier = ">=26.1,<27" },
     { name = "uvicorn" },
 ]
