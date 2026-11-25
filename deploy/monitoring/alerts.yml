@@ -1,0 +1,52 @@
+groups:
+  - name: tutorflow
+    rules:
+      - alert: TutorFlowApiUnavailable
+        expr: up{job="tutorflow"} == 0
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: API TutorFlow недоступен для Prometheus
+      - alert: TutorFlowDatabaseUnavailable
+        expr: tutorflow_metrics_database_available{job="tutorflow"} == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: API отвечает, но сбор данных из PostgreSQL завершается ошибкой
+      - alert: TutorFlowHttpErrors
+        expr: sum(rate(tutorflow_http_requests_total{job="tutorflow",status=~"5.."}[5m])) / clamp_min(sum(rate(tutorflow_http_requests_total{job="tutorflow"}[5m])), 0.001) > 0.05
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: Более пяти процентов HTTP-запросов завершаются серверной ошибкой
+      - alert: TutorFlowBackgroundRequestFailures
+        expr: sum(increase(tutorflow_http_failures_total{job="tutorflow",phase="after_response"}[5m])) > 0
+        for: 1m
+        labels:
+          severity: warning
+        annotations:
+          summary: Фоновая часть HTTP-запроса завершилась необработанной ошибкой
+      - alert: TutorFlowDeliveryDelayed
+        expr: tutorflow_delivery_oldest_pending_age_seconds{job="tutorflow"} > 120
+        for: 1m
+        labels:
+          severity: warning
+        annotations:
+          summary: Код подтверждения ожидает отправки более двух минут
+      - alert: TutorFlowDeliveryExhausted
+        expr: tutorflow_delivery_exhausted{job="tutorflow"} > 0
+        for: 1m
+        labels:
+          severity: warning
+        annotations:
+          summary: Есть коды с исчерпанными попытками отправки
+      - alert: TutorFlowMaintenanceStale
+        expr: (time() - tutorflow_maintenance_last_success_unixtime{job="tutorflow"} > 180) or absent(tutorflow_maintenance_last_success_unixtime{job="tutorflow"})
+        for: 3m
+        labels:
+          severity: critical
+        annotations:
+          summary: У обслуживания отсутствует недавний успешный запуск

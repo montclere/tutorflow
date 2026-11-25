@@ -12,7 +12,8 @@
     "typecheck": "tsc --noEmit",
     "test:run": "vitest run",
     "build": "vite build",
-    "preview": "vite preview --host 127.0.0.1 --strictPort"
+    "preview": "vite preview --host 127.0.0.1 --strictPort",
+    "format:files": "prettier"
   },
   "dependencies": {
     "react": "19.3.1",
@@ -29,6 +30,7 @@
     "@vitejs/plugin-react": "6.3.0",
     "eslint": "10.15.0",
     "jsdom": "31.0.1",
+    "prettier": "3.10.1",
     "tailwindcss": "4.3.5",
     "typescript": "6.0.3",
     "typescript-eslint": "8.74.0",

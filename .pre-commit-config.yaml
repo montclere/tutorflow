@@ -14,4 +14,9 @@ repos:
         entry: python3 scripts/check.py spec
         language: system
         pass_filenames: false
-        files: ^(docs/(business-rules|use-cases)\.md|scripts/check(-spec)?\.py)$
+        files: ^(docs/(modules/[^/]+/business-rules|use-cases/[^/]+|templates/[^/]+)\.md|scripts/(check(-spec)?|specification)\.py)$
+      - id: tutorflow-commit-message
+        name: Формат сообщения коммита
+        entry: python3 scripts/check.py commit-message
+        language: system
+        stages: [commit-msg]

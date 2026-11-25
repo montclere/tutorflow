@@ -1,0 +1,26 @@
+name: Пользовательский сценарий
+description: Родительская задача для бизнес-правил одного UC
+title: "[UC-XXX] "
+body:
+  - type: textarea
+    id: outcome
+    attributes:
+      label: Результат
+      description: Что пользователь сможет сделать в конце сценария?
+    validations:
+      required: true
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Критерии приёмки
+      description: Начальное состояние, действие пользователя и наблюдаемый результат.
+    validations:
+      required: true
+  - type: textarea
+    id: scope
+    attributes:
+      label: Границы
+      description: Какие разделы сценария остаются за пределами этой работы?
+  - type: markdown
+    attributes:
+      value: Задачи бизнес-правил добавляй через Sub-issues.
