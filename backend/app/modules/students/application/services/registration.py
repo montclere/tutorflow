@@ -26,7 +26,7 @@ class StudentRegistrationService:
         await self.invitations.requests.access(ip)
 
         async with self.persistence.transaction() as unit:
-            card, invitation = await self.invitations.get_active(unit, token)
+            _, invitation = await self.invitations.get_active(unit, token)
 
         return await self.identity.start_student(kind, contact, invitation.id, ip)
 
@@ -42,7 +42,7 @@ class StudentRegistrationService:
         await self.invitations.requests.access(ip)
 
         async with self.persistence.transaction() as unit:
-            card, invitation = await self.invitations.get_active(unit, token)
+            _, invitation = await self.invitations.get_active(unit, token)
 
         proof = await self.identity.prepare_student(challenge_id, code, password, invitation.id, ip)
 
@@ -57,3 +57,6 @@ class StudentRegistrationService:
             await self.connections.connect(unit, card, current, session.account_id)
 
             return session
+
+    async def deliver_pending(self, challenge_id: UUID) -> bool:
+        return await self.identity.deliver_pending(challenge_id)

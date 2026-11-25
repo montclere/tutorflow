@@ -69,7 +69,9 @@
     "BR-005": {
       "pytest": [
         "tests/test_students_api.py::test_card_profile_crud_is_owned_and_money_is_exact",
-        "tests/test_students_domain.py::test_card_requires_name_and_preserves_independent_ids"
+        "tests/test_students_domain.py::test_card_requires_name_and_preserves_independent_ids",
+        "tests/test_students_domain.py::test_direct_card_construction_enforces_invariants",
+        "tests/test_students_domain.py::test_card_updates_normalize_values_and_reject_clearing_name"
       ]
     },
     "BR-006": {
@@ -139,7 +141,8 @@
     },
     "BR-079": {
       "pytest": [
-        "tests/test_students_api.py::test_student_registration_profile_archive_and_delete_keep_accounts"
+        "tests/test_students_api.py::test_student_registration_profile_archive_and_delete_keep_accounts",
+        "tests/test_identity_invited.py::test_public_profile_queries_do_not_load_credentials"
       ]
     },
     "BR-080": {
@@ -164,7 +167,8 @@
         "tests/test_students_domain.py::test_invitation_rechecks_expiry_and_consumption",
         "tests/test_students_domain.py::test_tokens_are_random_scoped_and_settings_are_validated",
         "tests/test_students_api.py::test_student_login_reuses_account_and_scoped_code_cannot_move_to_another_invitation",
-        "tests/test_students_api.py::test_invitation_rate_limit_and_validation_do_not_disclose_tokens"
+        "tests/test_students_api.py::test_invitation_rate_limit_and_validation_do_not_disclose_tokens",
+        "tests/test_students_domain.py::test_invitation_belongs_to_one_active_card"
       ]
     }
   }

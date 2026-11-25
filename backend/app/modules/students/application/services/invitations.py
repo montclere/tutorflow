@@ -83,10 +83,10 @@ class InvitationService:
         card = await unit.students.find_card(invitation.card_id, lock=True)
         invitation = await unit.students.find_invitation(digest)
 
-        if card is None or card.archived or invitation is None:
+        if card is None or invitation is None:
             raise StudentError("invitation_invalid")
 
-        invitation.require_active(self.clock())
+        invitation.require_for(card, self.clock())
 
         if await unit.students.find_connection(card.id) is not None:
             raise StudentError("invitation_invalid")

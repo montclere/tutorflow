@@ -314,7 +314,7 @@ def students_router(
             client_ip(request),
         )
 
-        background.add_task(services.registration.identity.deliver_pending, challenge)
+        background.add_task(services.registration.deliver_pending, challenge)
 
         return ChallengeView(challenge_id=challenge)
 

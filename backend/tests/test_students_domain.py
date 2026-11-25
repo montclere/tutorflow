@@ -74,3 +74,34 @@ def test_tokens_are_random_scoped_and_settings_are_validated(monkeypatch):
 
     with pytest.raises(ValueError):
         StudentSettings()
+
+
+@pytest.mark.br_005
+@pytest.mark.parametrize("name,notes", [(" ", None), ("Имя", "bad\x00text")])
+def test_direct_card_construction_enforces_invariants(name, notes):
+    with pytest.raises(StudentError):
+        StudentCard(uuid4(), uuid4(), name, notes)
+
+
+@pytest.mark.br_005
+def test_card_updates_normalize_values_and_reject_clearing_name():
+    card = StudentCard(uuid4(), uuid4(), " Имя ", " Заметка ")
+
+    assert card.name == "Имя" and card.notes == "Заметка"
+    assert card.change({"notes": "  "}).notes is None
+
+    with pytest.raises(StudentError):
+        card.change({"name": None})
+
+
+@pytest.mark.br_012
+def test_invitation_belongs_to_one_active_card():
+    card = StudentCard.create(uuid4(), "Имя", None)
+    now = datetime(2026, 11, 26, tzinfo=UTC)
+    invitation = Invitation(uuid4(), card.id, "digest", now, now + timedelta(days=7), None, None)
+
+    invitation.require_for(card, now)
+
+    for changed in [replace(card, id=uuid4()), replace(card, archived=True)]:
+        with pytest.raises(StudentError):
+            invitation.require_for(changed, now)

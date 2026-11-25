@@ -30,7 +30,7 @@ class ConnectionService:
         if await unit.accounts.lock_student(account_id) is None:
             raise StudentError("student_required")
 
-        invitation.require_active(self.invitations.clock())
+        invitation.require_for(card, self.invitations.clock())
 
         if await unit.students.find_teacher_connection(card.teacher_id, account_id) is not None:
             raise StudentError("student_already_connected")

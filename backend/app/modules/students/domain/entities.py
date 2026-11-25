@@ -5,7 +5,7 @@ from datetime import datetime
 from uuid import UUID, uuid4
 
 from app.modules.students.domain.exceptions import StudentError
-from app.modules.students.domain.values import Money, card_name, optional_text
+from app.modules.students.domain.values import WELCOME_MAX_LENGTH, Money, card_name, optional_text
 
 
 @dataclass(frozen=True)
@@ -16,26 +16,19 @@ class StudentCard:
     notes: str | None
     archived: bool = False
 
+    def __post_init__(self) -> None:
+        object.__setattr__(self, "name", card_name(self.name))
+        object.__setattr__(self, "notes", optional_text(self.notes))
+
     @classmethod
     def create(cls, teacher_id: UUID, name: str, notes: str | None) -> "StudentCard":
-        return cls(uuid4(), teacher_id, card_name(name), optional_text(notes))
+        return cls(uuid4(), teacher_id, name, notes)
 
     def change(self, fields: dict[str, str | None]) -> "StudentCard":
         if not fields or fields.keys() - {"name", "notes"}:
             raise StudentError("invalid_student_data")
 
-        values = dict(fields)
-
-        if "name" in values:
-            if values["name"] is None:
-                raise StudentError("invalid_student_data")
-
-            values["name"] = card_name(values["name"])
-
-        if "notes" in values:
-            values["notes"] = optional_text(values["notes"])
-
-        return replace(self, **values)
+        return replace(self, **fields)
 
     def require_active(self) -> None:
         if self.archived:
@@ -71,6 +64,14 @@ class Invitation:
     def __post_init__(self) -> None:
         if self.expires_at <= self.created_at:
             raise StudentError("invitation_invalid")
+
+        object.__setattr__(self, "welcome", optional_text(self.welcome, WELCOME_MAX_LENGTH))
+
+    def require_for(self, card: StudentCard, now: datetime) -> None:
+        if self.card_id != card.id or card.archived:
+            raise StudentError("invitation_invalid")
+
+        self.require_active(now)
 
     def require_active(self, now: datetime) -> None:
         if self.consumed_at is not None or self.expires_at <= now:
