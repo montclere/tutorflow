@@ -1,9 +1,133 @@
 """Регрессии команд проверок проекта."""
 
 import unittest
+from contextlib import nullcontext
 from unittest.mock import patch
 
 import check
+
+
+class GitHubRequirementSnapshotTest(unittest.TestCase):
+    def setUp(self):
+        import base64
+
+
+        documents = {
+            "docs/use-cases/uc-999-new.md": "# UC-999 — Новый сценарий\n",
+            "docs/planned-business-rules.md": "- BR-999 [C] [students] UC-999: Новый результат.\n",
+            "scripts/specification.py": "raise RuntimeError('untrusted code')\n",
+        }
+        self.tree = {"truncated": False, "tree": []}
+        self.blobs = {}
+
+        for index, (path, content) in enumerate(documents.items()):
+            raw = content.encode()
+            sha = str(index) * 40
+
+            self.tree["tree"].append(
+                {"path": path, "type": "blob", "mode": "100644", "sha": sha, "size": len(raw)}
+            )
+
+            self.blobs[sha] = {"encoding": "base64", "content": base64.b64encode(raw).decode()}
+
+    def response(self, endpoint):
+        if "/git/commits/" in endpoint:
+            return {"tree": {"sha": "f" * 40}}
+
+        if "/git/trees/" in endpoint:
+            return self.tree
+
+        return self.blobs[endpoint.rsplit("/", 1)[1]]
+
+    def test_new_requirement_uses_head_data_without_loading_head_code(self):
+        body = "## Результат\n\nНовый результат.\n\n## Критерии приёмки\n\n- Проверено."
+        parent = {"title": "[UC-999] Новый сценарий", "body": body}
+        issue = {"title": "[BR-999] students — Новое правило", "body": body, "parent": parent}
+
+        with self.assertRaises(ValueError):
+            check.validate_issue(issue)
+
+        with (
+            patch.object(check, "github_json", side_effect=self.response),
+            check.github_requirements("owner/repo", "a" * 40) as root,
+        ):
+            self.assertTrue(check.validate_issue(issue, requirements_root=root))
+            self.assertFalse((root / "scripts").exists())
+
+            primary = parent | {"number": 50}
+            task = issue | {"number": 51, "parent": primary}
+            pull = {
+                "number": 60,
+                "title": "UC-999: Новый сценарий",
+                "commits": 1,
+                "head": {"ref": "add/uc-999", "sha": "a" * 40},
+                "base": {"ref": "dev"},
+                "body": "## Задача\n\n[Issue #50](https://github.com/owner/repo/issues/50)\n\n"
+                "## Результат\n\nНовый сценарий.\n\n- Новое правило.\n\n"
+                "## Проверки\n\n- [x] Проверено.",
+            }
+            commits = [{"commit": {"message": "add(backend): новый сценарий (Issue #51)"}}]
+
+            with (
+                patch.object(check, "github_json", side_effect=[pull, commits]),
+                patch.object(check, "github_issue", side_effect=[primary, task]),
+            ):
+                self.assertTrue(
+                    check.check_github_pr(
+                        "owner/repo", 60, expected_head="a" * 40, requirements_root=root
+                    )
+                )
+
+        self.assertFalse(root.exists())
+
+    def test_truncated_tree_is_rejected(self):
+        self.tree["truncated"] = True
+
+        with (
+            patch.object(check, "github_json", side_effect=self.response),
+            self.assertRaisesRegex(ValueError, "дерево"),
+            check.github_requirements("owner/repo", "a" * 40),
+        ):
+            self.fail("Truncated tree was accepted")
+
+    def test_symlink_is_not_followed(self):
+        self.tree["tree"][0]["mode"] = "120000"
+
+        with (
+            patch.object(check, "github_json", side_effect=self.response),
+            self.assertRaisesRegex(ValueError, "ссылк"),
+            check.github_requirements("owner/repo", "a" * 40),
+        ):
+            self.fail("Symlink was accepted")
+
+    def test_oversized_document_is_rejected(self):
+        self.tree["tree"][0]["size"] = check.GITHUB_REQUIREMENT_FILE_BYTE_LIMIT + 1
+
+        with (
+            patch.object(check, "github_json", side_effect=self.response),
+            self.assertRaisesRegex(ValueError, "размер"),
+            check.github_requirements("owner/repo", "a" * 40),
+        ):
+            self.fail("Oversized document was accepted")
+
+    def test_too_many_documents_are_rejected(self):
+        self.tree["tree"] = [self.tree["tree"][0]] * (check.GITHUB_REQUIREMENT_FILE_LIMIT + 1)
+
+        with (
+            patch.object(check, "github_json", side_effect=self.response),
+            self.assertRaisesRegex(ValueError, "количество"),
+            check.github_requirements("owner/repo", "a" * 40),
+        ):
+            self.fail("Too many documents were accepted")
+
+    def test_total_document_size_is_bounded(self):
+        with (
+            patch.object(check, "github_json", side_effect=self.response),
+            patch.object(check, "GITHUB_REQUIREMENT_BYTE_LIMIT", self.tree["tree"][0]["size"]),
+            self.assertRaisesRegex(ValueError, "общий размер"),
+            check.github_requirements("owner/repo", "a" * 40),
+        ):
+            self.fail("Oversized snapshot was accepted")
 
 
 class GitHubContractTest(unittest.TestCase):
@@ -128,6 +252,7 @@ class GitHubContractTest(unittest.TestCase):
             with (
                 patch.object(check, "github_json", side_effect=[[pull], changed]),
                 patch.object(check, "check_github_pr", return_value=True),
+                patch.object(check, "github_requirements", return_value=nullcontext(check.ROOT)),
                 patch.object(check, "publish_contract_status") as publish,
                 self.assertRaisesRegex(ValueError, "Head PR"),
             ):
@@ -151,11 +276,14 @@ class GitHubContractTest(unittest.TestCase):
             with (
                 patch.object(check, "github_json", side_effect=[pull, pull]),
                 patch.object(check, "check_github_pr", return_value=True) as validate,
+                patch.object(check, "github_requirements", return_value=nullcontext(check.ROOT)),
                 patch.object(check, "publish_contract_status") as publish,
             ):
                 self.assertTrue(check.check_github_event(self.repository, event, publish=True))
 
-            validate.assert_called_once_with(self.repository, 13, expected_head="a" * 40)
+            validate.assert_called_once_with(
+                self.repository, 13, expected_head="a" * 40, requirements_root=check.ROOT
+            )
             self.assertEqual(
                 [call.args[2] for call in publish.call_args_list], ["pending", "success"]
             )

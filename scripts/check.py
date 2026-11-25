@@ -1,19 +1,31 @@
 """Запускает проверки TutorFlow из любой папки и сохраняет вывод в логах."""
 
 import argparse
+import base64
 import json
 import re
 import subprocess
 import sys
-from pathlib import Path
-from tempfile import NamedTemporaryFile
+from collections.abc import Iterator
+from contextlib import contextmanager
+from pathlib import Path, PurePosixPath
+from tempfile import NamedTemporaryFile, TemporaryDirectory
 
-from specification import RULE_PATTERN, business_rule_ids, find_requirement
+from specification import (
+    CASE_DOCUMENTS,
+    RULE_DOCUMENTS,
+    RULE_PATTERN,
+    business_rule_ids,
+    find_requirement,
+)
 
 
 ROOT = Path(__file__).resolve().parents[1]
 LOG_DIR = ROOT / ".artifacts/logs"
 DEPENDABOT_USER_ID = 49699333
+GITHUB_REQUIREMENT_FILE_LIMIT = 128
+GITHUB_REQUIREMENT_FILE_BYTE_LIMIT = 128 * 1024
+GITHUB_REQUIREMENT_BYTE_LIMIT = 2 * 1024 * 1024
 
 
 def run(command, label):
@@ -258,7 +270,7 @@ def sections(body, headings):
     return result
 
 
-def validate_issue(issue):
+def validate_issue(issue, *, requirements_root=None):
     parts = sections(issue.get("body"), ("Результат", "Критерии приёмки"))
 
     if not re.search(r"^- \S", parts["Критерии приёмки"], re.MULTILINE):
@@ -273,7 +285,7 @@ def validate_issue(issue):
 
         return True
 
-    _, content = find_requirement(ROOT, identifier[1])
+    _, content = find_requirement(requirements_root or ROOT, identifier[1])
 
     if identifier[1].startswith("UC-"):
         name = content.splitlines()[0].split(" — ", 1)[1]
@@ -287,7 +299,7 @@ def validate_issue(issue):
         if not rule or not parent:
             raise ValueError("BR должен иметь родительский UC через Sub-issues")
 
-        validate_issue(parent)
+        validate_issue(parent, requirements_root=requirements_root)
 
         if not any(
             parent["title"].startswith(f"[UC-{uc.removeprefix('UC-')}]")
@@ -311,7 +323,7 @@ def dependabot_pr(pull, repository):
     )
 
 
-def validate_pull_request(pull, issue, repository):
+def validate_pull_request(pull, issue, repository, *, requirements_root=None):
     if pull["base"]["ref"] != "dev":
         raise ValueError("Рабочий PR должен быть направлен в dev")
 
@@ -321,7 +333,7 @@ def validate_pull_request(pull, issue, repository):
 
         return True
 
-    validate_issue(issue)
+    validate_issue(issue, requirements_root=requirements_root)
 
     if issue.get("parent"):
         raise ValueError(
@@ -366,6 +378,70 @@ def github_json(endpoint):
     return json.loads(subprocess.check_output(["gh", "api", endpoint], text=True))
 
 
+@contextmanager
+def github_requirements(repository: str, sha: str) -> Iterator[Path]:
+    if not re.fullmatch(r"[0-9a-f]{40}", sha):
+        raise ValueError("Требования должны читаться из точного SHA head")
+
+    commit = github_json(f"repos/{repository}/git/commits/{sha}")
+    tree = github_json(f"repos/{repository}/git/trees/{commit['tree']['sha']}?recursive=1")
+
+    if tree.get("truncated"):
+        raise ValueError("GitHub вернул неполное дерево требований")
+
+    entries = []
+
+    for entry in tree["tree"]:
+        path = PurePosixPath(entry["path"])
+
+        if not any(path.match(pattern) for pattern in (*RULE_DOCUMENTS, CASE_DOCUMENTS)):
+            continue
+
+        if path.is_absolute() or ".." in path.parts or path.parts[0] != "docs":
+            raise ValueError("Недопустимый путь документа требований")
+
+        if entry["type"] != "blob" or entry["mode"] == "120000":
+            raise ValueError("Документ требований не должен быть ссылкой или каталогом")
+
+        if entry["size"] > GITHUB_REQUIREMENT_FILE_BYTE_LIMIT:
+            raise ValueError("Превышен размер документа требований")
+
+        entries.append(entry)
+
+    if not entries or len(entries) > GITHUB_REQUIREMENT_FILE_LIMIT:
+        raise ValueError("Недопустимое количество документов требований")
+
+    if sum(entry["size"] for entry in entries) > GITHUB_REQUIREMENT_BYTE_LIMIT:
+        raise ValueError("Превышен общий размер документов требований")
+
+    total_size = 0
+
+    with TemporaryDirectory(prefix="tutorflow-requirements-") as temporary:
+        root = Path(temporary)
+
+        for entry in entries:
+            blob = github_json(f"repos/{repository}/git/blobs/{entry['sha']}")
+
+            if blob["encoding"] != "base64":
+                raise ValueError("Неизвестная кодировка документа требований")
+
+            content = base64.b64decode("".join(blob["content"].splitlines()), validate=True)
+            total_size += len(content)
+
+            if (
+                len(content) > GITHUB_REQUIREMENT_FILE_BYTE_LIMIT
+                or total_size > GITHUB_REQUIREMENT_BYTE_LIMIT
+            ):
+                raise ValueError("Превышен фактический размер документов требований")
+
+            path = root / entry["path"]
+
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_text(content.decode("utf-8"), encoding="utf-8")
+
+        yield root
+
+
 def github_issue(repository, number):
     issue = github_json(f"repos/{repository}/issues/{number}")
 
@@ -378,14 +454,14 @@ def github_issue(repository, number):
     return issue
 
 
-def check_github_pr(repository, number, *, expected_head=None):
+def check_github_pr(repository, number, *, expected_head=None, requirements_root=None):
     pull = github_json(f"repos/{repository}/pulls/{number}")
 
     if expected_head is not None and pull["head"]["sha"] != expected_head:
         raise ValueError("Head PR изменился; требуется проверка актуального коммита")
 
     if dependabot_pr(pull, repository):
-        return validate_pull_request(pull, {}, repository)
+        return validate_pull_request(pull, {}, repository, requirements_root=requirements_root)
 
     parts = sections(pull.get("body"), ("Задача",))
     references = re.findall(r"/issues/([1-9]\d*)", parts["Задача"])
@@ -395,7 +471,7 @@ def check_github_pr(repository, number, *, expected_head=None):
 
     primary = github_issue(repository, int(references[0]))
 
-    validate_pull_request(pull, primary, repository)
+    validate_pull_request(pull, primary, repository, requirements_root=requirements_root)
 
     checked_commits = 0
 
@@ -411,7 +487,7 @@ def check_github_pr(repository, number, *, expected_head=None):
             for reference in set(re.findall(r"Issue #([1-9]\d*)", message)):
                 task = github_issue(repository, int(reference))
 
-                validate_issue(task)
+                validate_issue(task, requirements_root=requirements_root)
 
                 if (
                     task["number"] != primary["number"]
@@ -453,12 +529,16 @@ def publish_contract_status(repository, sha, state):
 def check_github_event(repository, event_path, *, publish=False):
     event = json.loads(event_path.read_text())
     failures = []
+    event_issue = None
+    issue_error = None
 
     if event.get("issue"):
+        event_issue = github_issue(repository, event["issue"]["number"])
+
         try:
-            validate_issue(github_issue(repository, event["issue"]["number"]))
+            validate_issue(event_issue)
         except ValueError as exc:
-            failures.append(f"Issue #{event['issue']['number']}: {exc}")
+            issue_error = str(exc)
 
     pulls = []
     audit_number = event.get("inputs", {}).get("pull_request", "")
@@ -489,7 +569,21 @@ def check_github_event(repository, event_path, *, publish=False):
             publish_contract_status(repository, pull["head"]["sha"], "pending")
 
         try:
-            check_github_pr(repository, pull["number"], expected_head=pull["head"]["sha"])
+            with github_requirements(repository, pull["head"]["sha"]) as requirements_root:
+                if event_issue is not None and issue_error is not None:
+                    try:
+                        validate_issue(event_issue, requirements_root=requirements_root)
+                    except ValueError:
+                        pass
+                    else:
+                        issue_error = None
+
+                check_github_pr(
+                    repository,
+                    pull["number"],
+                    expected_head=pull["head"]["sha"],
+                    requirements_root=requirements_root,
+                )
         except (ValueError, subprocess.CalledProcessError) as exc:
             error = str(exc)
 
@@ -504,6 +598,9 @@ def check_github_event(repository, event_path, *, publish=False):
             publish_contract_status(
                 repository, pull["head"]["sha"], "failure" if error else "success"
             )
+
+    if issue_error is not None:
+        failures.append(f"Issue #{event['issue']['number']}: {issue_error}")
 
     if failures:
         raise ValueError("\n".join(failures))
