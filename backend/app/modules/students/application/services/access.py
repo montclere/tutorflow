@@ -35,3 +35,8 @@ async def owned_card(
         raise StudentError("student_card_not_found")
 
     return card
+
+
+def require_adult(actor: Actor) -> None:
+    if actor.role is not Role.ADULT:
+        raise StudentError("adult_required")
