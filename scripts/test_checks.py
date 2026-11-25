@@ -93,6 +93,61 @@ class GitHubContractTest(unittest.TestCase):
         ):
             check.check_github_pr(self.repository, 13, expected_head="b" * 40)
 
+    def test_empty_issue_form_section_is_not_filled_by_the_next_heading(self):
+        body = "### Результат\n\n### Критерии приёмки\n\n- Проверено."
+
+        with self.assertRaisesRegex(ValueError, "Результат"):
+            check.validate_issue(self.issue | {"body": body})
+
+    def test_head_changed_during_event_never_publishes_success(self):
+        import json
+        import tempfile
+        from pathlib import Path
+
+
+        pull = self.pull | {"state": "open"}
+        changed = pull | {"head": pull["head"] | {"sha": "b" * 40}}
+
+        with tempfile.TemporaryDirectory() as temporary:
+            event = Path(temporary) / "event.json"
+
+            event.write_text(json.dumps({"number": 13, "pull_request": {}}))
+
+            with (
+                patch.object(check, "github_json", side_effect=[[pull], changed]),
+                patch.object(check, "check_github_pr", return_value=True),
+                patch.object(check, "publish_contract_status") as publish,
+                self.assertRaisesRegex(ValueError, "Head PR"),
+            ):
+                check.check_github_event(self.repository, event, publish=True)
+
+            publish.assert_called_once_with(self.repository, "a" * 40, "pending")
+
+    def test_explicit_audit_checks_closed_pr_and_publishes_its_head(self):
+        import json
+        import tempfile
+        from pathlib import Path
+
+
+        pull = self.pull | {"state": "closed"}
+
+        with tempfile.TemporaryDirectory() as temporary:
+            event = Path(temporary) / "event.json"
+
+            event.write_text(json.dumps({"inputs": {"pull_request": "13"}}))
+
+            with (
+                patch.object(check, "github_json", side_effect=[pull, pull]),
+                patch.object(check, "check_github_pr", return_value=True) as validate,
+                patch.object(check, "publish_contract_status") as publish,
+            ):
+                self.assertTrue(check.check_github_event(self.repository, event, publish=True))
+
+            validate.assert_called_once_with(self.repository, 13, expected_head="a" * 40)
+            self.assertEqual(
+                [call.args[2] for call in publish.call_args_list], ["pending", "success"]
+            )
+
     def test_commit_cannot_reference_unrelated_issue(self):
         commit = {"commit": {"message": "configure(tooling): настройка (Issue #15)"}}
 

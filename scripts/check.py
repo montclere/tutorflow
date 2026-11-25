@@ -13,6 +13,7 @@ from specification import RULE_PATTERN, business_rule_ids, find_requirement
 
 ROOT = Path(__file__).resolve().parents[1]
 LOG_DIR = ROOT / ".artifacts/logs"
+DEPENDABOT_USER_ID = 49699333
 
 
 def run(command, label):
@@ -303,7 +304,7 @@ def validate_issue(issue):
 def dependabot_pr(pull, repository):
     return (
         pull.get("user", {}).get("login") == "dependabot[bot]"
-        and pull.get("user", {}).get("id") == 49699333
+        and pull.get("user", {}).get("id") == DEPENDABOT_USER_ID
         and pull.get("user", {}).get("type") == "Bot"
         and pull.get("head", {}).get("repo", {}).get("full_name") == repository
         and pull.get("head", {}).get("ref", "").startswith("dependabot/")
@@ -311,6 +312,9 @@ def dependabot_pr(pull, repository):
 
 
 def validate_pull_request(pull, issue, repository):
+    if pull["base"]["ref"] != "dev":
+        raise ValueError("Рабочий PR должен быть направлен в dev")
+
     if dependabot_pr(pull, repository):
         if not pull.get("title", "").startswith("Bump ") or not pull.get("body", "").strip():
             raise ValueError("Dependabot: ожидается стандартное описание обновления")
@@ -325,9 +329,6 @@ def validate_pull_request(pull, issue, repository):
         )
 
     check_branch_name(pull["head"]["ref"], pull_request=pull["number"])
-
-    if pull["base"]["ref"] != "dev":
-        raise ValueError("Рабочий PR должен быть направлен в dev")
 
     parts = sections(pull.get("body"), ("Задача", "Результат", "Проверки"))
     links = re.findall(r"https://github\.com/([^\s)]+/[^\s)]+)/issues/([1-9]\d*)", parts["Задача"])
@@ -396,10 +397,13 @@ def check_github_pr(repository, number, *, expected_head=None):
 
     validate_pull_request(pull, primary, repository)
 
+    checked_commits = 0
+
     for page in range(1, 101):
         commits = github_json(f"repos/{repository}/pulls/{number}/commits?per_page=100&page={page}")
 
         for commit in commits:
+            checked_commits += 1
             message = commit["commit"]["message"].strip()
 
             validate_commit_message(message)
@@ -419,6 +423,9 @@ def check_github_pr(repository, number, *, expected_head=None):
             break
     else:
         raise ValueError("Слишком большой PR для проверки контракта")
+
+    if checked_commits != pull.get("commits", checked_commits):
+        raise ValueError("GitHub вернул неполный список коммитов PR")
 
     return True
 
@@ -454,8 +461,14 @@ def check_github_event(repository, event_path, *, publish=False):
             failures.append(f"Issue #{event['issue']['number']}: {exc}")
 
     pulls = []
+    audit_number = event.get("inputs", {}).get("pull_request", "")
 
-    if event.get("pull_request"):
+    if audit_number and not re.fullmatch(r"[1-9]\d*", str(audit_number)):
+        raise ValueError("Для аудита укажите положительный номер PR")
+
+    if audit_number:
+        pulls = [github_json(f"repos/{repository}/pulls/{audit_number}")]
+    elif event.get("pull_request"):
         pulls = [github_json(f"repos/{repository}/pulls/{event['number']}")]
     else:
         for page in range(1, 101):
@@ -467,7 +480,7 @@ def check_github_event(repository, event_path, *, publish=False):
                 break
 
     for pull in pulls:
-        if pull["state"] != "open":
+        if pull["state"] != "open" and not audit_number:
             continue
 
         error = None
