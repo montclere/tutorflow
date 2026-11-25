@@ -16,27 +16,15 @@ class InvitedAccountService:
         self.registration = registration
 
     async def lock_student(self, account_id: UUID) -> PublicProfile | None:
-        account = await self.repository.find_account_for_update(account_id)
-
-        if account is None or account.role is not Role.STUDENT:
-            return None
-
-        return PublicProfile(account.id, account.profile.display_name, account.profile.timezone)
+        return await self.repository.find_student_profile_for_update(account_id)
 
     async def profile(self, account_id: UUID) -> PublicProfile | None:
-        account = await self.repository.find_account(account_id)
-
-        if account is None:
-            return None
-
-        return PublicProfile(account.id, account.profile.display_name, account.profile.timezone)
+        return await self.repository.find_public_profile(account_id)
 
     async def profiles(self, account_ids: list[UUID]) -> dict[UUID, PublicProfile]:
-        accounts = await self.repository.list_accounts(account_ids)
+        profiles = await self.repository.list_public_profiles(account_ids)
 
-        return {
-            a.id: PublicProfile(a.id, a.profile.display_name, a.profile.timezone) for a in accounts
-        }
+        return {profile.account_id: profile for profile in profiles}
 
     async def register(
         self, proof: StudentRegistrationProof, previous_token: str | None

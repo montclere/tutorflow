@@ -12,7 +12,7 @@ from app.modules.identity.infrastructure.security.settings import PasswordHashin
 
 
 class ArgonPasswords:
-    def __init__(self, settings: PasswordHashingSettings | None = None):
+    def __init__(self, settings: PasswordHashingSettings | None = None) -> None:
         self.settings = settings or PasswordHashingSettings()
         self.hasher = PasswordHasher(
             time_cost=self.settings.time_cost,

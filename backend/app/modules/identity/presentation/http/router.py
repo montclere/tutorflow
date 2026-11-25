@@ -1,4 +1,4 @@
-"""HTTP-адаптер регистрации, сессий и профиля преподавателя."""
+"""HTTP-адаптер регистрации, сессий и собственного профиля аккаунта."""
 
 from collections.abc import Awaitable, Callable
 from typing import Annotated

@@ -69,3 +69,37 @@ async def test_expiry_after_account_insert_rolls_back_teacher_and_session(
     async with AsyncSession(database) as db:
         assert await db.scalar(select(Account.id)) is None
         assert await db.scalar(select(LoginSession.token_digest)) is None
+
+
+@pytest.mark.br_079
+async def test_public_profile_queries_do_not_load_credentials(client, inbox, services, database):
+    from sqlalchemy import event
+    from tests.identity_testkit import register
+
+
+    response = await register(client, {"type": "email", "value": "teacher@example.com"}, inbox)
+    account_id = response.json()["account"]["id"]
+    statements = []
+
+
+    def capture(connection, cursor, statement, parameters, context, executemany):
+        statements.append(statement)
+
+
+    event.listen(database.sync_engine, "before_cursor_execute", capture)
+
+    try:
+        from uuid import UUID
+
+
+        async with services.students.cards.persistence.transaction() as unit:
+            profile = await unit.accounts.profile(UUID(account_id))
+            profiles = await unit.accounts.profiles([UUID(account_id)])
+            rejected = await unit.accounts.lock_student(UUID(account_id))
+
+        assert profile is not None and profile.account_id == UUID(account_id)
+        assert UUID(account_id) in profiles and rejected is None
+        assert statements
+        assert all("password_hash" not in sql and "contact" not in sql for sql in statements)
+    finally:
+        event.remove(database.sync_engine, "before_cursor_execute", capture)

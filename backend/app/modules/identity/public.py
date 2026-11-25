@@ -1,4 +1,4 @@
-"""Тип данных Identity, доступный соседним модулям."""
+"""Публичные данные и порты Identity для соседних модулей."""
 
 from dataclasses import dataclass, field
 from typing import Protocol

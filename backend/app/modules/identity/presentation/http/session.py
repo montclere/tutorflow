@@ -38,7 +38,7 @@ async def identity_problem(request: Request, error: Exception) -> ProblemRespons
 
 
 class IdentityHttpSession:
-    def __init__(self, sessions: SessionService, secure: bool):
+    def __init__(self, sessions: SessionService, secure: bool) -> None:
         self.sessions = sessions
         self.secure = secure
 
