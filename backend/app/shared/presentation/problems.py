@@ -13,6 +13,15 @@ from starlette.responses import JSONResponse
 
 
 DESCRIPTIONS = {
+    "student_required": "Приглашение предназначено аккаунту ученика.",
+    "student_card_not_found": "Карточка недоступна.",
+    "student_profile_not_found": "Учебный профиль недоступен.",
+    "student_connection_not_found": "Подключение недоступно.",
+    "student_already_connected": "Аккаунт уже подключён к этому преподавателю.",
+    "student_card_archived": "Карточка находится в архиве.",
+    "invitation_invalid": "Приглашение недействительно, истекло или уже использовано.",
+    "invalid_student_data": "Проверьте данные карточки или учебного профиля.",
+    "invalid_student_price": "Укажите неотрицательную стоимость в рублях с точностью до копейки.",
     "authentication_required": "Требуется вход в аккаунт.",
     "invalid_credentials": "Неверный контакт или пароль.",
     "challenge_invalid": "Код неверен, истёк или уже использован.",
@@ -60,6 +69,23 @@ SAFE_LOCATIONS = {
     "after_start",
     "after_id",
     "limit",
+    "name",
+    "notes",
+    "price",
+    "amount",
+    "currency",
+    "subject",
+    "level",
+    "goal",
+    "duration",
+    "description",
+    "welcome",
+    "token",
+    "card_id",
+    "profile_id",
+    "include_archived",
+    "kind",
+    "contact",
 }
 
 

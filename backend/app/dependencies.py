@@ -1,6 +1,6 @@
 """HTTP-провайдеры сервисов приложения и аутентифицированного пользователя."""
 
-from fastapi import HTTPException, Request
+from fastapi import HTTPException, Request, Response
 from sqlalchemy.exc import ArgumentError
 
 from app.composition import Services, services_from_environment
@@ -12,8 +12,9 @@ from app.modules.identity.presentation.http.session import (
     SECURE_SESSION_COOKIE,
     IdentityHttpSession,
 )
-from app.modules.identity.public import Actor
+from app.modules.identity.public import Actor, StudentSession
 from app.modules.scheduling.application.calendar import Calendar
+from app.modules.students.application.services.collection import StudentServices
 
 
 async def resolve_services(request: Request) -> Services:
@@ -67,3 +68,17 @@ async def read_actor(request: Request) -> Actor:
 
 async def write_actor(request: Request) -> Actor:
     return await (await authenticated_session(request)).actor(request, csrf=True)
+
+
+async def student_services(request: Request) -> StudentServices:
+    return (await resolve_services(request)).students
+
+
+async def previous_session(request: Request) -> str | None:
+    return (await identity_session(request)).token(request)
+
+
+async def set_student_session(
+    request: Request, response: Response, session: StudentSession
+) -> None:
+    (await identity_session(request)).set_cookie(response, session)

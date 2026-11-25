@@ -7,6 +7,7 @@ from datetime import UTC, datetime
 from sqlalchemy.ext.asyncio import AsyncEngine
 
 from app.config import Settings
+from app.integrations.students import PostgresStudentsUnitOfWork, StudentRateLimits
 from app.modules.identity.application.ports import CodeDelivery
 from app.modules.identity.application.services.authentication import AuthenticationService
 from app.modules.identity.application.services.profiles import ProfileService
@@ -29,6 +30,15 @@ from app.modules.identity.presentation.http.session import (
 )
 from app.modules.scheduling.application.calendar import Calendar
 from app.modules.scheduling.infrastructure.repository import PostgresCalendarRepository
+from app.modules.students.application.services.cards import CardService
+from app.modules.students.application.services.collection import StudentServices
+from app.modules.students.application.services.connections import ConnectionService
+from app.modules.students.application.services.invitations import InvitationService
+from app.modules.students.application.services.profiles import LearningProfileService
+from app.modules.students.application.services.registration import StudentRegistrationService
+from app.modules.students.domain.policies import StudentPolicy
+from app.modules.students.infrastructure.security.tokens import SecureInvitationTokens
+from app.modules.students.infrastructure.settings import StudentSettings
 from app.shared.infrastructure.database import postgres_engine
 from app.shared.infrastructure.metrics import Metrics, process_metrics
 
@@ -48,6 +58,7 @@ class Services:
     secure_cookie: bool
     engine: AsyncEngine
     metrics: Metrics
+    students: StudentServices
 
     @property
     def cookie_name(self) -> str:
@@ -67,6 +78,7 @@ async def build_services(
     metrics: Metrics | None = None,
     identity_policy: IdentityPolicy | None = None,
     password_hashing: PasswordHashingSettings | None = None,
+    student_policy: StudentPolicy | None = None,
 ) -> Services:
     metrics = metrics or Metrics()
     passwords = ArgonPasswords(password_hashing)
@@ -100,12 +112,33 @@ async def build_services(
         contacts=contacts,
     )
 
+    student_policy = student_policy or StudentSettings().policy
+    student_persistence = PostgresStudentsUnitOfWork(engine, registration)
+    invitation_service = InvitationService(
+        student_persistence,
+        SecureInvitationTokens(secret),
+        StudentRateLimits(rate_limits, student_policy, registration),
+        student_policy,
+        now_utc,
+    )
+    connection_service = ConnectionService(student_persistence, invitation_service)
+    student_services = StudentServices(
+        CardService(student_persistence),
+        LearningProfileService(student_persistence),
+        invitation_service,
+        connection_service,
+        StudentRegistrationService(
+            student_persistence, registration, invitation_service, connection_service
+        ),
+    )
+
     return Services(
         IdentityServices(registration, authentication, sessions, ProfileService(persistence)),
         Calendar(PostgresCalendarRepository(engine)),
         secure_cookie,
         engine,
         metrics,
+        student_services,
     )
 
 

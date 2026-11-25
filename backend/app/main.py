@@ -18,6 +18,10 @@ from starlette.exceptions import HTTPException as StarletteHTTPException
 from app.api_v1 import PREFIX, router
 from app.composition import Services
 from app.dependencies import resolve_services
+from app.modules.identity.domain.exceptions import IdentityError
+from app.modules.identity.presentation.http.session import identity_problem
+from app.modules.students.domain.exceptions import StudentError
+from app.modules.students.presentation.http.problems import student_problem
 from app.monitoring import monitoring_router
 from app.shared.infrastructure.logging import configure_logging
 from app.shared.infrastructure.metrics import process_metrics
@@ -86,6 +90,8 @@ def create_app(services: Services | None = None) -> FastAPI:
 
     application.add_exception_handler(StarletteHTTPException, http_problem)
     application.add_exception_handler(RequestValidationError, validation_problem)
+    application.add_exception_handler(IdentityError, identity_problem)
+    application.add_exception_handler(StudentError, student_problem)
 
 
     @application.middleware("http")
