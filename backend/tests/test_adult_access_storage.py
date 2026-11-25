@@ -23,7 +23,7 @@ pytestmark = pytest.mark.anyio
 @pytest.mark.br_082
 @pytest.mark.br_083
 async def test_database_rejects_third_slot_duplicate_account_and_wrong_card_owner(database):
-    owner, other_owner, card = uuid4(), uuid4(), uuid4()
+    owner, other_owner, card, second_card = uuid4(), uuid4(), uuid4(), uuid4()
     adults = [uuid4() for _ in range(3)]
     now = datetime.now(UTC)
 
@@ -40,7 +40,14 @@ async def test_database_rejects_third_slot_duplicate_account_and_wrong_card_owne
                 )
             )
 
-        await db.execute(insert(StudentCard).values(id=card, teacher_id=owner, name="Имя"))
+        for card_id in (card, second_card):
+            await db.execute(insert(StudentCard).values(id=card_id, teacher_id=owner, name="Имя"))
+
+        await db.execute(
+            insert(AdultConnection).values(
+                card_id=second_card, teacher_id=owner, account_id=adults[0], slot=1
+            )
+        )
 
         for slot, account_id in enumerate(adults[:2], 1):
             await db.execute(
@@ -49,17 +56,17 @@ async def test_database_rejects_third_slot_duplicate_account_and_wrong_card_owne
                 )
             )
 
-    for account_id, slot, teacher_id in [
-        (adults[2], 3, owner),
-        (adults[2], 1, owner),
-        (adults[0], 2, owner),
-        (adults[2], 2, other_owner),
+    for target_card, account_id, slot, teacher_id in [
+        (card, adults[2], 3, owner),
+        (card, adults[2], 1, owner),
+        (second_card, adults[0], 2, owner),
+        (second_card, adults[2], 2, other_owner),
     ]:
         with pytest.raises(IntegrityError):
             async with AsyncSession(database) as db, db.begin():
                 await db.execute(
                     insert(AdultConnection).values(
-                        card_id=card, teacher_id=teacher_id, account_id=account_id, slot=slot
+                        card_id=target_card, teacher_id=teacher_id, account_id=account_id, slot=slot
                     )
                 )
 
