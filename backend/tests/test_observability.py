@@ -100,6 +100,14 @@ def test_validation_and_default_errors_use_problem_details():
 
             assert SECRET not in extra.text
 
+            many = await client.post(
+                "/api/v1/auth/login", json={f"field_{index}": SECRET for index in range(100)}
+            )
+
+            assert many.status_code == 422
+            assert 0 < len(many.json()["errors"]) < 100
+            assert SECRET not in many.text
+
             schema = (await client.get("/openapi.json")).json()
             response_schema = schema["paths"]["/api/v1/auth/login"]["post"]["responses"]["422"]
 
@@ -169,3 +177,68 @@ def test_request_context_is_isolated_for_parallel_calls():
         assert all("request_id" not in line for line in logs if line["event"] == "external_log")
     finally:
         configure_logging()
+
+
+def test_unknown_structured_events_cannot_leak_through_allowed_field_names():
+    import structlog
+
+
+    stream = io.StringIO()
+
+    configure_logging(stream=stream)
+
+    try:
+        structlog.get_logger("library").warning(
+            "third_party_event", route=SECRET, channel=SECRET, outcome=SECRET, password=SECRET
+        )
+        logging.getLogger("library").warning("http_request_completed")
+
+        entries = [json.loads(line) for line in stream.getvalue().splitlines()]
+
+        assert SECRET not in stream.getvalue()
+        assert all(entry["event"] == "external_log" for entry in entries)
+        assert all("route" not in entry and "channel" not in entry for entry in entries)
+    finally:
+        configure_logging()
+
+
+def test_request_body_limit_counts_streamed_bytes_before_parsing(monkeypatch):
+    from fastapi import Request
+
+
+    monkeypatch.setenv("TUTORFLOW_HTTP_MAX_REQUEST_BODY_BYTES", "128")
+
+    application = create_app()
+
+
+    @application.post("/body-size")
+    async def body_size(request: Request):
+        return {"size": len(await request.body())}
+
+
+    async def chunks():
+        yield b"x" * 64
+        yield b"x" * 65
+
+
+    async def requests():
+        async with AsyncClient(
+            transport=ASGITransport(app=application), base_url="https://test"
+        ) as client:
+            valid = await client.post("/body-size", content=b"x" * 128)
+            excessive = await client.post("/body-size", content=chunks())
+            invalid_json = await client.post(
+                "/api/v1/auth/login",
+                content=b"x" * 129,
+                headers={"content-type": "application/json"},
+            )
+
+        assert valid.status_code == 200 and valid.json() == {"size": 128}
+
+        for result in (excessive, invalid_json):
+            assert result.status_code == 413, result.text
+            assert result.json()["code"] == "request_too_large"
+            assert result.json()["request_id"] == result.headers["x-request-id"]
+
+
+    asyncio.run(requests())

@@ -35,6 +35,13 @@ class Metrics:
             registry=self.registry,
         )
 
+    def record_request(self, method: str, route: str, status: int, duration_seconds: float) -> None:
+        self.requests.labels(method, route, str(status)).inc()
+        self.duration.labels(method, route).observe(duration_seconds)
+
+    def record_failure(self, response_started: bool) -> None:
+        self.failures.labels("after_response" if response_started else "before_response").inc()
+
 
 @cache
 def process_metrics() -> Metrics:

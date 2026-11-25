@@ -12,7 +12,9 @@ from starlette.exceptions import HTTPException
 from starlette.responses import JSONResponse
 
 
+MAX_VALIDATION_ERRORS = 20
 DESCRIPTIONS = {
+    "request_too_large": "Размер запроса превышает допустимый предел.",
     "student_required": "Приглашение предназначено аккаунту ученика.",
     "student_card_not_found": "Карточка недоступна.",
     "student_profile_not_found": "Учебный профиль недоступен.",
@@ -163,7 +165,7 @@ async def validation_problem(request: Request, error: Exception) -> ProblemRespo
             ],
             code=item["type"],
         )
-        for item in error.errors()
+        for item in error.errors()[:MAX_VALIDATION_ERRORS]
     ]
 
     return problem_response(request_id(request), 422, "validation_error", errors=fields)
@@ -174,5 +176,5 @@ PROBLEM_RESPONSES: dict[int | str, dict[str, Any]] = {
         "description": HTTPStatus(status).phrase,
         "content": {"application/problem+json": {"schema": Problem.model_json_schema()}},
     }
-    for status in (400, 401, 403, 404, 405, 409, 415, 422, 429, 500, 503)
+    for status in (400, 401, 403, 404, 405, 409, 413, 415, 422, 429, 500, 503)
 }

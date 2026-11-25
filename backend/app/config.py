@@ -26,6 +26,11 @@ class DatabaseSettings(BaseSettings):
     database_url: Annotated[SecretStr, Field(min_length=1)]
 
 
+class HttpSettings(BaseSettings):
+    model_config = SettingsConfigDict(env_prefix="TUTORFLOW_HTTP_", frozen=True)
+    max_request_body_bytes: Annotated[int, Field(gt=0)] = 64 * 1024
+
+
 class MonitoringSettings(BaseSettings):
     model_config = SettingsConfigDict(
         env_prefix="TUTORFLOW_METRICS_", frozen=True, hide_input_in_errors=True

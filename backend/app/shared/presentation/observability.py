@@ -2,6 +2,7 @@
 
 import sys
 from time import perf_counter
+from typing import Protocol
 from uuid import uuid4
 
 import structlog
@@ -13,8 +14,16 @@ from app.shared.presentation.problems import problem_response
 METHODS = {"GET", "HEAD", "POST", "PUT", "PATCH", "DELETE", "OPTIONS", "TRACE", "CONNECT"}
 
 
+class RequestMetrics(Protocol):
+    def record_request(
+        self, method: str, route: str, status: int, duration_seconds: float
+    ) -> None: ...
+
+    def record_failure(self, response_started: bool) -> None: ...
+
+
 class RequestObservability:
-    def __init__(self, app: ASGIApp, metrics) -> None:
+    def __init__(self, app: ASGIApp, metrics: RequestMetrics) -> None:
         self.app = app
         self.metrics = metrics
         self.logger = structlog.get_logger(__name__)
@@ -55,7 +64,7 @@ class RequestObservability:
         try:
             await self.app(scope, receive, observed_send)
         except Exception:
-            self.metrics.failures.labels("after_response" if started else "before_response").inc()
+            self.metrics.record_failure(started)
             await self.logger.aerror("http_request_failed", exc_info=sys.exc_info())
 
             if started:
@@ -70,8 +79,7 @@ class RequestObservability:
             method = scope["method"] if scope["method"] in METHODS else "OTHER"
 
             if route != "/metrics":
-                self.metrics.requests.labels(method, route, str(status)).inc()
-                self.metrics.duration.labels(method, route).observe(elapsed)
+                self.metrics.record_request(method, route, status, elapsed)
                 await self.logger.ainfo(
                     "http_request_completed",
                     method=method,

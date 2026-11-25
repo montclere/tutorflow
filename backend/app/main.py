@@ -1,6 +1,7 @@
 """Фабрика приложения FastAPI и общие HTTP-обработчики."""
 
 from asyncio import Lock, to_thread
+from collections.abc import AsyncIterator, Awaitable, Callable
 from contextlib import asynccontextmanager
 from functools import cache
 from pathlib import Path
@@ -14,9 +15,11 @@ from pydantic import BaseModel
 from sqlalchemy import text
 from sqlalchemy.exc import SQLAlchemyError
 from starlette.exceptions import HTTPException as StarletteHTTPException
+from starlette.responses import Response
 
 from app.api_v1 import PREFIX, router
 from app.composition import Services
+from app.config import HttpSettings
 from app.dependencies import resolve_services
 from app.modules.identity.domain.exceptions import IdentityError
 from app.modules.identity.presentation.http.session import identity_problem
@@ -25,6 +28,7 @@ from app.modules.students.presentation.http.problems import student_problem
 from app.monitoring import monitoring_router
 from app.shared.infrastructure.logging import configure_logging
 from app.shared.infrastructure.metrics import process_metrics
+from app.shared.presentation.http import RequestBodyLimit
 from app.shared.presentation.observability import RequestObservability
 from app.shared.presentation.problems import PROBLEM_RESPONSES, http_problem, validation_problem
 
@@ -44,7 +48,7 @@ def expected_revisions() -> set[str]:
 
 
 @asynccontextmanager
-async def application_lifespan(application: FastAPI):
+async def application_lifespan(application: FastAPI) -> AsyncIterator[None]:
     try:
         yield
     finally:
@@ -95,7 +99,9 @@ def create_app(services: Services | None = None) -> FastAPI:
 
 
     @application.middleware("http")
-    async def prevent_identity_caching(request: Request, call_next):
+    async def prevent_api_caching(
+        request: Request, call_next: Callable[[Request], Awaitable[Response]]
+    ) -> Response:
         response = await call_next(request)
 
         if request.url.path.startswith(f"{PREFIX}/"):
@@ -104,6 +110,7 @@ def create_app(services: Services | None = None) -> FastAPI:
         return response
 
 
+    application.add_middleware(RequestBodyLimit, max_bytes=HttpSettings().max_request_body_bytes)
     application.add_middleware(RequestObservability, metrics=metrics)
 
     return application
