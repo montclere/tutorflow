@@ -9,7 +9,7 @@ from app.modules.identity.infrastructure.persistence.repository import PostgresI
 
 
 class PostgresIdentityUnitOfWork:
-    def __init__(self, engine: AsyncEngine):
+    def __init__(self, engine: AsyncEngine) -> None:
         self.sessions = async_sessionmaker(engine, expire_on_commit=False)
 
     @asynccontextmanager

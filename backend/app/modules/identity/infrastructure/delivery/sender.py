@@ -18,7 +18,7 @@ SMSC_ENDPOINT = "https://smsc.ru/sys/send.php"
 
 
 class ConfiguredDelivery:
-    def __init__(self, settings: DeliverySettings):
+    def __init__(self, settings: DeliverySettings) -> None:
         self.settings = settings
 
     async def send(self, contact: Contact, code: str) -> None:

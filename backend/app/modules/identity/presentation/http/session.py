@@ -8,29 +8,37 @@ from app.modules.identity.application.contracts import SignedIn
 from app.modules.identity.application.services.sessions import SessionService
 from app.modules.identity.domain.exceptions import IdentityError
 from app.modules.identity.presentation.http.schemas import AuthenticatedSession
-from app.modules.identity.public import Actor
+from app.modules.identity.public import Actor, StudentSession
+from app.shared.presentation.problems import ProblemResponse, problem_response, request_id
 
 
 SECURE_SESSION_COOKIE = "__Host-tutorflow_session"
 LOCAL_SESSION_COOKIE = "tutorflow_session"
 
 
-def raise_identity_error(error: IdentityError) -> NoReturn:
-    status = {
-        "authentication_required": 401,
-        "invalid_credentials": 401,
-        "challenge_invalid": 400,
-        "rate_limited": 429,
-        "invalid_contact": 422,
-        "invalid_password": 422,
-        "identity_busy": 503,
-    }[error.code]
+IDENTITY_STATUSES = {
+    "authentication_required": 401,
+    "invalid_credentials": 401,
+    "challenge_invalid": 400,
+    "rate_limited": 429,
+    "invalid_contact": 422,
+    "invalid_password": 422,
+    "identity_busy": 503,
+}
 
-    raise HTTPException(status, error.code) from None
+
+def raise_identity_error(error: IdentityError) -> NoReturn:
+    raise HTTPException(IDENTITY_STATUSES[error.code], error.code) from None
+
+
+async def identity_problem(request: Request, error: Exception) -> ProblemResponse:
+    assert isinstance(error, IdentityError)
+
+    return problem_response(request_id(request), IDENTITY_STATUSES[error.code], error.code)
 
 
 class IdentityHttpSession:
-    def __init__(self, sessions: SessionService, secure: bool):
+    def __init__(self, sessions: SessionService, secure: bool) -> None:
         self.sessions = sessions
         self.secure = secure
 
@@ -62,7 +70,7 @@ class IdentityHttpSession:
 
         return Actor(account.id, account.role, account.profile.timezone)
 
-    def set_cookie(self, response: Response, result: SignedIn) -> None:
+    def set_cookie(self, response: Response, result: SignedIn | StudentSession) -> None:
         response.set_cookie(
             self.cookie_name,
             result.session_token,

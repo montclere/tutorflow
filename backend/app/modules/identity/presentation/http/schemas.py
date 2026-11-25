@@ -1,7 +1,7 @@
 """Входные и выходные схемы HTTP API аккаунта."""
 
 from dataclasses import dataclass, field
-from typing import Annotated, Literal
+from typing import Annotated, Literal, Self
 from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field, PrivateAttr, SecretStr, model_validator
@@ -40,7 +40,7 @@ class StartRegistration(Input):
 
 class CompleteRegistration(Input):
     challenge_id: UUID
-    code: Annotated[str, Field(pattern=rf"^[0-9]{{{REGISTRATION_CODE_DIGITS}}}$")]
+    code: Annotated[str, Field(pattern=rf"^[0-9]{{{REGISTRATION_CODE_DIGITS}}}$", repr=False)]
     password: Annotated[
         SecretStr, Field(min_length=PASSWORD_MIN_LENGTH, max_length=PASSWORD_MAX_LENGTH)
     ]
@@ -56,7 +56,7 @@ class ProfilePatch(Input):
     _change: ProfileChange = PrivateAttr()
 
     @model_validator(mode="after")
-    def validate_patch(self):
+    def validate_patch(self) -> Self:
         self._change = ProfileChange(self.model_dump(exclude_unset=True))
 
         return self

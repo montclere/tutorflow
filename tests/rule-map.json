@@ -30,7 +30,9 @@
         "tests/test_identity_security.py::test_security_separates_token_purposes_and_keys",
         "tests/test_identity_security.py::test_new_sessions_have_independent_tokens_and_store_digests",
         "tests/test_identity_security.py::test_cancelled_password_request_keeps_its_slot_until_worker_finishes",
-        "tests/test_identity_security.py::test_token_security_rejects_a_short_secret_without_disclosing_it"
+        "tests/test_identity_security.py::test_token_security_rejects_a_short_secret_without_disclosing_it",
+        "tests/test_students_api.py::test_code_expiring_after_account_insert_rolls_back_registration",
+        "tests/test_identity_invited.py::test_expiry_after_account_insert_rolls_back_teacher_and_session"
       ]
     },
     "BR-002": {
@@ -62,6 +64,111 @@
         "tests/test_identity.py::test_registration_and_login_keep_the_same_account",
         "tests/test_identity_application.py::test_registration_selects_role_and_consumes_locked_challenge",
         "tests/test_identity.py::test_challenge_is_single_use_and_cannot_assign_a_role"
+      ]
+    },
+    "BR-005": {
+      "pytest": [
+        "tests/test_students_api.py::test_card_profile_crud_is_owned_and_money_is_exact",
+        "tests/test_students_domain.py::test_card_requires_name_and_preserves_independent_ids",
+        "tests/test_students_domain.py::test_direct_card_construction_enforces_invariants",
+        "tests/test_students_domain.py::test_card_updates_normalize_values_and_reject_clearing_name"
+      ]
+    },
+    "BR-006": {
+      "pytest": [
+        "tests/test_students_api.py::test_card_profile_crud_is_owned_and_money_is_exact"
+      ]
+    },
+    "BR-010": {
+      "pytest": [
+        "tests/test_students_api.py::test_card_profile_crud_is_owned_and_money_is_exact",
+        "tests/test_students_api.py::test_existing_student_joins_teachers_and_concurrent_cards_do_not_duplicate",
+        "tests/test_students_api.py::test_anonymous_students_request_does_not_initialize_identity",
+        "tests/test_students_storage.py::test_database_protects_price_card_owner_and_connection_uniqueness",
+        "tests/test_students_api.py::test_student_login_reuses_account_and_scoped_code_cannot_move_to_another_invitation"
+      ]
+    },
+    "BR-076": {
+      "pytest": [
+        "tests/test_students_api.py::test_card_profile_crud_is_owned_and_money_is_exact",
+        "tests/test_students_domain.py::test_money_rejects_invalid_amount",
+        "tests/test_students_domain.py::test_money_preserves_exact_rubles_and_accepts_zero",
+        "tests/test_students_storage.py::test_database_protects_price_card_owner_and_connection_uniqueness"
+      ]
+    },
+    "BR-007": {
+      "pytest": [
+        "tests/test_students_api.py::test_student_registration_profile_archive_and_delete_keep_accounts",
+        "tests/test_students_api.py::test_invitation_flow_works_with_one_database_connection"
+      ]
+    },
+    "BR-008": {
+      "pytest": [
+        "tests/test_students_api.py::test_student_registration_profile_archive_and_delete_keep_accounts",
+        "tests/test_students_api.py::test_one_invitation_registers_at_most_one_account_under_concurrency",
+        "tests/test_students_api.py::test_invitation_invalidated_during_hashing_creates_no_account",
+        "tests/test_students_api.py::test_student_challenge_cannot_create_teacher_or_change_existing_role",
+        "tests/test_students_api.py::test_disconnect_then_new_account_uses_same_card_and_old_account_remains",
+        "tests/test_students_api.py::test_failure_at_final_invitation_claim_rolls_back_account_and_session",
+        "tests/test_students_api.py::test_code_expiring_after_account_insert_rolls_back_registration",
+        "tests/test_students_storage.py::test_upgrade_keeps_existing_teacher_confirmation_scope",
+        "tests/test_students_api.py::test_student_login_reuses_account_and_scoped_code_cannot_move_to_another_invitation",
+        "tests/test_identity_invited.py::test_confirmation_is_bound_to_role_and_specific_invitation"
+      ]
+    },
+    "BR-009": {
+      "pytest": [
+        "tests/test_students_api.py::test_student_registration_profile_archive_and_delete_keep_accounts",
+        "tests/test_students_api.py::test_existing_student_joins_teachers_and_concurrent_cards_do_not_duplicate"
+      ]
+    },
+    "BR-011": {
+      "pytest": [
+        "tests/test_students_api.py::test_student_registration_profile_archive_and_delete_keep_accounts"
+      ]
+    },
+    "BR-077": {
+      "pytest": [
+        "tests/test_students_api.py::test_student_registration_profile_archive_and_delete_keep_accounts",
+        "tests/test_students_api.py::test_disconnect_then_new_account_uses_same_card_and_old_account_remains"
+      ]
+    },
+    "BR-078": {
+      "pytest": [
+        "tests/test_students_api.py::test_student_registration_profile_archive_and_delete_keep_accounts",
+        "tests/test_students_api.py::test_reissue_archive_restore_and_csrf_keep_revoked_tokens_invalid"
+      ]
+    },
+    "BR-079": {
+      "pytest": [
+        "tests/test_students_api.py::test_student_registration_profile_archive_and_delete_keep_accounts",
+        "tests/test_identity_invited.py::test_public_profile_queries_do_not_load_credentials"
+      ]
+    },
+    "BR-080": {
+      "pytest": [
+        "tests/test_students_api.py::test_student_registration_profile_archive_and_delete_keep_accounts"
+      ]
+    },
+    "BR-081": {
+      "pytest": [
+        "tests/test_students_api.py::test_student_registration_profile_archive_and_delete_keep_accounts",
+        "tests/test_students_api.py::test_one_invitation_registers_at_most_one_account_under_concurrency"
+      ]
+    },
+    "BR-012": {
+      "pytest": [
+        "tests/test_students_api.py::test_one_invitation_registers_at_most_one_account_under_concurrency",
+        "tests/test_students_api.py::test_invitation_invalidated_during_hashing_creates_no_account",
+        "tests/test_students_api.py::test_existing_student_joins_teachers_and_concurrent_cards_do_not_duplicate",
+        "tests/test_students_api.py::test_student_challenge_cannot_create_teacher_or_change_existing_role",
+        "tests/test_students_api.py::test_reissue_archive_restore_and_csrf_keep_revoked_tokens_invalid",
+        "tests/test_students_api.py::test_failure_at_final_invitation_claim_rolls_back_account_and_session",
+        "tests/test_students_domain.py::test_invitation_rechecks_expiry_and_consumption",
+        "tests/test_students_domain.py::test_tokens_are_random_scoped_and_settings_are_validated",
+        "tests/test_students_api.py::test_student_login_reuses_account_and_scoped_code_cannot_move_to_another_invitation",
+        "tests/test_students_api.py::test_invitation_rate_limit_and_validation_do_not_disclose_tokens",
+        "tests/test_students_domain.py::test_invitation_belongs_to_one_active_card"
       ]
     }
   }

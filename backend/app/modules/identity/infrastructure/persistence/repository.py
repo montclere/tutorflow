@@ -13,6 +13,7 @@ from app.modules.identity.domain.values import Contact, ContactKind, Profile, Ro
 from app.modules.identity.infrastructure.persistence.models import Account as AccountRow
 from app.modules.identity.infrastructure.persistence.models import LoginSession, RateWindow
 from app.modules.identity.infrastructure.persistence.models import Registration as RegistrationRow
+from app.modules.identity.public import PublicProfile
 
 
 def to_account(row: AccountRow | None) -> Account | None:
@@ -30,8 +31,36 @@ def to_account(row: AccountRow | None) -> Account | None:
 
 
 class PostgresIdentityRepository:
-    def __init__(self, db: DatabaseSession):
+    def __init__(self, db: DatabaseSession) -> None:
         self.db = db
+
+    async def find_public_profile(self, account_id: UUID) -> PublicProfile | None:
+        profiles = await self.list_public_profiles([account_id])
+
+        return profiles[0] if profiles else None
+
+    async def list_public_profiles(self, account_ids: list[UUID]) -> list[PublicProfile]:
+        if not account_ids:
+            return []
+
+        rows = await self.db.execute(
+            select(AccountRow.id, AccountRow.display_name, AccountRow.timezone).where(
+                AccountRow.id.in_(account_ids)
+            )
+        )
+
+        return [PublicProfile(row.id, row.display_name, row.timezone) for row in rows]
+
+    async def find_student_profile_for_update(self, account_id: UUID) -> PublicProfile | None:
+        row = (
+            await self.db.execute(
+                select(AccountRow.id, AccountRow.display_name, AccountRow.timezone)
+                .where(AccountRow.id == account_id, AccountRow.role == Role.STUDENT)
+                .with_for_update()
+            )
+        ).one_or_none()
+
+        return PublicProfile(row.id, row.display_name, row.timezone) if row else None
 
     async def find_account_for_update(self, account_id: UUID) -> Account | None:
         row = await self.db.scalar(
@@ -80,6 +109,8 @@ class PostgresIdentityRepository:
     ) -> UUID:
         values = {
             "id": registration.id,
+            "role": registration.role,
+            "invitation_id": registration.invitation_id,
             "code_digest": registration.code_digest,
             "sent_at": registration.sent_at,
             "expires_at": registration.expires_at,
@@ -162,6 +193,8 @@ class PostgresIdentityRepository:
             row.sent_at,
             row.expires_at,
             row.remaining_attempts,
+            Role(row.role),
+            row.invitation_id,
         )
 
     async def save_attempts(self, registration: Registration) -> None:

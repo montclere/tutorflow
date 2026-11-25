@@ -26,8 +26,16 @@ class Registration:
     sent_at: datetime
     expires_at: datetime
     remaining_attempts: int
+    role: Role = Role.TEACHER
+    invitation_id: UUID | None = None
 
     def __post_init__(self) -> None:
+        if (self.role is Role.STUDENT) != (self.invitation_id is not None) or self.role not in (
+            Role.TEACHER,
+            Role.STUDENT,
+        ):
+            raise ValueError("Некорректное назначение регистрации")
+
         if self.remaining_attempts < 0 or self.expires_at <= self.sent_at:
             raise ValueError("Некорректный срок или количество попыток подтверждения")
 

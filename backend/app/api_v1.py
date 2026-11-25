@@ -7,13 +7,17 @@ from app.dependencies import (
     authentication_service,
     calendar_service,
     identity_session,
+    previous_session,
     profile_service,
     read_actor,
     registration_service,
+    set_student_session,
+    student_services,
     write_actor,
 )
 from app.modules.identity.presentation.http.router import identity_router
 from app.modules.scheduling.presentation.router import calendar_router
+from app.modules.students.presentation.http.router import students_router
 
 
 PREFIX = "/api/v1"
@@ -31,3 +35,9 @@ router.include_router(
     )
 )
 router.include_router(calendar_router(calendar_service, read_actor, write_actor))
+
+router.include_router(
+    students_router(
+        student_services, read_actor, write_actor, previous_session, set_student_session
+    )
+)

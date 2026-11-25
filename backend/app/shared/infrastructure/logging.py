@@ -40,6 +40,8 @@ FIELDS = {
     "frames",
 }
 
+EXTERNAL_FIELDS = {"event", "level", "timestamp", "logger", "exception_type", "frames"}
+
 
 def safe_event(logger: Any, method: str, event: EventDict) -> EventDict:
     record = event.get("_record")
@@ -59,10 +61,13 @@ def safe_event(logger: Any, method: str, event: EventDict) -> EventDict:
                 for frame in traceback.extract_tb(exception[2])
             ]
 
-    if event.get("event") not in EVENTS:
+    known_event = event.get("_from_structlog") and event.get("event") in EVENTS
+    allowed_fields = FIELDS if known_event else EXTERNAL_FIELDS
+
+    if not known_event:
         event["event"] = "external_log"
 
-    return {key: value for key, value in event.items() if key in FIELDS}
+    return {key: value for key, value in event.items() if key in allowed_fields}
 
 
 def configure_logging(*, level: str = "INFO", stream: TextIO | None = None) -> None:

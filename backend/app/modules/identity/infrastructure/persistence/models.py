@@ -37,6 +37,11 @@ class Registration(IdentityBase):
     __tablename__ = "identity_registrations"
     __table_args__ = (
         CheckConstraint(
+            "(role = 'teacher' AND invitation_id IS NULL) "
+            "OR (role = 'student' AND invitation_id IS NOT NULL)",
+            name="ck_identity_registration_purpose",
+        ),
+        CheckConstraint(
             "contact_kind IN ('email', 'phone')", name="ck_identity_registration_contact_kind"
         ),
         CheckConstraint(
@@ -53,6 +58,8 @@ class Registration(IdentityBase):
     contact_kind: Mapped[str] = mapped_column(String(5), primary_key=True)
     contact: Mapped[str] = mapped_column(String(254), primary_key=True)
     id: Mapped[UUID] = mapped_column(unique=True)
+    role: Mapped[str] = mapped_column(String(10), server_default="teacher")
+    invitation_id: Mapped[UUID | None] = mapped_column()
     code_digest: Mapped[str] = mapped_column(String(64))
     sent_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
     expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), index=True)
