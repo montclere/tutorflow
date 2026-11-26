@@ -25,6 +25,8 @@ from app.modules.groups.domain.exceptions import GroupError
 from app.modules.groups.presentation.http.problems import group_problem
 from app.modules.identity.domain.exceptions import IdentityError
 from app.modules.identity.presentation.http.session import identity_problem
+from app.modules.scheduling.domain.exceptions import LessonError
+from app.modules.scheduling.presentation.http.lesson_problems import lesson_problem
 from app.modules.students.domain.exceptions import StudentError
 from app.modules.students.presentation.http.problems import student_problem
 from app.monitoring import monitoring_router
@@ -99,6 +101,7 @@ def create_app(services: Services | None = None) -> FastAPI:
     application.add_exception_handler(IdentityError, identity_problem)
     application.add_exception_handler(StudentError, student_problem)
     application.add_exception_handler(GroupError, group_problem)
+    application.add_exception_handler(LessonError, lesson_problem)
 
 
     @application.middleware("http")
