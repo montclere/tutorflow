@@ -14,6 +14,12 @@ from starlette.responses import JSONResponse
 
 MAX_VALIDATION_ERRORS = 20
 DESCRIPTIONS = {
+    "group_not_found": "Группа недоступна.",
+    "group_member_not_found": "Участник группы недоступен.",
+    "group_member_exists": "Карточка уже состоит в группе.",
+    "group_archived": "Сначала восстановите группу из архива.",
+    "invalid_group_data": "Проверьте название, заметку и параметры группы.",
+    "invalid_group_price": "Укажите точную неотрицательную стоимость занятия в рублях.",
     "role_not_enabled": "Этот кабинет ещё не подключён к аккаунту.",
     "self_connection_forbidden": "Нельзя быть собственным учеником или взрослым самого себя.",
     "adult_required": "Операция доступна приглашённому взрослому.",

@@ -21,6 +21,8 @@ from app.api_v1 import PREFIX, router
 from app.composition import Services
 from app.config import HttpSettings
 from app.dependencies import resolve_services
+from app.modules.groups.domain.exceptions import GroupError
+from app.modules.groups.presentation.http.problems import group_problem
 from app.modules.identity.domain.exceptions import IdentityError
 from app.modules.identity.presentation.http.session import identity_problem
 from app.modules.students.domain.exceptions import StudentError
@@ -96,6 +98,7 @@ def create_app(services: Services | None = None) -> FastAPI:
     application.add_exception_handler(RequestValidationError, validation_problem)
     application.add_exception_handler(IdentityError, identity_problem)
     application.add_exception_handler(StudentError, student_problem)
+    application.add_exception_handler(GroupError, group_problem)
 
 
     @application.middleware("http")
