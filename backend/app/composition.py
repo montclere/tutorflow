@@ -7,7 +7,12 @@ from datetime import UTC, datetime
 from sqlalchemy.ext.asyncio import AsyncEngine
 
 from app.config import Settings
+from app.integrations.groups import PostgresGroupsUnitOfWork
 from app.integrations.students import PostgresStudentsUnitOfWork, StudentRateLimits
+from app.modules.groups.application.services.collection import GroupServices
+from app.modules.groups.application.services.groups import GroupService
+from app.modules.groups.application.services.memberships import MembershipService
+from app.modules.groups.application.services.participation import ParticipationService
 from app.modules.identity.application.ports import CodeDelivery
 from app.modules.identity.application.services.authentication import AuthenticationService
 from app.modules.identity.application.services.profiles import ProfileService
@@ -65,6 +70,7 @@ class Services:
     metrics: Metrics
     students: StudentServices
     adults: AdultServices
+    groups: GroupServices
 
     @property
     def cookie_name(self) -> str:
@@ -158,6 +164,13 @@ async def build_services(
         ),
     )
 
+    groups_persistence = PostgresGroupsUnitOfWork(engine)
+    groups = GroupServices(
+        GroupService(groups_persistence),
+        MembershipService(groups_persistence),
+        ParticipationService(groups_persistence),
+    )
+
     return Services(
         IdentityServices(
             registration,
@@ -172,6 +185,7 @@ async def build_services(
         metrics,
         student_services,
         adult_services,
+        groups,
     )
 
 

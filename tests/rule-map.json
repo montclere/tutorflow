@@ -279,6 +279,63 @@
       "pytest": [
         "tests/test_account_roles_storage.py::test_upgrade_preserves_accounts_profiles_sessions_and_both_connection_types"
       ]
+    },
+    "BR-021": {
+      "pytest": [
+        "tests/test_groups_domain.py::test_empty_group_has_own_identity_and_normalized_name",
+        "tests/test_groups_api.py::test_group_is_independent_with_personal_prices_and_computed_total",
+        "tests/test_groups_api.py::test_group_mutations_validate_csrf_money_and_page_bounds",
+        "tests/test_groups_storage.py::test_upgrade_preserves_existing_cards_and_orm_matches_schema"
+      ]
+    },
+    "BR-027": {
+      "pytest": [
+        "tests/test_groups_domain.py::test_archived_group_rejects_changes_until_restored",
+        "tests/test_groups_api.py::test_group_archive_preserves_members_but_card_archive_requires_manual_rejoin"
+      ]
+    },
+    "BR-091": {
+      "pytest": [
+        "tests/test_groups_domain.py::test_price_rejects_invalid_amounts",
+        "tests/test_groups_domain.py::test_personal_price_is_exact_and_independent_of_another_member",
+        "tests/test_groups_api.py::test_group_is_independent_with_personal_prices_and_computed_total",
+        "tests/test_groups_api.py::test_concurrent_duplicate_join_and_large_total_are_exact",
+        "tests/test_groups_api.py::test_group_mutations_validate_csrf_money_and_page_bounds",
+        "tests/test_groups_storage.py::test_database_rejects_cross_owner_duplicate_and_invalid_memberships"
+      ]
+    },
+    "BR-024": {
+      "pytest": [
+        "tests/test_groups_domain.py::test_personal_price_is_exact_and_independent_of_another_member",
+        "tests/test_groups_api.py::test_group_is_independent_with_personal_prices_and_computed_total"
+      ]
+    },
+    "BR-023": {
+      "pytest": [
+        "tests/test_groups_api.py::test_group_is_independent_with_personal_prices_and_computed_total"
+      ]
+    },
+    "BR-022": {
+      "pytest": [
+        "tests/test_groups_api.py::test_card_can_join_multiple_groups_but_foreign_card_and_duplicates_are_rejected",
+        "tests/test_groups_api.py::test_concurrent_join_and_card_archive_leave_no_current_membership",
+        "tests/test_groups_api.py::test_concurrent_duplicate_join_and_large_total_are_exact",
+        "tests/test_groups_storage.py::test_database_rejects_cross_owner_duplicate_and_invalid_memberships"
+      ]
+    },
+    "BR-093": {
+      "pytest": [
+        "tests/test_groups_api.py::test_group_archive_preserves_members_but_card_archive_requires_manual_rejoin",
+        "tests/test_groups_api.py::test_concurrent_join_and_card_archive_leave_no_current_membership",
+        "tests/test_groups_api.py::test_membership_cleanup_failure_rolls_back_card_archive",
+        "tests/test_groups_storage.py::test_upgrade_preserves_existing_cards_and_orm_matches_schema"
+      ]
+    },
+    "BR-092": {
+      "pytest": [
+        "tests/test_groups_api.py::test_student_reads_only_own_participation_without_roster_or_private_prices",
+        "tests/test_groups_api.py::test_adult_reads_only_linked_child_group_and_loses_access_after_disconnect"
+      ]
     }
   }
 }

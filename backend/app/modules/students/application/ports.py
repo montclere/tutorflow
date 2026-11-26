@@ -6,6 +6,7 @@ from datetime import datetime
 from typing import Protocol
 from uuid import UUID
 
+from app.modules.groups.public import GroupMemberships
 from app.modules.identity.public import InvitedAccounts
 from app.modules.students.application.contracts import (
     AdultLearningProfile,
@@ -115,6 +116,7 @@ class StudentsTransaction:
     students: StudentsRepository
     accounts: InvitedAccounts
     adults: AdultAccessRepository
+    groups: GroupMemberships
 
 
 class StudentsUnitOfWork(Protocol):

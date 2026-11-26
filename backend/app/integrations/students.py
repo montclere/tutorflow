@@ -6,6 +6,7 @@ from uuid import UUID
 
 from sqlalchemy.ext.asyncio import AsyncEngine, async_sessionmaker
 
+from app.modules.groups.infrastructure.persistence.repository import PostgresGroupsRepository
 from app.modules.identity.application.services.invited_accounts import InvitedAccountService
 from app.modules.identity.application.services.rate_limits import RateLimitService
 from app.modules.identity.application.services.registration import RegistrationService
@@ -31,6 +32,7 @@ class PostgresStudentsUnitOfWork:
                 PostgresStudentsRepository(db),
                 InvitedAccountService(PostgresIdentityRepository(db), self.registration),
                 PostgresAdultAccessRepository(db),
+                PostgresGroupsRepository(db),
             )
 
 

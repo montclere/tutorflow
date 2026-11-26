@@ -4,6 +4,7 @@ from fastapi import HTTPException, Request, Response
 from sqlalchemy.exc import ArgumentError
 
 from app.composition import Services, services_from_environment
+from app.modules.groups.application.services.collection import GroupServices
 from app.modules.identity.application.services.authentication import AuthenticationService
 from app.modules.identity.application.services.profiles import ProfileService
 from app.modules.identity.application.services.registration import RegistrationService
@@ -122,3 +123,7 @@ async def set_invited_session(
 
 async def adult_services(request: Request) -> AdultServices:
     return (await resolve_services(request)).adults
+
+
+async def group_services(request: Request) -> GroupServices:
+    return (await resolve_services(request)).groups
