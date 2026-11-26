@@ -129,7 +129,9 @@ def groups_router(
             actor, group_id, command.card_id, command.price.to_price()
         )
 
-        return MemberView(card_id=row.member.card_id, name=row.name, price=command.price)
+        return MemberView(
+            card_id=row.member.card_id, name=row.name, price=Amount(amount=row.member.price.amount)
+        )
 
 
     @router.get("/groups/{group_id}/members")

@@ -9,7 +9,7 @@ from pydantic import BaseModel, ConfigDict, Field
 
 from app.modules.groups.application.contracts import PAGE_MAX_SIZE, GroupOverview, Participation
 from app.modules.groups.domain.entities import Member
-from app.modules.groups.domain.values import NAME_MAX_LENGTH, NOTES_MAX_LENGTH, Price
+from app.modules.groups.domain.values import NAME_MAX_LENGTH, NOTES_MAX_LENGTH, PRICE_QUANTUM, Price
 
 
 PageSize = Annotated[int, Query(ge=1, le=PAGE_MAX_SIZE)]
@@ -60,7 +60,7 @@ class GroupView(BaseModel):
             name=group.name,
             notes=group.notes,
             archived=group.archived,
-            total_price=TotalPrice(amount=value.total),
+            total_price=TotalPrice(amount=value.total.quantize(PRICE_QUANTUM)),
         )
 
 

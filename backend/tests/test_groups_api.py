@@ -55,6 +55,10 @@ async def test_group_is_independent_with_personal_prices_and_computed_total(clie
 
     assert profile.status_code == 201
 
+    assert all(
+        row["total_price"]["amount"] == "0.00"
+        for row in (await client.get(f"{BASE}/groups")).json()["items"]
+    )
     assert item["id"] != duplicate["id"]
     assert item["total_price"] == {"amount": "0.00", "currency": "RUB"}
     assert (await add_member(client, headers, item["id"], first["id"])).status_code == 201
