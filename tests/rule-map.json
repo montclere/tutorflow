@@ -261,7 +261,8 @@
       "pytest": [
         "tests/test_account_roles_api.py::test_teacher_can_parent_own_child_but_cannot_be_own_student",
         "tests/test_account_roles_api.py::test_student_and_parent_of_same_card_are_exclusive_in_both_orders",
-        "tests/test_account_roles_api.py::test_racing_student_and_parent_acceptance_creates_only_one_relation"
+        "tests/test_account_roles_api.py::test_racing_student_and_parent_acceptance_creates_only_one_relation",
+        "tests/test_account_roles_storage.py::test_database_rejects_self_student_and_two_participation_types"
       ]
     },
     "BR-089": {
@@ -269,6 +270,11 @@
         "tests/test_account_roles_api.py::test_one_identity_has_independent_teacher_student_and_adult_contexts",
         "tests/test_account_roles_api.py::test_teacher_activation_is_explicit_csrf_protected_and_idempotent",
         "tests/test_account_roles_api.py::test_final_invitation_failure_rolls_back_new_role_and_preserves_account"
+      ]
+    },
+    "BR-090": {
+      "pytest": [
+        "tests/test_account_roles_storage.py::test_upgrade_preserves_accounts_profiles_sessions_and_both_connection_types"
       ]
     }
   }
