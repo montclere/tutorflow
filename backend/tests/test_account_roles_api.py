@@ -47,6 +47,7 @@ async def roles(client):
     return set(response.json()["roles"])
 
 
+@pytest.mark.br_084
 async def test_one_identity_has_independent_teacher_student_and_adult_contexts(
     client, inbox, services, database
 ):
@@ -244,3 +245,48 @@ async def test_final_invitation_failure_rolls_back_new_role_and_preserves_accoun
     async with AsyncSession(database) as db:
         assert await db.scalar(select(func.count()).select_from(Account)) == 2
         assert await db.scalar(select(func.count()).select_from(Connection)) == 1
+
+
+async def test_forged_context_and_repeat_registration_cannot_grant_role(
+    client, inbox, services, database
+):
+    headers = await teacher(client, inbox, "owner@example.com")
+    item = await card(client, headers)
+    token = (await issue(client, headers, item["id"]))["token"]
+    forged = headers | {"x-role": "adult", "x-account-role": "adult"}
+    response = await client.get(f"{BASE}/me/students?role=adult", headers=forged)
+
+    assert response.status_code == 403, response.text
+    assert response.json()["code"] == "role_not_enabled"
+    assert (await client.get(f"{BASE}/me?role=adult")).status_code == 403
+
+    messages_before = len(inbox.messages)
+
+    async with client_for(services) as anonymous:
+        challenge = await anonymous.post(
+            f"{BASE}/adult-invitations/registrations",
+            json={"token": token, "kind": "email", "contact": "owner@example.com"},
+        )
+
+        assert challenge.status_code == 202, challenge.text
+        assert len(inbox.messages) == messages_before
+
+        completed = await anonymous.post(
+            f"{BASE}/adult-invitations/registrations/complete",
+            json={
+                "token": token,
+                "challenge_id": challenge.json()["challenge_id"],
+                "code": inbox.messages[-1][2],
+                "password": PASSWORD,
+            },
+        )
+
+        assert completed.status_code == 400, completed.text
+        assert (await anonymous.get(f"{BASE}/me")).status_code == 401
+
+    assert await roles(client) == {"teacher"}
+
+    async with AsyncSession(database) as db:
+        assert await db.scalar(select(func.count()).select_from(Account)) == 1
+        assert await db.scalar(select(func.count()).select_from(AccountRole)) == 1
+        assert await db.scalar(select(func.count()).select_from(Connection)) == 0

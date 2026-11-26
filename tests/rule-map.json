@@ -198,7 +198,8 @@
       "pytest": [
         "tests/test_adult_access_storage.py::test_upgrade_preserves_teacher_and_student_confirmations",
         "tests/test_adult_access_api.py::test_adult_registers_views_price_and_updates_only_own_profile",
-        "tests/test_adult_access_api.py::test_invitation_roles_and_codes_cannot_be_swapped"
+        "tests/test_adult_access_api.py::test_invitation_roles_and_codes_cannot_be_swapped",
+        "tests/test_account_roles_api.py::test_one_identity_has_independent_teacher_student_and_adult_contexts"
       ]
     },
     "BR-013": {
@@ -254,7 +255,8 @@
     "BR-087": {
       "pytest": [
         "tests/test_account_roles_api.py::test_one_identity_has_independent_teacher_student_and_adult_contexts",
-        "tests/test_account_roles_api.py::test_teacher_activation_is_explicit_csrf_protected_and_idempotent"
+        "tests/test_account_roles_api.py::test_teacher_activation_is_explicit_csrf_protected_and_idempotent",
+        "tests/test_account_roles_api.py::test_forged_context_and_repeat_registration_cannot_grant_role"
       ]
     },
     "BR-088": {
@@ -269,7 +271,8 @@
       "pytest": [
         "tests/test_account_roles_api.py::test_one_identity_has_independent_teacher_student_and_adult_contexts",
         "tests/test_account_roles_api.py::test_teacher_activation_is_explicit_csrf_protected_and_idempotent",
-        "tests/test_account_roles_api.py::test_final_invitation_failure_rolls_back_new_role_and_preserves_account"
+        "tests/test_account_roles_api.py::test_final_invitation_failure_rolls_back_new_role_and_preserves_account",
+        "tests/test_account_roles_api.py::test_forged_context_and_repeat_registration_cannot_grant_role"
       ]
     },
     "BR-090": {
