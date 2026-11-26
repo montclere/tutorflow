@@ -66,6 +66,7 @@ class CardService:
             await unit.students.save_card(card)
 
             if archived:
+                await unit.groups.remove_card(card.id)
                 await unit.students.revoke_invitation(card.id)
                 await unit.adults.revoke_invitations(card.id)
 
