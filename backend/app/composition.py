@@ -45,6 +45,7 @@ from app.modules.students.application.services.connections import ConnectionServ
 from app.modules.students.application.services.invitations import InvitationService
 from app.modules.students.application.services.profiles import LearningProfileService
 from app.modules.students.application.services.registration import InvitedRegistrationService
+from app.modules.students.application.services.responsibilities import ResponsibilityService
 from app.modules.students.domain.policies import AdultAccessPolicy, StudentPolicy
 from app.modules.students.infrastructure.security.tokens import SecureInvitationTokens
 from app.modules.students.infrastructure.settings import StudentSettings
@@ -138,6 +139,7 @@ async def build_services(
     )
     connection_service = ConnectionService(student_persistence, invitation_service)
     student_services = StudentServices(
+        ResponsibilityService(student_persistence, now_utc),
         CardService(student_persistence),
         LearningProfileService(student_persistence),
         invitation_service,

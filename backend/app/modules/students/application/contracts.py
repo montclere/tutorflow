@@ -1,9 +1,10 @@
 """Контракты списков, приглашений и результатов карточки."""
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from datetime import datetime
 from uuid import UUID
 
+from app.modules.identity.public import Role, field
 from app.modules.students.domain.entities import StudentCard
 from app.modules.students.domain.values import Money
 
@@ -65,3 +66,10 @@ class StudentCardSummary:
     teacher_id: UUID
     name: str
     archived: bool
+
+
+@dataclass(frozen=True)
+class ResponsibilityAssignment:
+    card_id: UUID
+    account_id: UUID | None
+    role: Role | None

@@ -24,6 +24,7 @@ from app.modules.groups.presentation.http.router import groups_router
 from app.modules.identity.presentation.http.router import identity_router
 from app.modules.scheduling.presentation.router import calendar_router
 from app.modules.students.presentation.http.adult_router import adult_access_router
+from app.modules.students.presentation.http.responsibilities_router import responsibilities_router
 from app.modules.students.presentation.http.router import students_router
 
 
@@ -69,3 +70,6 @@ router.include_router(
 
 
 router.include_router(groups_router(group_services, teacher_access, student_access, adult_access))
+
+
+router.include_router(responsibilities_router(student_services, teacher_access))

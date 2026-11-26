@@ -10,6 +10,7 @@ from app.modules.students.application.services.access import (
     require_student,
 )
 from app.modules.students.application.services.invitations import InvitationService
+from app.modules.students.application.services.responsibilities import assign_initial_responsibility
 from app.modules.students.domain.entities import (
     Connection,
     Invitation,
@@ -47,6 +48,7 @@ class ConnectionService:
         connection = Connection(card.id, card.teacher_id, account_id)
 
         await unit.students.add_connection(connection)
+        await assign_initial_responsibility(unit, card.id, account_id, self.invitations.clock())
 
         return connection
 

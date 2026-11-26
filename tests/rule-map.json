@@ -336,6 +336,24 @@
         "tests/test_groups_api.py::test_student_reads_only_own_participation_without_roster_or_private_prices",
         "tests/test_groups_api.py::test_adult_reads_only_linked_child_group_and_loses_access_after_disconnect"
       ]
+    },
+    "BR-033": {
+      "pytest": [
+        "tests/test_card_responsibilities.py::test_first_adult_remains_responsible_when_student_joins_and_teacher_can_reassign",
+        "tests/test_card_responsibilities.py::test_responsible_disconnect_does_not_transfer_permission_to_another_observer",
+        "tests/test_card_responsibilities.py::test_responsibility_assignment_requires_owner_csrf_and_live_connection",
+        "tests/test_card_responsibilities.py::test_concurrent_first_student_and_adult_connections_assign_only_one_responsible",
+        "tests/test_responsibilities_storage.py::test_migration_assigns_only_unambiguous_existing_connection_and_fk_revokes_it"
+      ]
+    },
+    "BR-098": {
+      "pytest": [
+        "tests/test_card_responsibilities.py::test_first_adult_remains_responsible_when_student_joins_and_teacher_can_reassign",
+        "tests/test_card_responsibilities.py::test_responsible_disconnect_does_not_transfer_permission_to_another_observer",
+        "tests/test_card_responsibilities.py::test_responsibility_assignment_requires_owner_csrf_and_live_connection",
+        "tests/test_card_responsibilities.py::test_concurrent_first_student_and_adult_connections_assign_only_one_responsible",
+        "tests/test_responsibilities_storage.py::test_migration_assigns_only_unambiguous_existing_connection_and_fk_revokes_it"
+      ]
     }
   }
 }

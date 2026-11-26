@@ -11,6 +11,7 @@ from app.modules.students.application.services.access import (
     require_page_size,
 )
 from app.modules.students.application.services.adult_invitations import AdultInvitationService
+from app.modules.students.application.services.responsibilities import assign_initial_responsibility
 from app.modules.students.domain.entities import Connection, Invitation, StudentCard
 from app.modules.students.domain.exceptions import StudentError
 from app.modules.students.domain.policies import AdultAccessPolicy
@@ -50,6 +51,7 @@ class AdultConnectionService:
         connection = Connection(card.id, card.teacher_id, account_id)
 
         await unit.adults.add_connection(connection)
+        await assign_initial_responsibility(unit, card.id, account_id, self.invitations.clock())
 
         return connection
 
