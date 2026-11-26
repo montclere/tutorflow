@@ -73,7 +73,7 @@ class PostgresStudentsRepository:
             query = query.where(CardRow.teacher_id == teacher_id)
 
         if lock:
-            query = query.with_for_update()
+            query = query.with_for_update().execution_options(populate_existing=True)
 
         row = await self.db.scalar(query)
 

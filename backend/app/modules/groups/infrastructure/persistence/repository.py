@@ -44,7 +44,11 @@ class PostgresGroupsRepository:
         await self.db.flush()
 
     async def find(self, group_id: UUID, teacher_id: UUID, *, lock: bool) -> Group | None:
-        query = select(GroupRow).where(GroupRow.id == group_id, GroupRow.teacher_id == teacher_id)
+        query = (
+            select(GroupRow)
+            .where(GroupRow.id == group_id, GroupRow.teacher_id == teacher_id)
+            .execution_options(populate_existing=True)
+        )
 
         if lock:
             query = query.with_for_update()
