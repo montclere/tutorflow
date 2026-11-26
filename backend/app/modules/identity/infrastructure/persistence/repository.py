@@ -11,7 +11,11 @@ from app.modules.identity.application.ports import RegistrationDelivery
 from app.modules.identity.domain.entities import Account, Registration, Session
 from app.modules.identity.domain.values import Contact, ContactKind, Profile, Role
 from app.modules.identity.infrastructure.persistence.models import Account as AccountRow
-from app.modules.identity.infrastructure.persistence.models import LoginSession, RateWindow
+from app.modules.identity.infrastructure.persistence.models import (
+    AccountRole,
+    LoginSession,
+    RateWindow,
+)
 from app.modules.identity.infrastructure.persistence.models import Registration as RegistrationRow
 from app.modules.identity.public import PublicProfile
 
@@ -23,7 +27,7 @@ def to_account(row: AccountRow | None) -> Account | None:
     return Account(
         row.id,
         Contact(ContactKind(row.contact_kind), row.contact),
-        Role(row.role),
+        frozenset(Role(item.role) for item in row.role_assignments),
         row.password_hash,
         row.verified_at,
         Profile(row.display_name, row.timezone),
@@ -51,14 +55,17 @@ class PostgresIdentityRepository:
 
         return [PublicProfile(row.id, row.display_name, row.timezone) for row in rows]
 
-    async def find_student_profile_for_update(self, account_id: UUID) -> PublicProfile | None:
-        row = (
-            await self.db.execute(
-                select(AccountRow.id, AccountRow.display_name, AccountRow.timezone)
-                .where(AccountRow.id == account_id, AccountRow.role == Role.STUDENT)
-                .with_for_update()
-            )
-        ).one_or_none()
+    async def find_public_profile_for_update(
+        self, account_id: UUID, role: Role | None = None
+    ) -> PublicProfile | None:
+        query = select(AccountRow.id, AccountRow.display_name, AccountRow.timezone).where(
+            AccountRow.id == account_id
+        )
+
+        if role is not None:
+            query = query.where(AccountRow.role_assignments.any(AccountRole.role == role))
+
+        row = (await self.db.execute(query.with_for_update())).one_or_none()
 
         return PublicProfile(row.id, row.display_name, row.timezone) if row else None
 
@@ -85,7 +92,6 @@ class PostgresIdentityRepository:
                 id=account.id,
                 contact_kind=account.contact.kind,
                 contact=account.contact.value,
-                role=account.role,
                 password_hash=account.password_hash,
                 verified_at=account.verified_at,
             )
@@ -93,7 +99,20 @@ class PostgresIdentityRepository:
             .returning(AccountRow.id)
         )
 
-        return await self.db.scalar(statement) is not None
+        created = await self.db.scalar(statement) is not None
+
+        if created:
+            for role in account.roles:
+                await self.add_role(account.id, role, account.verified_at)
+
+        return created
+
+    async def add_role(self, account_id: UUID, role: Role, now: datetime) -> None:
+        await self.db.execute(
+            insert(AccountRole)
+            .values(account_id=account_id, role=role, created_at=now)
+            .on_conflict_do_nothing(index_elements=[AccountRole.account_id, AccountRole.role])
+        )
 
     async def update_password_hash(self, account_id: UUID, digest: str) -> None:
         await self.db.execute(

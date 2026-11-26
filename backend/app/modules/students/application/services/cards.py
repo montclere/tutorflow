@@ -67,6 +67,7 @@ class CardService:
 
             if archived:
                 await unit.students.revoke_invitation(card.id)
+                await unit.adults.revoke_invitations(card.id)
 
             connection = await unit.students.find_connection(card.id)
 

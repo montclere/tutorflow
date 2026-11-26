@@ -90,7 +90,7 @@ async def test_registration_selects_role_and_consumes_locked_challenge():
     repo.find_registration_for_update.return_value = registration
     result = await service.complete(challenge_id, code, "example password", "127.0.0.1", None)
 
-    assert result.account.role is Role.TEACHER
+    assert result.account.roles == frozenset({Role.TEACHER})
     assert result.account.contact == contact
     assert result.account.verified_at == now
     assert registration.code_digest != code
@@ -161,7 +161,7 @@ async def test_login_rechecks_credentials_after_password_verification(rehash):
 
     now = datetime(2026, 11, 24, 8, tzinfo=UTC)
     contact = Contact(ContactKind.EMAIL, "teacher@example.com")
-    account = Account(uuid4(), contact, Role.TEACHER, "old-hash", now)
+    account = Account(uuid4(), contact, frozenset({Role.TEACHER}), "old-hash", now)
     storage = MemoryUnitOfWork()
     repository = storage.repository
     repository.consume_rate_window.return_value = True

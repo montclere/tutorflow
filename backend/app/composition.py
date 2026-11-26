@@ -13,6 +13,7 @@ from app.modules.identity.application.services.authentication import Authenticat
 from app.modules.identity.application.services.profiles import ProfileService
 from app.modules.identity.application.services.rate_limits import RateLimitService
 from app.modules.identity.application.services.registration import RegistrationService
+from app.modules.identity.application.services.roles import RoleService
 from app.modules.identity.application.services.sessions import SessionService
 from app.modules.identity.domain.policies import IdentityPolicy
 from app.modules.identity.infrastructure.delivery.sender import (
@@ -28,15 +29,18 @@ from app.modules.identity.presentation.http.session import (
     LOCAL_SESSION_COOKIE,
     SECURE_SESSION_COOKIE,
 )
+from app.modules.identity.public import Role
 from app.modules.scheduling.application.calendar import Calendar
 from app.modules.scheduling.infrastructure.repository import PostgresCalendarRepository
+from app.modules.students.application.services.adult_connections import AdultConnectionService
+from app.modules.students.application.services.adult_invitations import AdultInvitationService
 from app.modules.students.application.services.cards import CardService
-from app.modules.students.application.services.collection import StudentServices
+from app.modules.students.application.services.collection import AdultServices, StudentServices
 from app.modules.students.application.services.connections import ConnectionService
 from app.modules.students.application.services.invitations import InvitationService
 from app.modules.students.application.services.profiles import LearningProfileService
-from app.modules.students.application.services.registration import StudentRegistrationService
-from app.modules.students.domain.policies import StudentPolicy
+from app.modules.students.application.services.registration import InvitedRegistrationService
+from app.modules.students.domain.policies import AdultAccessPolicy, StudentPolicy
 from app.modules.students.infrastructure.security.tokens import SecureInvitationTokens
 from app.modules.students.infrastructure.settings import StudentSettings
 from app.shared.infrastructure.database import postgres_engine
@@ -49,6 +53,7 @@ class IdentityServices:
     authentication: AuthenticationService
     sessions: SessionService
     profiles: ProfileService
+    roles: RoleService
 
 
 @dataclass(frozen=True)
@@ -59,6 +64,7 @@ class Services:
     engine: AsyncEngine
     metrics: Metrics
     students: StudentServices
+    adults: AdultServices
 
     @property
     def cookie_name(self) -> str:
@@ -79,6 +85,7 @@ async def build_services(
     identity_policy: IdentityPolicy | None = None,
     password_hashing: PasswordHashingSettings | None = None,
     student_policy: StudentPolicy | None = None,
+    adult_policy: AdultAccessPolicy | None = None,
 ) -> Services:
     metrics = metrics or Metrics()
     passwords = ArgonPasswords(password_hashing)
@@ -112,7 +119,9 @@ async def build_services(
         contacts=contacts,
     )
 
-    student_policy = student_policy or StudentSettings().policy
+    student_settings = StudentSettings()
+    student_policy = student_policy or student_settings.policy
+    adult_policy = adult_policy or student_settings.adult_policy
     student_persistence = PostgresStudentsUnitOfWork(engine, registration)
     invitation_service = InvitationService(
         student_persistence,
@@ -127,18 +136,42 @@ async def build_services(
         LearningProfileService(student_persistence),
         invitation_service,
         connection_service,
-        StudentRegistrationService(
-            student_persistence, registration, invitation_service, connection_service
+        InvitedRegistrationService(
+            student_persistence, registration, invitation_service, connection_service, Role.STUDENT
+        ),
+    )
+
+    adult_invitations = AdultInvitationService(
+        student_persistence,
+        SecureInvitationTokens(secret, purpose=b"adults-invitation\0"),
+        StudentRateLimits(rate_limits, student_policy, registration),
+        student_policy,
+        adult_policy,
+        now_utc,
+    )
+    adult_connections = AdultConnectionService(student_persistence, adult_invitations, adult_policy)
+    adult_services = AdultServices(
+        adult_invitations,
+        adult_connections,
+        InvitedRegistrationService(
+            student_persistence, registration, adult_invitations, adult_connections, Role.ADULT
         ),
     )
 
     return Services(
-        IdentityServices(registration, authentication, sessions, ProfileService(persistence)),
+        IdentityServices(
+            registration,
+            authentication,
+            sessions,
+            ProfileService(persistence),
+            RoleService(persistence, now_utc),
+        ),
         Calendar(PostgresCalendarRepository(engine)),
         secure_cookie,
         engine,
         metrics,
         student_services,
+        adult_services,
     )
 
 

@@ -7,7 +7,7 @@ from uuid import UUID
 
 from app.modules.identity.application.contracts import ContactInput, RegistrationDelivery
 from app.modules.identity.domain.entities import Account, Registration, Session
-from app.modules.identity.domain.values import Contact
+from app.modules.identity.domain.values import Contact, Role
 from app.modules.identity.public import PublicProfile
 
 
@@ -16,13 +16,17 @@ class IdentityRepository(Protocol):
 
     async def list_public_profiles(self, account_ids: list[UUID]) -> list[PublicProfile]: ...
 
-    async def find_student_profile_for_update(self, account_id: UUID) -> PublicProfile | None: ...
+    async def find_public_profile_for_update(
+        self, account_id: UUID, role: Role | None = None
+    ) -> PublicProfile | None: ...
 
     async def find_account_for_update(self, account_id: UUID) -> Account | None: ...
 
     async def find_account_by_contact(self, contact: Contact) -> Account | None: ...
 
     async def add_account(self, account: Account) -> bool: ...
+
+    async def add_role(self, account_id: UUID, role: Role, now: datetime) -> None: ...
 
     async def update_password_hash(self, account_id: UUID, digest: str) -> None: ...
 

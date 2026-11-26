@@ -23,6 +23,9 @@ class Role(StrEnum):
     ADULT = "adult"
 
 
+INVITED_ROLES = frozenset({Role.STUDENT, Role.ADULT})
+
+
 @dataclass(frozen=True)
 class Contact:
     kind: ContactKind

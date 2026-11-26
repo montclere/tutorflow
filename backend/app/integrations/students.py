@@ -13,6 +13,9 @@ from app.modules.identity.domain.policies import AttemptLimit
 from app.modules.identity.infrastructure.persistence.repository import PostgresIdentityRepository
 from app.modules.students.application.ports import StudentsTransaction
 from app.modules.students.domain.policies import StudentPolicy
+from app.modules.students.infrastructure.persistence.adult_repository import (
+    PostgresAdultAccessRepository,
+)
 from app.modules.students.infrastructure.persistence.repository import PostgresStudentsRepository
 
 
@@ -27,6 +30,7 @@ class PostgresStudentsUnitOfWork:
             yield StudentsTransaction(
                 PostgresStudentsRepository(db),
                 InvitedAccountService(PostgresIdentityRepository(db), self.registration),
+                PostgresAdultAccessRepository(db),
             )
 
 

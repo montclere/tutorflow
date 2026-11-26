@@ -8,9 +8,10 @@ import pytest
 from sqlalchemy import insert, select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
+from tests.identity_testkit import seed_account
 from tests.postgres_testkit import check_schema, migrate, migrated_schema
 
-from app.modules.identity.infrastructure.persistence.models import Account, Registration
+from app.modules.identity.infrastructure.persistence.models import Registration
 from app.modules.students.infrastructure.persistence.models import (
     Connection,
     LearningProfile,
@@ -63,15 +64,14 @@ async def test_database_protects_price_card_owner_and_connection_uniqueness(data
             (teacher_b, "teacher"),
             (student, "student"),
         ]:
-            await db.execute(
-                insert(Account).values(
-                    id=identifier,
-                    contact_kind="email",
-                    contact=f"{identifier}@example.com",
-                    verified_at=now,
-                    password_hash="hash",
-                    role=role,
-                )
+            await seed_account(
+                db,
+                account_id=identifier,
+                contact_kind="email",
+                contact=f"{identifier}@example.com",
+                verified_at=now,
+                password_hash="hash",
+                role=role,
             )
 
         for identifier in (first, second):

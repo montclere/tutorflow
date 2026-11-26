@@ -1,5 +1,5 @@
 export type Contact = { type: "email" | "phone"; value: string };
-export type Account = { id: string };
+export type Account = { id: string; roles: ("teacher" | "student" | "adult")[] };
 export type Profile = { display_name: string | null; timezone: string | null };
 export type CalendarBlock = {
   id: string;
@@ -27,6 +27,7 @@ const errors: Record<string, string> = {
   calendar_block_conflict: "Запрос устарел. Откройте список и повторите действие.",
   calendar_block_not_found: "Блок больше недоступен.",
   authentication_required: "Сессия закончилась. Войдите снова.",
+  role_not_enabled: "У этого аккаунта пока нет кабинета преподавателя.",
   identity_unavailable: "API аккаунтов пока недоступен.",
 };
 
@@ -87,7 +88,7 @@ function blockListPath(after?: CalendarBlock) {
 }
 
 export const api = {
-  me: () => request<Account>("/me"),
+  me: () => request<Account>("/me?role=teacher"),
   register: (login_contact: Contact) =>
     request<{ challenge_id: string }>("/auth/registrations", "POST", { login_contact }),
   confirm: (challenge_id: string, code: string, password: string) =>
@@ -97,7 +98,11 @@ export const api = {
       password,
     }),
   login: (login_contact: Contact, password: string) =>
-    request<{ account: Account }>("/auth/login", "POST", { login_contact, password }),
+    request<{ account: Account }>("/auth/login", "POST", {
+      login_contact,
+      password,
+      role: "teacher",
+    }),
   logout: () => protectedRequest<void>("/auth/session", "DELETE"),
   profile: () => request<Profile>("/me/profile"),
   updateProfile: (profile: Partial<Profile>) =>

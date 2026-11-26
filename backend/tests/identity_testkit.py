@@ -1,10 +1,15 @@
 """Почтовый ящик и HTTP-шаги регистрации для интеграционных тестов."""
 
 from dataclasses import dataclass, field
+from datetime import datetime
+from uuid import UUID
 
 from httpx import AsyncClient
+from sqlalchemy import insert, text
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.modules.identity.domain.values import Contact, ContactKind
+from app.modules.identity.infrastructure.persistence.models import Account, AccountRole
 
 
 PASSWORD = "a long teacher password"
@@ -44,3 +49,38 @@ async def register(client: AsyncClient, contact: dict[str, str], inbox: Inbox):
     assert response.status_code == 201, response.text
 
     return response
+
+
+async def seed_account(
+    db: AsyncSession,
+    *,
+    account_id: UUID,
+    contact_kind: str,
+    contact: str,
+    password_hash: str,
+    verified_at: datetime,
+    role: str,
+    legacy: bool = False,
+) -> None:
+    values = dict(
+        id=account_id,
+        contact_kind=contact_kind,
+        contact=contact,
+        password_hash=password_hash,
+        verified_at=verified_at,
+    )
+
+    if legacy:
+        await db.execute(
+            text(
+                "INSERT INTO identity_accounts (id, contact_kind, contact, password_hash, "
+                "verified_at, role) VALUES (:id, :contact_kind, :contact, :password_hash, "
+                ":verified_at, :role)"
+            ),
+            values | {"role": role},
+        )
+    else:
+        await db.execute(insert(Account).values(**values))
+        await db.execute(
+            insert(AccountRole).values(account_id=account_id, role=role, created_at=verified_at)
+        )

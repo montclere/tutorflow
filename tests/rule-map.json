@@ -107,7 +107,7 @@
         "tests/test_students_api.py::test_student_registration_profile_archive_and_delete_keep_accounts",
         "tests/test_students_api.py::test_one_invitation_registers_at_most_one_account_under_concurrency",
         "tests/test_students_api.py::test_invitation_invalidated_during_hashing_creates_no_account",
-        "tests/test_students_api.py::test_student_challenge_cannot_create_teacher_or_change_existing_role",
+        "tests/test_students_api.py::test_student_challenge_cannot_create_teacher_or_allow_self_connection",
         "tests/test_students_api.py::test_disconnect_then_new_account_uses_same_card_and_old_account_remains",
         "tests/test_students_api.py::test_failure_at_final_invitation_claim_rolls_back_account_and_session",
         "tests/test_students_api.py::test_code_expiring_after_account_insert_rolls_back_registration",
@@ -161,7 +161,7 @@
         "tests/test_students_api.py::test_one_invitation_registers_at_most_one_account_under_concurrency",
         "tests/test_students_api.py::test_invitation_invalidated_during_hashing_creates_no_account",
         "tests/test_students_api.py::test_existing_student_joins_teachers_and_concurrent_cards_do_not_duplicate",
-        "tests/test_students_api.py::test_student_challenge_cannot_create_teacher_or_change_existing_role",
+        "tests/test_students_api.py::test_student_challenge_cannot_create_teacher_or_allow_self_connection",
         "tests/test_students_api.py::test_reissue_archive_restore_and_csrf_keep_revoked_tokens_invalid",
         "tests/test_students_api.py::test_failure_at_final_invitation_claim_rolls_back_account_and_session",
         "tests/test_students_domain.py::test_invitation_rechecks_expiry_and_consumption",
@@ -169,6 +169,115 @@
         "tests/test_students_api.py::test_student_login_reuses_account_and_scoped_code_cannot_move_to_another_invitation",
         "tests/test_students_api.py::test_invitation_rate_limit_and_validation_do_not_disclose_tokens",
         "tests/test_students_domain.py::test_invitation_belongs_to_one_active_card"
+      ]
+    },
+    "BR-082": {
+      "pytest": [
+        "tests/test_adult_access_storage.py::test_database_rejects_third_slot_duplicate_account_and_wrong_card_owner",
+        "tests/test_adult_access_domain.py::test_active_invitations_reserve_available_capacity",
+        "tests/test_adult_access_domain.py::test_capacity_cannot_exceed_storage_guarantee",
+        "tests/test_adult_access_api.py::test_independent_invites_reissue_revoke_and_capacity",
+        "tests/test_adult_access_api.py::test_concurrent_invitation_generation_cannot_create_unbounded_rows",
+        "tests/test_adult_access_api.py::test_two_adults_join_concurrently_and_existing_adult_has_multiple_children",
+        "tests/test_adult_access_api.py::test_race_for_last_slot_rolls_back_losing_registration",
+        "tests/test_adult_access_api.py::test_configured_lower_limit_and_single_connection_pool"
+      ]
+    },
+    "BR-083": {
+      "pytest": [
+        "tests/test_adult_access_storage.py::test_database_rejects_third_slot_duplicate_account_and_wrong_card_owner",
+        "tests/test_adult_access_domain.py::test_active_invitations_reserve_available_capacity",
+        "tests/test_adult_access_api.py::test_independent_invites_reissue_revoke_and_capacity",
+        "tests/test_adult_access_api.py::test_concurrent_invitation_generation_cannot_create_unbounded_rows",
+        "tests/test_adult_access_api.py::test_invalidation_during_hashing_creates_no_adult",
+        "tests/test_adult_access_api.py::test_expired_invitations_release_places_without_accumulating_rows",
+        "tests/test_adult_access_api.py::test_invitation_mutations_are_scoped_to_owner_and_card"
+      ]
+    },
+    "BR-084": {
+      "pytest": [
+        "tests/test_adult_access_storage.py::test_upgrade_preserves_teacher_and_student_confirmations",
+        "tests/test_adult_access_api.py::test_adult_registers_views_price_and_updates_only_own_profile",
+        "tests/test_adult_access_api.py::test_invitation_roles_and_codes_cannot_be_swapped",
+        "tests/test_account_roles_api.py::test_one_identity_has_independent_teacher_student_and_adult_contexts"
+      ]
+    },
+    "BR-013": {
+      "pytest": [
+        "tests/test_adult_access_api.py::test_adult_registers_views_price_and_updates_only_own_profile",
+        "tests/test_adult_access_api.py::test_concurrent_invitation_generation_cannot_create_unbounded_rows",
+        "tests/test_adult_access_api.py::test_invitation_mutations_are_scoped_to_owner_and_card"
+      ]
+    },
+    "BR-014": {
+      "pytest": [
+        "tests/test_adult_access_api.py::test_adult_registers_views_price_and_updates_only_own_profile",
+        "tests/test_adult_access_api.py::test_invitation_roles_and_codes_cannot_be_swapped",
+        "tests/test_adult_access_api.py::test_invitation_mutations_are_scoped_to_owner_and_card"
+      ]
+    },
+    "BR-017": {
+      "pytest": [
+        "tests/test_adult_access_api.py::test_adult_registers_views_price_and_updates_only_own_profile",
+        "tests/test_adult_access_api.py::test_invitation_roles_and_codes_cannot_be_swapped"
+      ]
+    },
+    "BR-018": {
+      "pytest": [
+        "tests/test_adult_access_api.py::test_adult_registers_views_price_and_updates_only_own_profile"
+      ]
+    },
+    "BR-086": {
+      "pytest": [
+        "tests/test_adult_access_api.py::test_adult_registers_views_price_and_updates_only_own_profile",
+        "tests/test_adult_access_api.py::test_two_adults_join_concurrently_and_existing_adult_has_multiple_children",
+        "tests/test_adult_access_api.py::test_race_for_last_slot_rolls_back_losing_registration",
+        "tests/test_adult_access_api.py::test_invalidation_during_hashing_creates_no_adult",
+        "tests/test_adult_access_api.py::test_final_claim_failure_rolls_back_account_and_session",
+        "tests/test_adult_access_api.py::test_configured_lower_limit_and_single_connection_pool"
+      ]
+    },
+    "BR-015": {
+      "pytest": [
+        "tests/test_adult_access_api.py::test_two_adults_join_concurrently_and_existing_adult_has_multiple_children"
+      ]
+    },
+    "BR-016": {
+      "pytest": [
+        "tests/test_adult_access_api.py::test_two_adults_join_concurrently_and_existing_adult_has_multiple_children"
+      ]
+    },
+    "BR-085": {
+      "pytest": [
+        "tests/test_adult_access_api.py::test_disconnect_archive_and_delete_preserve_independent_accounts_and_child"
+      ]
+    },
+    "BR-087": {
+      "pytest": [
+        "tests/test_account_roles_api.py::test_one_identity_has_independent_teacher_student_and_adult_contexts",
+        "tests/test_account_roles_api.py::test_teacher_activation_is_explicit_csrf_protected_and_idempotent",
+        "tests/test_account_roles_api.py::test_forged_context_and_repeat_registration_cannot_grant_role"
+      ]
+    },
+    "BR-088": {
+      "pytest": [
+        "tests/test_account_roles_api.py::test_teacher_can_parent_own_child_but_cannot_be_own_student",
+        "tests/test_account_roles_api.py::test_student_and_parent_of_same_card_are_exclusive_in_both_orders",
+        "tests/test_account_roles_api.py::test_racing_student_and_parent_acceptance_creates_only_one_relation",
+        "tests/test_account_roles_storage.py::test_database_rejects_self_student_and_two_participation_types"
+      ]
+    },
+    "BR-089": {
+      "pytest": [
+        "tests/test_account_roles_api.py::test_one_identity_has_independent_teacher_student_and_adult_contexts",
+        "tests/test_account_roles_api.py::test_teacher_activation_is_explicit_csrf_protected_and_idempotent",
+        "tests/test_account_roles_api.py::test_final_invitation_failure_rolls_back_new_role_and_preserves_account",
+        "tests/test_account_roles_api.py::test_forged_context_and_repeat_registration_cannot_grant_role"
+      ]
+    },
+    "BR-090": {
+      "pytest": [
+        "tests/test_account_roles_storage.py::test_upgrade_preserves_accounts_profiles_sessions_and_both_connection_types"
       ]
     }
   }

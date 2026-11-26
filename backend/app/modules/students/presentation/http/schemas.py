@@ -5,15 +5,20 @@ from decimal import Decimal
 from typing import Annotated, Literal
 from uuid import UUID
 
+from fastapi import Query
 from pydantic import BaseModel, ConfigDict, Field, SecretStr
 
 from app.modules.identity.public import (
+    CONTACT_MAX_LENGTH,
     PASSWORD_MAX_LENGTH,
     PASSWORD_MIN_LENGTH,
     REGISTRATION_CODE_DIGITS,
 )
-from app.modules.students.application.contracts import INVITATION_TOKEN_LENGTH
+from app.modules.students.application.contracts import INVITATION_TOKEN_LENGTH, PAGE_MAX_SIZE
 from app.modules.students.domain.values import NAME_MAX_LENGTH, TEXT_MAX_LENGTH, WELCOME_MAX_LENGTH
+
+
+PageSize = Annotated[int, Query(ge=1, le=PAGE_MAX_SIZE)]
 
 
 class Input(BaseModel):
@@ -68,12 +73,12 @@ class Token(Input):
     ]
 
 
-class StudentStart(Token):
+class InvitedRegistrationStart(Token):
     kind: Literal["email", "phone"]
-    contact: Annotated[SecretStr, Field(min_length=1, max_length=254)]
+    contact: Annotated[SecretStr, Field(min_length=1, max_length=CONTACT_MAX_LENGTH)]
 
 
-class StudentComplete(Token):
+class InvitedRegistrationComplete(Token):
     challenge_id: UUID
     code: Annotated[
         SecretStr, Field(min_length=REGISTRATION_CODE_DIGITS, max_length=REGISTRATION_CODE_DIGITS)
@@ -85,7 +90,7 @@ class StudentComplete(Token):
 
 class InvitationView(BaseModel):
     id: UUID
-    token: str
+    token: str = Field(repr=False)
     expires_at: datetime
 
 
@@ -132,3 +137,35 @@ class ChallengeView(BaseModel):
 class Page[T](BaseModel):
     items: list[T]
     next_after: UUID | None
+
+
+class AdultPreviewView(PreviewView):
+    student_name: str
+
+
+class AdultStudentView(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+    card_id: UUID
+    student_name: str
+    teacher_id: UUID
+    teacher_name: str | None
+    archived: bool
+
+
+class AdultProfileView(BaseModel):
+    id: UUID
+    subject: str | None
+    price: Price
+
+
+class AdultSessionView(BaseModel):
+    account_id: UUID
+    role: Literal["adult"] = "adult"
+    csrf_token: str
+
+
+class InvitationSummary(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+    id: UUID
+    expires_at: datetime
+    welcome: str | None

@@ -11,6 +11,7 @@ from tests.identity_testkit import PASSWORD, finish, start
 from app.modules.identity.domain.exceptions import IdentityError
 from app.modules.identity.infrastructure.persistence.models import Account, LoginSession
 from app.modules.identity.infrastructure.persistence.repository import PostgresIdentityRepository
+from app.modules.identity.public import Role
 
 
 pytestmark = pytest.mark.anyio
@@ -20,8 +21,8 @@ pytestmark = pytest.mark.anyio
 async def test_confirmation_is_bound_to_role_and_specific_invitation(client, inbox, services):
     registration = services.identity.registration
     invitation_id = uuid4()
-    challenge = await registration.start_student(
-        "email", "student@example.com", invitation_id, "test-client"
+    challenge = await registration.start_invited(
+        "email", "student@example.com", invitation_id, "test-client", role=Role.STUDENT
     )
 
     await registration.deliver_pending(challenge)
@@ -31,10 +32,12 @@ async def test_confirmation_is_bound_to_role_and_specific_invitation(client, inb
     assert (await finish(client, str(challenge), code)).status_code == 400
 
     with pytest.raises(IdentityError):
-        await registration.prepare_student(challenge, code, PASSWORD, uuid4(), "test-client")
+        await registration.prepare_invited(
+            challenge, code, PASSWORD, uuid4(), "test-client", role=Role.STUDENT
+        )
 
-    proof = await registration.prepare_student(
-        challenge, code, PASSWORD, invitation_id, "test-client"
+    proof = await registration.prepare_invited(
+        challenge, code, PASSWORD, invitation_id, "test-client", role=Role.STUDENT
     )
 
     assert proof.invitation_id == invitation_id
@@ -95,7 +98,7 @@ async def test_public_profile_queries_do_not_load_credentials(client, inbox, ser
         async with services.students.cards.persistence.transaction() as unit:
             profile = await unit.accounts.profile(UUID(account_id))
             profiles = await unit.accounts.profiles([UUID(account_id)])
-            rejected = await unit.accounts.lock_student(UUID(account_id))
+            rejected = await unit.accounts.lock_profile(UUID(account_id), Role.STUDENT)
 
         assert profile is not None and profile.account_id == UUID(account_id)
         assert UUID(account_id) in profiles and rejected is None

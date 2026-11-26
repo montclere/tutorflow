@@ -7,8 +7,10 @@ from uuid import UUID, uuid4
 from app.modules.identity.public import Actor
 from app.modules.students.application.contracts import InvitationPreview, IssuedInvitation
 from app.modules.students.application.ports import (
+    InvitationLookup,
     InvitationTokens,
     StudentRequests,
+    StudentsRepository,
     StudentsTransaction,
     StudentsUnitOfWork,
 )
@@ -17,6 +19,30 @@ from app.modules.students.domain.entities import Invitation, StudentCard
 from app.modules.students.domain.exceptions import StudentError
 from app.modules.students.domain.policies import StudentPolicy
 from app.modules.students.domain.values import WELCOME_MAX_LENGTH, optional_text
+
+
+async def load_active_invitation(
+    cards: StudentsRepository,
+    invitations: InvitationLookup,
+    tokens: InvitationTokens,
+    clock: Callable[[], datetime],
+    token: str,
+) -> tuple[StudentCard, Invitation]:
+    digest = tokens.digest(token)
+    invitation = await invitations.find_invitation(digest)
+
+    if invitation is None:
+        raise StudentError("invitation_invalid")
+
+    card = await cards.find_card(invitation.card_id, lock=True)
+    invitation = await invitations.find_invitation(digest)
+
+    if card is None or invitation is None:
+        raise StudentError("invitation_invalid")
+
+    invitation.require_for(card, clock())
+
+    return card, invitation
 
 
 class InvitationService:
@@ -74,19 +100,9 @@ class InvitationService:
     async def get_active(
         self, unit: StudentsTransaction, token: str
     ) -> tuple[StudentCard, Invitation]:
-        digest = self.tokens.digest(token)
-        invitation = await unit.students.find_invitation(digest)
-
-        if invitation is None:
-            raise StudentError("invitation_invalid")
-
-        card = await unit.students.find_card(invitation.card_id, lock=True)
-        invitation = await unit.students.find_invitation(digest)
-
-        if card is None or invitation is None:
-            raise StudentError("invitation_invalid")
-
-        invitation.require_for(card, self.clock())
+        card, invitation = await load_active_invitation(
+            unit.students, unit.students, self.tokens, self.clock, token
+        )
 
         if await unit.students.find_connection(card.id) is not None:
             raise StudentError("invitation_invalid")

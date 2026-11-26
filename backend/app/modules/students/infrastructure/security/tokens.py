@@ -13,11 +13,12 @@ INVITATION_TOKEN_BYTES = 32
 
 
 class SecureInvitationTokens:
-    def __init__(self, secret: bytes) -> None:
+    def __init__(self, secret: bytes, *, purpose: bytes = b"students-invitation\0") -> None:
         if len(secret) < INVITATION_MINIMUM_SECRET_BYTES:
             raise ValueError("Недостаточная длина секрета приглашений")
 
         self.secret = secret
+        self.purpose = purpose
 
     def new_token(self) -> str:
         return secrets.token_urlsafe(INVITATION_TOKEN_BYTES)
@@ -28,6 +29,4 @@ class SecureInvitationTokens:
         ):
             raise StudentError("invitation_invalid")
 
-        return hmac.new(
-            self.secret, b"students-invitation\0" + token.encode(), hashlib.sha256
-        ).hexdigest()
+        return hmac.new(self.secret, self.purpose + token.encode(), hashlib.sha256).hexdigest()

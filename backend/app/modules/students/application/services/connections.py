@@ -2,7 +2,7 @@
 
 from uuid import UUID
 
-from app.modules.identity.public import Actor, Role
+from app.modules.identity.public import Actor, Principal, Role
 from app.modules.students.application.ports import StudentsTransaction, StudentsUnitOfWork
 from app.modules.students.application.services.access import (
     owned_card,
@@ -27,8 +27,14 @@ class ConnectionService:
     async def connect(
         self, unit: StudentsTransaction, card: StudentCard, invitation: Invitation, account_id: UUID
     ) -> Connection:
-        if await unit.accounts.lock_student(account_id) is None:
-            raise StudentError("student_required")
+        if (
+            card.teacher_id == account_id
+            or await unit.adults.find_connection(card.id, account_id) is not None
+        ):
+            raise StudentError("self_connection_forbidden")
+
+        if await unit.accounts.activate_role(account_id, Role.STUDENT) is None:
+            raise StudentError("authentication_required")
 
         invitation.require_for(card, self.invitations.clock())
 
@@ -44,9 +50,7 @@ class ConnectionService:
 
         return connection
 
-    async def accept(self, actor: Actor, token: str, ip: str) -> Connection:
-        require_student(actor)
-
+    async def accept(self, actor: Principal, token: str, ip: str) -> Connection:
         await self.invitations.requests.access(ip)
 
         async with self.persistence.transaction() as unit:
@@ -73,7 +77,7 @@ class ConnectionService:
             ):
                 raise StudentError("student_connection_not_found")
 
-            await unit.accounts.lock_student(connection.account_id)
+            await unit.accounts.lock_profile(connection.account_id, Role.STUDENT)
             await unit.students.delete_connection(card.id)
             await unit.students.revoke_invitation(card.id)
 

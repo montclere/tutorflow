@@ -9,8 +9,10 @@ from app.modules.identity.application.contracts import SignedIn
 from app.modules.identity.application.services.authentication import AuthenticationService
 from app.modules.identity.application.services.profiles import ProfileService
 from app.modules.identity.application.services.registration import RegistrationService
+from app.modules.identity.application.services.roles import RoleService
 from app.modules.identity.domain.entities import Account
 from app.modules.identity.domain.exceptions import IdentityError
+from app.modules.identity.domain.values import Role
 from app.modules.identity.presentation.http.schemas import (
     AccountView,
     CompleteRegistration,
@@ -24,22 +26,18 @@ from app.modules.identity.presentation.http.schemas import (
     StartRegistration,
 )
 from app.modules.identity.presentation.http.session import IdentityHttpSession, raise_identity_error
-from app.shared.presentation.http import require_json
+from app.shared.presentation.http import request_ip, require_json
 
 
 def account_view(account: Account) -> AccountView:
     return AccountView(
         id=account.id,
-        role=account.role,
+        roles=sorted(account.roles, key=lambda role: role.value),
         workspace_id=account.id,
         login_contact=Contact.model_validate(
             {"type": account.contact.kind.value, "value": account.contact.value}
         ),
     )
-
-
-def request_ip(request: Request) -> str:
-    return request.client.host if request.client else "unknown"
 
 
 def session_view(response: Response, session: IdentityHttpSession, result: SignedIn) -> SessionView:
@@ -54,6 +52,7 @@ def identity_router(
     get_registration: Callable[[Request], Awaitable[RegistrationService]],
     get_authentication: Callable[[Request], Awaitable[AuthenticationService]],
     get_profile: Callable[[Request], Awaitable[ProfileService]],
+    get_roles: Callable[[Request], Awaitable[RoleService]],
 ) -> APIRouter:
     router = APIRouter(tags=["Аккаунт"])
 
@@ -119,6 +118,7 @@ def identity_router(
                 command.password.get_secret_value(),
                 request_ip(request),
                 session.token(request),
+                role=command.role,
             )
         except IdentityError as error:
             raise_identity_error(error)
@@ -148,11 +148,27 @@ def identity_router(
 
     @router.get("/me")
     async def me(
-        request: Request, session: Annotated[IdentityHttpSession, Depends(require_session)]
+        request: Request,
+        session: Annotated[IdentityHttpSession, Depends(require_session)],
+        role: Role | None = None,
     ) -> AccountView:
         current = await session.authenticate(request)
 
+        if role is not None:
+            current.account.require_role(role)
+
         return account_view(current.account)
+
+
+    @router.post("/me/roles/teacher")
+    async def activate_teacher(
+        request: Request,
+        session: Annotated[IdentityHttpSession, Depends(require_session)],
+        roles: Annotated[RoleService, Depends(get_roles)],
+    ) -> AccountView:
+        current = await session.authenticate(request, csrf=True)
+
+        return account_view(await roles.activate_teacher(current.account.id))
 
 
     @router.get("/me/profile")

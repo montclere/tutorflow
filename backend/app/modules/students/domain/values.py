@@ -6,6 +6,7 @@ from decimal import Decimal
 from app.modules.students.domain.exceptions import StudentError
 
 
+MAX_ADULT_CONNECTIONS = 2
 NAME_MAX_LENGTH = 120
 TEXT_MAX_LENGTH = 4000
 WELCOME_MAX_LENGTH = 2000

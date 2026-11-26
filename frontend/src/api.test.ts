@@ -50,3 +50,19 @@ test("описывает отказ входа по стабильному ко�
   const error: unknown = await api.me().catch((failure: unknown) => failure);
   expect(message(error)).toBe("Неверный контакт или пароль.");
 });
+
+test("вход преподавателя явно проверяет свой кабинет", async () => {
+  const fetch = vi
+    .fn()
+    .mockImplementation(() =>
+      Promise.resolve(new Response(JSON.stringify({ id: "account", roles: ["teacher"] }))),
+    );
+  vi.stubGlobal("fetch", fetch);
+
+  await api.me();
+  expect(fetch.mock.calls[0][0]).toBe("/api/v1/me?role=teacher");
+
+  await api.login({ type: "email", value: "teacher@example.com" }, "password");
+  const body = JSON.parse(fetch.mock.calls[1][1].body);
+  expect(body.role).toBe("teacher");
+});

@@ -10,6 +10,7 @@ from app.modules.identity.application.services.rate_limits import RateLimitServi
 from app.modules.identity.application.services.sessions import SessionService
 from app.modules.identity.domain.exceptions import IdentityError
 from app.modules.identity.domain.policies import IdentityPolicy, validate_password
+from app.modules.identity.domain.values import Role
 
 
 MAX_CREDENTIAL_VERIFICATIONS = 2
@@ -38,7 +39,13 @@ class AuthenticationService:
         self.contacts = contacts
 
     async def login(
-        self, contact: ContactInput, password: str, ip: str, previous_token: str | None
+        self,
+        contact: ContactInput,
+        password: str,
+        ip: str,
+        previous_token: str | None,
+        *,
+        role: Role | None = None,
     ) -> SignedIn:
         validate_password(password, registering=False)
 
@@ -72,6 +79,9 @@ class AuthenticationService:
 
                 if current.password_hash != digest:
                     continue
+
+                if role is not None:
+                    current.require_role(role)
 
                 if replacement is not None:
                     await repository.update_password_hash(current.id, replacement)

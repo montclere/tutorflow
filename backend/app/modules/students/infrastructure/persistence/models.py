@@ -12,8 +12,10 @@ from sqlalchemy import (
     ForeignKeyConstraint,
     Index,
     Numeric,
+    SmallInteger,
     String,
     UniqueConstraint,
+    text,
 )
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
@@ -83,9 +85,31 @@ class Connection(StudentsBase):
             ["students_cards.id", "students_cards.teacher_id"],
             ondelete="CASCADE",
         ),
-        UniqueConstraint("teacher_id", "account_id", name="uq_students_teacher_account"),
+        ForeignKeyConstraint(
+            ["account_id", "role"],
+            ["identity_account_roles.account_id", "identity_account_roles.role"],
+            ondelete="CASCADE",
+            name="fk_card_connection_role",
+        ),
+        UniqueConstraint("card_id", "slot", name="uq_card_connection_slot"),
+        CheckConstraint(
+            "(role = 'student' AND slot = 0 AND account_id <> teacher_id) OR (role = 'adult' "
+            "AND slot BETWEEN 1 AND 2)",
+            name="ck_card_connection_role_slot",
+        ),
+        Index(
+            "uq_students_teacher_account",
+            "teacher_id",
+            "account_id",
+            unique=True,
+            postgresql_where=text("role = 'student'"),
+        ),
         Index("ix_students_connection_listing", "account_id", "card_id"),
     )
     card_id: Mapped[UUID] = mapped_column(primary_key=True)
     teacher_id: Mapped[UUID] = mapped_column()
-    account_id: Mapped[UUID] = mapped_column(ForeignKey("identity_accounts.id", ondelete="CASCADE"))
+    account_id: Mapped[UUID] = mapped_column(
+        ForeignKey("identity_accounts.id", ondelete="CASCADE"), primary_key=True
+    )
+    role: Mapped[str] = mapped_column(String(10), server_default="student")
+    slot: Mapped[int] = mapped_column(SmallInteger, server_default="0")
