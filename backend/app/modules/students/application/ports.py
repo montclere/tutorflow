@@ -7,7 +7,7 @@ from typing import Protocol
 from uuid import UUID
 
 from app.modules.groups.public import GroupMemberships
-from app.modules.identity.public import InvitedAccounts
+from app.modules.identity.public import InvitedAccounts, Role
 from app.modules.students.application.contracts import (
     AdultLearningProfile,
     CardDetails,
@@ -19,9 +19,20 @@ from app.modules.students.domain.entities import (
     LearningProfile,
     StudentCard,
 )
+from app.modules.students.domain.responsibilities import Responsibility
 
 
 class StudentsRepository(Protocol):
+    async def count_participants(self, card_id: UUID) -> int: ...
+
+    async def find_participant_role(self, card_id: UUID, account_id: UUID) -> Role | None: ...
+
+    async def find_responsibility(self, card_id: UUID) -> Responsibility | None: ...
+
+    async def add_initial_responsibility(self, assignment: Responsibility) -> None: ...
+
+    async def set_responsibility(self, assignment: Responsibility) -> None: ...
+
     async def add_card(self, card: StudentCard) -> None: ...
 
     async def find_card(

@@ -9,10 +9,12 @@ from app.modules.students.application.services.connections import ConnectionServ
 from app.modules.students.application.services.invitations import InvitationService
 from app.modules.students.application.services.profiles import LearningProfileService
 from app.modules.students.application.services.registration import InvitedRegistrationService
+from app.modules.students.application.services.responsibilities import ResponsibilityService
 
 
 @dataclass(frozen=True)
 class StudentServices:
+    responsibilities: ResponsibilityService
     cards: CardService
     profiles: LearningProfileService
     invitations: InvitationService

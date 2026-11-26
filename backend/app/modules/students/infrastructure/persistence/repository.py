@@ -1,5 +1,6 @@
 """Операции PostgreSQL над агрегатом карточки и его связями."""
 
+from dataclasses import asdict
 from datetime import datetime
 from uuid import UUID
 
@@ -7,6 +8,7 @@ from sqlalchemy import and_, delete, func, select, update
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.modules.identity.public import Role
 from app.modules.students.application.contracts import CardDetails
 from app.modules.students.domain.entities import (
     Connection,
@@ -15,7 +17,9 @@ from app.modules.students.domain.entities import (
     StudentCard,
 )
 from app.modules.students.domain.exceptions import StudentError
+from app.modules.students.domain.responsibilities import SCHEDULING_RESPONSIBILITY, Responsibility
 from app.modules.students.domain.values import Money
+from app.modules.students.infrastructure.persistence.models import CardResponsibility
 from app.modules.students.infrastructure.persistence.models import Connection as ConnectionRow
 from app.modules.students.infrastructure.persistence.models import Invitation as InvitationRow
 from app.modules.students.infrastructure.persistence.models import LearningProfile as ProfileRow
@@ -69,7 +73,7 @@ class PostgresStudentsRepository:
             query = query.where(CardRow.teacher_id == teacher_id)
 
         if lock:
-            query = query.with_for_update()
+            query = query.with_for_update().execution_options(populate_existing=True)
 
         row = await self.db.scalar(query)
 
@@ -280,3 +284,49 @@ class PostgresStudentsRepository:
             (Connection(row.card_id, row.teacher_id, row.account_id), archived)
             for row, archived in rows
         ]
+
+    async def count_participants(self, card_id: UUID) -> int:
+        return (
+            await self.db.scalar(
+                select(func.count())
+                .select_from(ConnectionRow)
+                .where(ConnectionRow.card_id == card_id)
+            )
+        ) or 0
+
+    async def find_participant_role(self, card_id: UUID, account_id: UUID) -> Role | None:
+        role = await self.db.scalar(
+            select(ConnectionRow.role).where(
+                ConnectionRow.card_id == card_id, ConnectionRow.account_id == account_id
+            )
+        )
+
+        return Role(role) if role else None
+
+    async def find_responsibility(self, card_id: UUID) -> Responsibility | None:
+        row = await self.db.get(CardResponsibility, (card_id, SCHEDULING_RESPONSIBILITY))
+
+        return (
+            Responsibility(row.card_id, row.account_id, row.assigned_at, row.category)
+            if row
+            else None
+        )
+
+    async def add_initial_responsibility(self, assignment: Responsibility) -> None:
+        await self.db.execute(
+            insert(CardResponsibility)
+            .values(**asdict(assignment))
+            .on_conflict_do_nothing(
+                index_elements=[CardResponsibility.card_id, CardResponsibility.category]
+            )
+        )
+
+    async def set_responsibility(self, assignment: Responsibility) -> None:
+        statement = insert(CardResponsibility).values(**asdict(assignment))
+
+        await self.db.execute(
+            statement.on_conflict_do_update(
+                index_elements=[CardResponsibility.card_id, CardResponsibility.category],
+                set_={"account_id": assignment.account_id, "assigned_at": assignment.assigned_at},
+            )
+        )

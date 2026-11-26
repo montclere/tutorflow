@@ -113,3 +113,19 @@ class Connection(StudentsBase):
     )
     role: Mapped[str] = mapped_column(String(10), server_default="student")
     slot: Mapped[int] = mapped_column(SmallInteger, server_default="0")
+
+
+class CardResponsibility(StudentsBase):
+    __tablename__ = "students_responsibilities"
+    __table_args__ = (
+        ForeignKeyConstraint(
+            ["card_id", "account_id"],
+            ["students_connections.card_id", "students_connections.account_id"],
+            ondelete="CASCADE",
+        ),
+        CheckConstraint("category = 'scheduling'", name="ck_student_responsibility_category"),
+    )
+    card_id: Mapped[UUID] = mapped_column(primary_key=True)
+    category: Mapped[str] = mapped_column(String(30), primary_key=True)
+    account_id: Mapped[UUID] = mapped_column()
+    assigned_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))

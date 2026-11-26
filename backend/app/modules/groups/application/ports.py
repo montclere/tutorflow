@@ -7,7 +7,7 @@ from uuid import UUID
 
 from app.modules.groups.application.contracts import GroupOverview, Participation
 from app.modules.groups.domain.entities import Group, Member
-from app.modules.students.public import GroupCards
+from app.modules.students.public import CardAccess
 
 
 class GroupsRepository(Protocol):
@@ -47,7 +47,7 @@ class GroupsRepository(Protocol):
 @dataclass(frozen=True)
 class GroupTransaction:
     groups: GroupsRepository
-    cards: GroupCards
+    cards: CardAccess
 
 
 class GroupsUnitOfWork(Protocol):

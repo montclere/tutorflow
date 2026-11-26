@@ -336,6 +336,136 @@
         "tests/test_groups_api.py::test_student_reads_only_own_participation_without_roster_or_private_prices",
         "tests/test_groups_api.py::test_adult_reads_only_linked_child_group_and_loses_access_after_disconnect"
       ]
+    },
+    "BR-033": {
+      "pytest": [
+        "tests/test_card_responsibilities.py::test_first_adult_remains_responsible_when_student_joins_and_teacher_can_reassign",
+        "tests/test_card_responsibilities.py::test_responsible_disconnect_does_not_transfer_permission_to_another_observer",
+        "tests/test_card_responsibilities.py::test_responsibility_assignment_requires_owner_csrf_and_live_connection",
+        "tests/test_card_responsibilities.py::test_concurrent_first_student_and_adult_connections_assign_only_one_responsible",
+        "tests/test_responsibilities_storage.py::test_migration_assigns_only_unambiguous_existing_connection_and_fk_revokes_it",
+        "tests/test_lessons_api.py::test_independent_group_replies_and_current_responsible_are_enforced",
+        "tests/test_lessons_api.py::test_observer_cannot_become_responsible_implicitly_after_disconnect"
+      ]
+    },
+    "BR-098": {
+      "pytest": [
+        "tests/test_card_responsibilities.py::test_first_adult_remains_responsible_when_student_joins_and_teacher_can_reassign",
+        "tests/test_card_responsibilities.py::test_responsible_disconnect_does_not_transfer_permission_to_another_observer",
+        "tests/test_card_responsibilities.py::test_responsibility_assignment_requires_owner_csrf_and_live_connection",
+        "tests/test_card_responsibilities.py::test_concurrent_first_student_and_adult_connections_assign_only_one_responsible",
+        "tests/test_responsibilities_storage.py::test_migration_assigns_only_unambiguous_existing_connection_and_fk_revokes_it",
+        "tests/test_lessons_api.py::test_observer_cannot_become_responsible_implicitly_after_disconnect"
+      ]
+    },
+    "BR-028": {
+      "pytest": [
+        "tests/test_lessons_api.py::test_defaults_snapshot_replay_and_deleted_source_do_not_rewrite_lesson",
+        "tests/test_lessons_api.py::test_independent_group_replies_and_current_responsible_are_enforced",
+        "tests/test_lessons_api.py::test_group_and_personal_price_sources_are_snapshots_including_empty_group",
+        "tests/test_lessons_api.py::test_group_calendar_filters_context_and_cursor_pagination_is_stable",
+        "tests/test_lessons_application.py::test_create_replay_edit_and_audit_are_one_consistent_lesson",
+        "tests/test_lessons_api.py::test_every_lesson_operation_checks_owner_role_and_csrf"
+      ]
+    },
+    "BR-029": {
+      "pytest": [
+        "tests/test_lessons_api.py::test_defaults_snapshot_replay_and_deleted_source_do_not_rewrite_lesson",
+        "tests/test_lessons_application.py::test_create_replay_edit_and_audit_are_one_consistent_lesson"
+      ]
+    },
+    "BR-030": {
+      "pytest": [
+        "tests/test_lessons_api.py::test_defaults_snapshot_replay_and_deleted_source_do_not_rewrite_lesson",
+        "tests/test_lessons_api.py::test_minimal_creation_requires_resolvable_price_and_validates_input",
+        "tests/test_lessons_api.py::test_selected_profile_price_is_snapshot_and_explicit_price_takes_precedence"
+      ]
+    },
+    "BR-031": {
+      "pytest": [
+        "tests/test_lessons_api.py::test_defaults_snapshot_replay_and_deleted_source_do_not_rewrite_lesson",
+        "tests/test_lessons_api.py::test_independent_group_replies_and_current_responsible_are_enforced"
+      ]
+    },
+    "BR-094": {
+      "pytest": [
+        "tests/test_lessons_api.py::test_defaults_snapshot_replay_and_deleted_source_do_not_rewrite_lesson",
+        "tests/test_lessons_api.py::test_group_and_personal_price_sources_are_snapshots_including_empty_group",
+        "tests/test_lessons_api.py::test_minimal_creation_requires_resolvable_price_and_validates_input",
+        "tests/test_lessons_api.py::test_selected_profile_price_is_snapshot_and_explicit_price_takes_precedence"
+      ]
+    },
+    "BR-095": {
+      "pytest": [
+        "tests/test_lessons_api.py::test_defaults_snapshot_replay_and_deleted_source_do_not_rewrite_lesson",
+        "tests/test_lessons_api.py::test_independent_group_replies_and_current_responsible_are_enforced",
+        "tests/test_lessons_api.py::test_group_and_personal_price_sources_are_snapshots_including_empty_group",
+        "tests/test_lessons_api.py::test_group_calendar_filters_context_and_cursor_pagination_is_stable",
+        "tests/test_lessons_api.py::test_group_change_during_snapshot_returns_conflict_without_consuming_request",
+        "tests/test_lessons_domain.py::test_individual_lesson_cannot_be_empty_but_group_can_be_planned_before_enrollment",
+        "tests/test_lessons_api.py::test_selected_profile_price_is_snapshot_and_explicit_price_takes_precedence",
+        "tests/test_lessons_application.py::test_create_replay_edit_and_audit_are_one_consistent_lesson",
+        "tests/test_lessons_storage.py::test_lesson_migration_preserves_cards_blocks_and_existing_connection_schema",
+        "tests/test_lessons_api.py::test_every_lesson_operation_checks_owner_role_and_csrf"
+      ]
+    },
+    "BR-097": {
+      "pytest": [
+        "tests/test_lessons_api.py::test_defaults_snapshot_replay_and_deleted_source_do_not_rewrite_lesson",
+        "tests/test_lessons_api.py::test_concurrent_edits_and_logical_deletion_keep_ordered_history",
+        "tests/test_lessons_api.py::test_creation_audit_failure_rolls_back_every_row_and_request_claim",
+        "tests/test_lessons_api.py::test_concurrent_repeated_creation_returns_one_lesson_and_one_revision",
+        "tests/test_lessons_api.py::test_concurrent_overlaps_are_saved_but_second_writer_sees_warning",
+        "tests/test_lessons_api.py::test_group_change_during_snapshot_returns_conflict_without_consuming_request",
+        "tests/test_lessons_domain.py::test_started_lesson_and_stale_version_cannot_be_rewritten",
+        "tests/test_lessons_application.py::test_create_replay_edit_and_audit_are_one_consistent_lesson",
+        "tests/test_lessons_storage.py::test_lesson_migration_preserves_cards_blocks_and_existing_connection_schema",
+        "tests/test_lessons_api.py::test_every_lesson_operation_checks_owner_role_and_csrf"
+      ]
+    },
+    "BR-032": {
+      "pytest": [
+        "tests/test_lessons_api.py::test_independent_group_replies_and_current_responsible_are_enforced"
+      ]
+    },
+    "BR-096": {
+      "pytest": [
+        "tests/test_lessons_api.py::test_independent_group_replies_and_current_responsible_are_enforced",
+        "tests/test_lessons_api.py::test_confirmation_expiry_and_configured_limits_are_enforced",
+        "tests/test_lessons_domain.py::test_reply_changes_only_own_participation_without_cancelling_the_lesson",
+        "tests/test_lessons_api.py::test_observer_cannot_become_responsible_implicitly_after_disconnect",
+        "tests/test_lessons_api.py::test_every_lesson_operation_checks_owner_role_and_csrf"
+      ]
+    },
+    "BR-025": {
+      "pytest": [
+        "tests/test_lessons_api.py::test_group_and_personal_price_sources_are_snapshots_including_empty_group",
+        "tests/test_lessons_api.py::test_group_calendar_filters_context_and_cursor_pagination_is_stable"
+      ]
+    },
+    "BR-034": {
+      "pytest": [
+        "tests/test_lessons_api.py::test_conflicts_are_warnings_adjacent_events_are_allowed_and_foreign_events_are_private",
+        "tests/test_lessons_api.py::test_concurrent_overlaps_are_saved_but_second_writer_sees_warning"
+      ]
+    },
+    "BR-035": {
+      "pytest": [
+        "tests/test_lessons_api.py::test_conflicts_are_warnings_adjacent_events_are_allowed_and_foreign_events_are_private",
+        "tests/test_lessons_api.py::test_shared_student_does_not_reveal_another_teacher_busy_time"
+      ]
+    },
+    "BR-036": {
+      "pytest": [
+        "tests/test_lessons_api.py::test_conflicts_are_warnings_adjacent_events_are_allowed_and_foreign_events_are_private"
+      ]
+    },
+    "BR-099": {
+      "pytest": [
+        "tests/test_lessons_api.py::test_conflicts_are_warnings_adjacent_events_are_allowed_and_foreign_events_are_private",
+        "tests/test_lessons_api.py::test_confirmation_expiry_and_configured_limits_are_enforced",
+        "tests/test_lessons_api.py::test_shared_student_does_not_reveal_another_teacher_busy_time"
+      ]
     }
   }
 }

@@ -16,6 +16,7 @@ from app.modules.identity.presentation.http.session import (
 )
 from app.modules.identity.public import Actor, InvitedSession, Principal, Role
 from app.modules.scheduling.application.calendar import Calendar
+from app.modules.scheduling.application.services.lesson_collection import LessonServices
 from app.modules.students.application.services.collection import AdultServices, StudentServices
 from app.shared.presentation.http import RequestAccess
 
@@ -127,3 +128,7 @@ async def adult_services(request: Request) -> AdultServices:
 
 async def group_services(request: Request) -> GroupServices:
     return (await resolve_services(request)).groups
+
+
+async def lesson_services(request: Request) -> LessonServices:
+    return (await resolve_services(request)).lessons

@@ -1,6 +1,7 @@
 """Сборка сценариев из PostgreSQL-репозиториев и внешних адаптеров."""
 
 import secrets
+from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import UTC, datetime
 
@@ -8,6 +9,7 @@ from sqlalchemy.ext.asyncio import AsyncEngine
 
 from app.config import Settings
 from app.integrations.groups import PostgresGroupsUnitOfWork
+from app.integrations.scheduling import PostgresLessonsUnitOfWork
 from app.integrations.students import PostgresStudentsUnitOfWork, StudentRateLimits
 from app.modules.groups.application.services.collection import GroupServices
 from app.modules.groups.application.services.groups import GroupService
@@ -36,7 +38,17 @@ from app.modules.identity.presentation.http.session import (
 )
 from app.modules.identity.public import Role
 from app.modules.scheduling.application.calendar import Calendar
+from app.modules.scheduling.application.services.lesson_changes import LessonChangeService
+from app.modules.scheduling.application.services.lesson_collection import LessonServices
+from app.modules.scheduling.application.services.lesson_creation import LessonCreationService
+from app.modules.scheduling.application.services.lesson_preferences import (
+    TeachingPreferencesService,
+)
+from app.modules.scheduling.application.services.lesson_queries import LessonQueryService
+from app.modules.scheduling.application.services.lesson_replies import LessonReplyService
+from app.modules.scheduling.domain.policies import LessonPolicy
 from app.modules.scheduling.infrastructure.repository import PostgresCalendarRepository
+from app.modules.scheduling.infrastructure.settings import LessonSettings
 from app.modules.students.application.services.adult_connections import AdultConnectionService
 from app.modules.students.application.services.adult_invitations import AdultInvitationService
 from app.modules.students.application.services.cards import CardService
@@ -45,6 +57,7 @@ from app.modules.students.application.services.connections import ConnectionServ
 from app.modules.students.application.services.invitations import InvitationService
 from app.modules.students.application.services.profiles import LearningProfileService
 from app.modules.students.application.services.registration import InvitedRegistrationService
+from app.modules.students.application.services.responsibilities import ResponsibilityService
 from app.modules.students.domain.policies import AdultAccessPolicy, StudentPolicy
 from app.modules.students.infrastructure.security.tokens import SecureInvitationTokens
 from app.modules.students.infrastructure.settings import StudentSettings
@@ -71,6 +84,7 @@ class Services:
     students: StudentServices
     adults: AdultServices
     groups: GroupServices
+    lessons: LessonServices
 
     @property
     def cookie_name(self) -> str:
@@ -92,6 +106,8 @@ async def build_services(
     password_hashing: PasswordHashingSettings | None = None,
     student_policy: StudentPolicy | None = None,
     adult_policy: AdultAccessPolicy | None = None,
+    lesson_policy: LessonPolicy | None = None,
+    lesson_clock: Callable[[], datetime] | None = None,
 ) -> Services:
     metrics = metrics or Metrics()
     passwords = ArgonPasswords(password_hashing)
@@ -138,6 +154,7 @@ async def build_services(
     )
     connection_service = ConnectionService(student_persistence, invitation_service)
     student_services = StudentServices(
+        ResponsibilityService(student_persistence, now_utc),
         CardService(student_persistence),
         LearningProfileService(student_persistence),
         invitation_service,
@@ -171,6 +188,18 @@ async def build_services(
         ParticipationService(groups_persistence),
     )
 
+    lesson_policy = lesson_policy or LessonSettings().policy
+    lesson_clock = lesson_clock or now_utc
+    lesson_persistence = PostgresLessonsUnitOfWork(engine)
+    lessons = LessonServices(
+        LessonCreationService(lesson_persistence, lesson_policy, lesson_clock),
+        LessonChangeService(lesson_persistence, lesson_policy, lesson_clock),
+        LessonQueryService(lesson_persistence, lesson_policy, lesson_clock),
+        LessonReplyService(lesson_persistence, lesson_clock),
+        TeachingPreferencesService(lesson_persistence, lesson_policy),
+        lesson_policy,
+    )
+
     return Services(
         IdentityServices(
             registration,
@@ -186,6 +215,7 @@ async def build_services(
         student_services,
         adult_services,
         groups,
+        lessons,
     )
 
 

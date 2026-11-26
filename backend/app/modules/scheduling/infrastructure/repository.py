@@ -9,6 +9,7 @@ from sqlalchemy.ext.asyncio import AsyncEngine, async_sessionmaker
 
 from app.modules.scheduling.application.ports import BlockCursor
 from app.modules.scheduling.domain.calendar import CalendarBlock
+from app.modules.scheduling.infrastructure.calendar_lock import lock_calendar
 from app.modules.scheduling.infrastructure.models import BlockRequest
 from app.modules.scheduling.infrastructure.models import CalendarBlock as CalendarBlockRow
 
@@ -25,6 +26,8 @@ class PostgresCalendarRepository:
         self, block: CalendarBlock, *, request_fingerprint: str | None
     ) -> CalendarBlock | None:
         async with self.sessions.begin() as db:
+            await lock_calendar(db, block.owner_id)
+
             if request_fingerprint is not None:
                 claim = (
                     insert(BlockRequest)
@@ -71,6 +74,8 @@ class PostgresCalendarRepository:
 
     async def replace(self, block: CalendarBlock) -> bool:
         async with self.sessions.begin() as db:
+            await lock_calendar(db, block.owner_id)
+
             statement = (
                 update(CalendarBlockRow)
                 .where(CalendarBlockRow.id == block.id, CalendarBlockRow.owner_id == block.owner_id)
@@ -86,6 +91,8 @@ class PostgresCalendarRepository:
 
     async def remove(self, owner_id: UUID, block_id: UUID) -> None:
         async with self.sessions.begin() as db:
+            await lock_calendar(db, owner_id)
+
             await db.execute(
                 delete(CalendarBlockRow).where(
                     CalendarBlockRow.id == block_id, CalendarBlockRow.owner_id == owner_id
