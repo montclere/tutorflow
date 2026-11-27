@@ -63,3 +63,4 @@ class RevisionKind(StrEnum):
     REPLY = "reply"
     CANCELLED = "cancelled"
     RESTORED = "restored"
+    COMPLETED = "completed"

@@ -15,6 +15,7 @@ from app.modules.scheduling.application.lesson_contracts import (
     SavedLessonRequest,
     TeachingPreferences,
 )
+from app.modules.scheduling.domain.completion import Attendance, LessonOutcome
 from app.modules.scheduling.domain.exceptions import LessonError
 from app.modules.scheduling.domain.lessons import (
     Lesson,
@@ -53,6 +54,8 @@ def lesson_values(lesson: Lesson) -> dict:
         deleted=lesson.deleted,
         cancelled=lesson.cancelled,
         cancellation_reason=lesson.cancellation_reason,
+        outcome=lesson.outcome,
+        completion_notes=lesson.completion_notes,
     )
 
 
@@ -69,6 +72,7 @@ def participant_value(row: LessonParticipantRow) -> LessonParticipant:
         row.replied_at,
         row.cancelled,
         row.cancellation_reason,
+        Attendance(row.attendance),
     )
 
 
@@ -126,6 +130,8 @@ class PostgresLessonsRepository:
                 series_by_lesson[row.id].local_date if row.id in series_by_lesson else None,
                 row.cancelled,
                 row.cancellation_reason,
+                LessonOutcome(row.outcome),
+                row.completion_notes,
             )
             for row in rows
         ]
@@ -220,6 +226,7 @@ class PostgresLessonsRepository:
                 replied_at=item.replied_at,
                 cancelled=item.cancelled,
                 cancellation_reason=item.cancellation_reason,
+                attendance=item.attendance,
             )
             for item in lesson.participants
         ]
@@ -235,6 +242,7 @@ class PostgresLessonsRepository:
             "replied_at",
             "cancelled",
             "cancellation_reason",
+            "attendance",
         )
 
         await self.db.execute(
@@ -351,6 +359,32 @@ class PostgresLessonsRepository:
         rows = (
             await self.db.scalars(query.order_by(LessonRow.starts_at, LessonRow.id).limit(limit))
         ).all()
+
+        return await self.hydrate(list(rows))
+
+    async def unfinished(
+        self,
+        teacher_id: UUID,
+        start: datetime,
+        end: datetime,
+        now: datetime,
+        after_id: UUID | None,
+        limit: int,
+    ) -> list[Lesson]:
+        query = select(LessonRow).where(
+            LessonRow.teacher_id == teacher_id,
+            LessonRow.deleted.is_(False),
+            LessonRow.cancelled.is_(False),
+            LessonRow.outcome == LessonOutcome.UNRECORDED,
+            LessonRow.starts_at >= start,
+            LessonRow.starts_at < end,
+            LessonRow.starts_at + LessonRow.duration_minutes * text("interval '1 minute'") <= now,
+        )
+
+        if after_id is not None:
+            query = query.where(LessonRow.id > after_id)
+
+        rows = await self.db.scalars(query.order_by(LessonRow.id).limit(limit))
 
         return await self.hydrate(list(rows))
 

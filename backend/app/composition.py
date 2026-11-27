@@ -43,6 +43,7 @@ from app.modules.scheduling.application.services.lesson_cancellation import (
 )
 from app.modules.scheduling.application.services.lesson_changes import LessonChangeService
 from app.modules.scheduling.application.services.lesson_collection import LessonServices
+from app.modules.scheduling.application.services.lesson_completion import LessonCompletionService
 from app.modules.scheduling.application.services.lesson_creation import LessonCreationService
 from app.modules.scheduling.application.services.lesson_preferences import (
     TeachingPreferencesService,
@@ -238,6 +239,7 @@ async def build_services(
         LessonRequestService(
             lesson_persistence, lesson_policy, lesson_clock, changes, cancellation
         ),
+        LessonCompletionService(lesson_persistence, lesson_policy, lesson_clock, series.calendar),
     )
 
     return Services(
