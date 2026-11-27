@@ -544,7 +544,8 @@
       "pytest": [
         "tests/test_lesson_changes_domain.py::test_cancellation_keeps_snapshot_and_restores_with_version",
         "tests/test_lesson_changes_api.py::test_cancel_restore_keeps_calendar_and_resets_confirmation",
-        "tests/test_lesson_changes_api.py::test_restored_series_occurrence_stays_exception"
+        "tests/test_lesson_changes_api.py::test_restored_series_occurrence_stays_exception",
+        "tests/test_lesson_changes_api.py::test_cancelled_future_lesson_can_be_removed_without_losing_history"
       ]
     },
     "BR-045": {
