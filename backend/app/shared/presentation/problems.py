@@ -14,6 +14,12 @@ from starlette.responses import JSONResponse
 
 MAX_VALIDATION_ERRORS = 20
 DESCRIPTIONS = {
+    "lesson_cancelled": "Сначала восстановите отменённое занятие или участие.",
+    "lesson_group_required": "Отдельная отмена участия доступна для группового занятия.",
+    "group_reschedule_forbidden": "Участник группы может запросить отмену своего участия.",
+    "invalid_lesson_change_request": "Проверьте вид запроса и предложенное время.",
+    "lesson_change_request_conflict": "Запрос уже рассмотрен либо занятие изменилось.",
+    "lesson_change_request_not_found": "Запрос изменения занятия недоступен.",
     "series_not_found": "Серия не найдена.",
     "series_conflict": "Расписание изменилось; прочитайте актуальную версию.",
     "series_request_conflict": "Идентификатор запроса уже использован с другим содержанием.",

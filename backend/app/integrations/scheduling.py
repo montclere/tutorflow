@@ -15,6 +15,7 @@ from app.modules.groups.public import LessonGroup, LessonGroupMember
 from app.modules.identity.public import Role
 from app.modules.scheduling.application.lesson_ports import LessonTransaction
 from app.modules.scheduling.application.series_ports import SeriesTransaction
+from app.modules.scheduling.infrastructure.persistence.change_requests import PostgresChangeRequests
 from app.modules.scheduling.infrastructure.persistence.lesson_repository import (
     PostgresLessonsRepository,
 )
@@ -96,7 +97,10 @@ class PostgresLessonsUnitOfWork:
     async def transaction(self) -> AsyncIterator[LessonTransaction]:
         async with self.sessions.begin() as db:
             yield LessonTransaction(
-                PostgresLessonsRepository(db), PostgresLessonCards(db), PostgresLessonGroups(db)
+                PostgresLessonsRepository(db),
+                PostgresLessonCards(db),
+                PostgresLessonGroups(db),
+                PostgresChangeRequests(db),
             )
 
 
@@ -111,5 +115,6 @@ class PostgresSeriesUnitOfWork:
                 PostgresLessonsRepository(db),
                 PostgresLessonCards(db),
                 PostgresLessonGroups(db),
+                PostgresChangeRequests(db),
                 PostgresSeriesRepository(db),
             )

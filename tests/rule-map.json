@@ -539,6 +539,42 @@
         "tests/test_series_api.py::test_future_edits_and_series_deletion_preserve_started_lessons",
         "tests/test_series_application.py::test_application_creates_pauses_and_restores_same_lesson_instances"
       ]
+    },
+    "BR-044": {
+      "pytest": [
+        "tests/test_lesson_changes_domain.py::test_cancellation_keeps_snapshot_and_restores_with_version",
+        "tests/test_lesson_changes_api.py::test_cancel_restore_keeps_calendar_and_resets_confirmation",
+        "tests/test_lesson_changes_api.py::test_restored_series_occurrence_stays_exception"
+      ]
+    },
+    "BR-045": {
+      "pytest": [
+        "tests/test_lesson_changes_domain.py::test_request_validates_time_version_and_participant",
+        "tests/test_lesson_changes_api.py::test_reschedule_request_is_versioned_and_concurrent_decision_runs_once",
+        "tests/test_lesson_changes_api.py::test_withdraw_reject_permissions_and_csrf"
+      ]
+    },
+    "BR-046": {
+      "pytest": [
+        "tests/test_lessons_api.py::test_concurrent_edits_and_logical_deletion_keep_ordered_history"
+      ]
+    },
+    "BR-047": {
+      "pytest": [
+        "tests/test_lesson_changes_api.py::test_cancel_restore_keeps_calendar_and_resets_confirmation"
+      ]
+    },
+    "BR-048": {
+      "pytest": [
+        "tests/test_lesson_changes_api.py::test_request_acceptance_audit_failure_rolls_back",
+        "tests/test_lesson_changes_api.py::test_reschedule_request_is_versioned_and_concurrent_decision_runs_once"
+      ]
+    },
+    "BR-052": {
+      "pytest": [
+        "tests/test_lesson_changes_domain.py::test_group_member_requests_only_own_cancellation",
+        "tests/test_lesson_changes_api.py::test_group_request_cancels_only_own_member_and_hides_other_requests"
+      ]
     }
   }
 }

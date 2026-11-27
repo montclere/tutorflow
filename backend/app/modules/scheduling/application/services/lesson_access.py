@@ -63,7 +63,7 @@ async def owned_lesson(
 async def with_warnings(
     unit: LessonTransaction, lesson: Lesson, policy: LessonPolicy, now: datetime
 ) -> LessonResult:
-    if lesson.deleted:
+    if lesson.deleted or lesson.cancelled:
         return LessonResult(lesson, now)
 
     warnings = await unit.lessons.warnings(lesson, policy.conflict_limit + 1)

@@ -15,6 +15,7 @@ from app.modules.scheduling.application.lesson_contracts import (
     SavedLessonRequest,
     TeachingPreferences,
 )
+from app.modules.scheduling.domain.change_requests import LessonChangeRequest
 from app.modules.scheduling.domain.lessons import Lesson
 from app.modules.students.public import LessonCards
 
@@ -79,11 +80,26 @@ class LessonsRepository(Protocol):
     ) -> None: ...
 
 
+class ChangeRequestsRepository(Protocol):
+    async def add(self, request: LessonChangeRequest) -> None: ...
+
+    async def find(self, lesson_id: UUID, request_id: UUID) -> LessonChangeRequest | None: ...
+
+    async def list_for_lesson(
+        self, lesson_id: UUID, card_id: UUID | None, after_id: UUID | None, limit: int
+    ) -> list[LessonChangeRequest]: ...
+
+    async def save(self, request: LessonChangeRequest) -> None: ...
+
+    async def supersede(self, lesson_id: UUID, version: int) -> None: ...
+
+
 @dataclass(frozen=True)
 class LessonTransaction:
     lessons: LessonsRepository
     cards: LessonCards
     groups: LessonGroups
+    requests: ChangeRequestsRepository
 
 
 class LessonsUnitOfWork(Protocol):

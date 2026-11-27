@@ -11,7 +11,7 @@ from app.modules.scheduling.application.lesson_contracts import (
     LessonResult,
     LessonRevision,
 )
-from app.modules.scheduling.application.lesson_ports import LessonsUnitOfWork
+from app.modules.scheduling.application.lesson_ports import LessonsUnitOfWork, LessonTransaction
 from app.modules.scheduling.application.services.lesson_access import owned_lesson, with_warnings
 from app.modules.scheduling.application.services.lesson_participants import LessonParticipantBuilder
 from app.modules.scheduling.domain.exceptions import LessonError
@@ -33,56 +33,61 @@ class LessonChangeService:
 
     async def update(self, actor: Actor, lesson_id: UUID, command: LessonPatch) -> LessonResult:
         async with self.persistence.transaction() as unit:
-            initial = await owned_lesson(unit, actor, lesson_id)
-            sources = await self.participants.sources(
-                unit, actor, initial.group_id, command.participants, initial
-            )
-            current = await owned_lesson(unit, actor, lesson_id, lock=True)
-            now = self.clock()
+            return await self.update_in_transaction(unit, actor, lesson_id, command)
 
-            current.require_editable(now, command.expected_version)
+    async def update_in_transaction(
+        self, unit: LessonTransaction, actor: Actor, lesson_id: UUID, command: LessonPatch
+    ) -> LessonResult:
+        initial = await owned_lesson(unit, actor, lesson_id)
+        sources = await self.participants.sources(
+            unit, actor, initial.group_id, command.participants, initial
+        )
+        current = await owned_lesson(unit, actor, lesson_id, lock=True)
+        now = self.clock()
 
-            if command.text_changes.keys() - TEXT_FIELDS:
-                raise LessonError("invalid_lesson_data")
+        current.require_editable(now, command.expected_version)
 
-            conditions = replace(current.conditions, **command.text_changes)
+        if command.text_changes.keys() - TEXT_FIELDS:
+            raise LessonError("invalid_lesson_data")
 
-            if command.starts_at is not None:
-                conditions = replace(conditions, starts_at=command.starts_at)
+        conditions = replace(current.conditions, **command.text_changes)
 
-            if command.timezone is not None:
-                conditions = replace(conditions, timezone=command.timezone)
+        if command.starts_at is not None:
+            conditions = replace(conditions, starts_at=command.starts_at)
 
-            if command.duration_minutes is not None:
-                conditions = replace(conditions, duration_minutes=command.duration_minutes)
+        if command.timezone is not None:
+            conditions = replace(conditions, timezone=command.timezone)
 
-            self.policy.require_duration(conditions.duration_minutes)
+        if command.duration_minutes is not None:
+            conditions = replace(conditions, duration_minutes=command.duration_minutes)
 
-            confirmation = (
-                current.confirmation if command.confirmation is None else command.confirmation
-            )
-            preferences = await unit.lessons.preferences(actor.account_id)
-            participants = await self.participants.build(
-                unit,
-                sources,
-                conditions,
-                confirmation,
-                preferences.price,
-                now,
-                previous=current,
-                reset=command.reset_confirmations,
-            )
-            changed = current.revise(
-                conditions, participants, confirmation, now, command.expected_version
-            )
+        self.policy.require_duration(conditions.duration_minutes)
 
-            await unit.lessons.save(changed)
-            await unit.lessons.mark_exception(changed.id)
-            await unit.lessons.append_revision(
-                LessonRevision(uuid4(), actor.account_id, now, RevisionKind.UPDATED, changed)
-            )
+        confirmation = (
+            current.confirmation if command.confirmation is None else command.confirmation
+        )
+        preferences = await unit.lessons.preferences(actor.account_id)
+        participants = await self.participants.build(
+            unit,
+            sources,
+            conditions,
+            confirmation,
+            preferences.price,
+            now,
+            previous=current,
+            reset=command.reset_confirmations,
+        )
+        changed = current.revise(
+            conditions, participants, confirmation, now, command.expected_version
+        )
 
-            return await with_warnings(unit, changed, self.policy, self.clock())
+        await unit.lessons.save(changed)
+        await unit.lessons.mark_exception(changed.id)
+        await unit.lessons.append_revision(
+            LessonRevision(uuid4(), actor.account_id, now, RevisionKind.UPDATED, changed)
+        )
+
+        return await with_warnings(unit, changed, self.policy, self.clock())
 
     async def remove(self, actor: Actor, lesson_id: UUID, expected_version: int) -> None:
         async with self.persistence.transaction() as unit:

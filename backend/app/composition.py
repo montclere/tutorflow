@@ -38,6 +38,9 @@ from app.modules.identity.presentation.http.session import (
 )
 from app.modules.identity.public import Role
 from app.modules.scheduling.application.calendar import Calendar
+from app.modules.scheduling.application.services.lesson_cancellation import (
+    LessonCancellationService,
+)
 from app.modules.scheduling.application.services.lesson_changes import LessonChangeService
 from app.modules.scheduling.application.services.lesson_collection import LessonServices
 from app.modules.scheduling.application.services.lesson_creation import LessonCreationService
@@ -46,6 +49,7 @@ from app.modules.scheduling.application.services.lesson_preferences import (
 )
 from app.modules.scheduling.application.services.lesson_queries import LessonQueryService
 from app.modules.scheduling.application.services.lesson_replies import LessonReplyService
+from app.modules.scheduling.application.services.lesson_requests import LessonRequestService
 from app.modules.scheduling.application.services.series_access import SeriesRuntime
 from app.modules.scheduling.application.services.series_changes import SeriesChangeService
 from app.modules.scheduling.application.services.series_collection import SeriesServices
@@ -221,13 +225,19 @@ async def build_services(
         lesson_policy,
     )
     lesson_persistence = PostgresLessonsUnitOfWork(engine)
+    changes = LessonChangeService(lesson_persistence, lesson_policy, lesson_clock)
+    cancellation = LessonCancellationService(lesson_persistence, lesson_policy, lesson_clock)
     lessons = LessonServices(
         LessonCreationService(lesson_persistence, lesson_policy, lesson_clock),
-        LessonChangeService(lesson_persistence, lesson_policy, lesson_clock),
+        changes,
         LessonQueryService(lesson_persistence, lesson_policy, lesson_clock, series.calendar),
         LessonReplyService(lesson_persistence, lesson_clock),
         TeachingPreferencesService(lesson_persistence, lesson_policy),
         lesson_policy,
+        cancellation,
+        LessonRequestService(
+            lesson_persistence, lesson_policy, lesson_clock, changes, cancellation
+        ),
     )
 
     return Services(

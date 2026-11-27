@@ -168,12 +168,16 @@ class ParticipantView(BaseModel):
     price: Price
     profile_id: UUID | None
     profile_subject: str | None
+    cancelled: bool
+    cancellation_reason: str | None
     confirmation: TeacherConfirmationView
 
     @classmethod
     def from_participant(cls, part: LessonParticipant, now: datetime) -> "ParticipantView":
         return cls(
             card_id=part.card_id,
+            cancelled=part.cancelled,
+            cancellation_reason=part.cancellation_reason,
             name=part.name,
             price=Price(amount=part.price.amount),
             profile_id=part.profile_id,
@@ -198,6 +202,8 @@ class LessonDetails(BaseModel):
     delivery_format: str | None
     group: GroupSnapshotView | None
     version: int
+    cancelled: bool
+    cancellation_reason: str | None
     series_id: UUID | None = None
     original_date: date | None = None
 
@@ -218,6 +224,8 @@ def common_fields(lesson: Lesson) -> dict[str, object]:
         if lesson.group_id and lesson.group_name
         else None,
         version=lesson.version,
+        cancelled=lesson.cancelled,
+        cancellation_reason=lesson.cancellation_reason,
         series_id=lesson.series_id,
         original_date=lesson.original_date,
     )
@@ -284,6 +292,8 @@ class OwnLessonView(LessonDetails):
     profile_subject: str | None
     confirmation: ConfirmationView
     can_reply: bool
+    participation_cancelled: bool
+    participation_cancellation_reason: str | None
 
     @classmethod
     def from_result(cls, result: OwnLesson) -> "OwnLessonView":
@@ -301,6 +311,8 @@ class OwnLessonView(LessonDetails):
                     replied_at=part.replied_at,
                 ),
                 can_reply=result.can_reply,
+                participation_cancelled=part.cancelled,
+                participation_cancellation_reason=part.cancellation_reason,
             )
         )
 
