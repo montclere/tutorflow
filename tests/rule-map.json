@@ -466,6 +466,79 @@
         "tests/test_lessons_api.py::test_confirmation_expiry_and_configured_limits_are_enforced",
         "tests/test_lessons_api.py::test_shared_student_does_not_reveal_another_teacher_busy_time"
       ]
+    },
+    "BR-037": {
+      "pytest": [
+        "tests/test_recurrence_domain.py::test_monthly_rule_skips_missing_day_without_consuming_count",
+        "tests/test_recurrence_domain.py::test_weekly_slots_keep_local_time_and_individual_duration",
+        "tests/test_recurrence_domain.py::test_dst_requires_resolution_and_never_silently_shifts_time",
+        "tests/test_series_api.py::test_series_materializes_stable_instances_and_replays_one_request",
+        "tests/test_series_api.py::test_existing_lesson_becomes_first_instance_without_duplicate",
+        "tests/test_series_api.py::test_unbounded_series_prepares_later_range_without_ending_at_horizon",
+        "tests/test_series_api.py::test_series_operations_enforce_owner_csrf_and_source_version",
+        "tests/test_recurrence_domain.py::test_unresolved_time_outside_requested_hours_does_not_block_calendar",
+        "tests/test_series_application.py::test_application_creates_pauses_and_restores_same_lesson_instances"
+      ]
+    },
+    "BR-038": {
+      "pytest": [
+        "tests/test_recurrence_domain.py::test_monthly_rule_skips_missing_day_without_consuming_count",
+        "tests/test_recurrence_domain.py::test_weekly_slots_keep_local_time_and_individual_duration",
+        "tests/test_recurrence_domain.py::test_until_is_inclusive_and_expansion_budget_rejects_partial_results",
+        "tests/test_series_api.py::test_series_materializes_stable_instances_and_replays_one_request",
+        "tests/test_series_api.py::test_concurrent_creation_preparation_and_changes_are_serialized",
+        "tests/test_series_api.py::test_unbounded_series_prepares_later_range_without_ending_at_horizon",
+        "tests/test_series_api.py::test_configured_budget_returns_error_instead_of_partial_calendar",
+        "tests/test_series_storage.py::test_upgrade_preserves_old_lesson_history_and_rejects_duplicate_occurrence",
+        "tests/test_series_api.py::test_calendar_materializes_lesson_that_starts_before_requested_interval",
+        "tests/test_series_application.py::test_application_creates_pauses_and_restores_same_lesson_instances"
+      ]
+    },
+    "BR-042": {
+      "pytest": [
+        "tests/test_series_api.py::test_series_materializes_stable_instances_and_replays_one_request",
+        "tests/test_series_api.py::test_group_series_uses_snapshot_and_explicit_membership_refresh"
+      ]
+    },
+    "BR-043": {
+      "pytest": [
+        "tests/test_series_api.py::test_existing_lesson_becomes_first_instance_without_duplicate",
+        "tests/test_series_api.py::test_moved_exception_survives_future_change_and_explicit_overwrite",
+        "tests/test_series_api.py::test_series_consent_individual_decline_and_confirmed_pause_require_explicit_action",
+        "tests/test_series_api.py::test_concurrent_creation_preparation_and_changes_are_serialized",
+        "tests/test_series_storage.py::test_upgrade_preserves_old_lesson_history_and_rejects_duplicate_occurrence",
+        "tests/test_series_api.py::test_retired_revisions_do_not_consume_active_preparation_budget"
+      ]
+    },
+    "BR-040": {
+      "pytest": [
+        "tests/test_series_api.py::test_moved_exception_survives_future_change_and_explicit_overwrite",
+        "tests/test_series_api.py::test_following_scope_preserves_preceding_future_lessons",
+        "tests/test_series_api.py::test_series_consent_individual_decline_and_confirmed_pause_require_explicit_action",
+        "tests/test_series_api.py::test_concurrent_creation_preparation_and_changes_are_serialized",
+        "tests/test_series_api.py::test_unbounded_series_prepares_later_range_without_ending_at_horizon",
+        "tests/test_series_api.py::test_series_operations_enforce_owner_csrf_and_source_version",
+        "tests/test_series_api.py::test_series_creation_audit_failure_rolls_back_series_lessons_and_request",
+        "tests/test_series_api.py::test_future_edits_and_series_deletion_preserve_started_lessons",
+        "tests/test_series_api.py::test_retired_revisions_do_not_consume_active_preparation_budget"
+      ]
+    },
+    "BR-039": {
+      "pytest": [
+        "tests/test_series_api.py::test_series_consent_individual_decline_and_confirmed_pause_require_explicit_action",
+        "tests/test_series_api.py::test_series_creation_audit_failure_rolls_back_series_lessons_and_request",
+        "tests/test_series_api.py::test_future_edits_and_series_deletion_preserve_started_lessons",
+        "tests/test_series_application.py::test_application_creates_pauses_and_restores_same_lesson_instances"
+      ]
+    },
+    "BR-041": {
+      "pytest": [
+        "tests/test_series_api.py::test_series_consent_individual_decline_and_confirmed_pause_require_explicit_action",
+        "tests/test_series_api.py::test_series_operations_enforce_owner_csrf_and_source_version",
+        "tests/test_series_api.py::test_series_creation_audit_failure_rolls_back_series_lessons_and_request",
+        "tests/test_series_api.py::test_future_edits_and_series_deletion_preserve_started_lessons",
+        "tests/test_series_application.py::test_application_creates_pauses_and_restores_same_lesson_instances"
+      ]
     }
   }
 }

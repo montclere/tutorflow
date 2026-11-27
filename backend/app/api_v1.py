@@ -16,6 +16,7 @@ from app.dependencies import (
     profile_service,
     registration_service,
     role_service,
+    series_services,
     set_invited_session,
     student_access,
     student_services,
@@ -24,6 +25,7 @@ from app.dependencies import (
 from app.modules.groups.presentation.http.router import groups_router
 from app.modules.identity.presentation.http.router import identity_router
 from app.modules.scheduling.presentation.http.lesson_router import lessons_router
+from app.modules.scheduling.presentation.http.series_router import series_router
 from app.modules.scheduling.presentation.router import calendar_router
 from app.modules.students.presentation.http.adult_router import adult_access_router
 from app.modules.students.presentation.http.responsibilities_router import responsibilities_router
@@ -78,3 +80,6 @@ router.include_router(responsibilities_router(student_services, teacher_access))
 
 
 router.include_router(lessons_router(lesson_services, teacher_access, student_access, adult_access))
+
+
+router.include_router(series_router(series_services, teacher_access, student_access, adult_access))
