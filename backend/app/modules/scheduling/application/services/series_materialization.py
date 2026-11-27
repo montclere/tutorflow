@@ -7,13 +7,12 @@ from hashlib import sha256
 from uuid import UUID, uuid4, uuid5
 
 from app.modules.scheduling.application.lesson_contracts import LessonRevision
-from app.modules.scheduling.application.series_contracts import SeriesOccurrence
 from app.modules.scheduling.application.series_ports import SeriesTransaction
 from app.modules.scheduling.domain.exceptions import LessonError
 from app.modules.scheduling.domain.lessons import Lesson, ReplyState
 from app.modules.scheduling.domain.policies import SeriesPolicy
 from app.modules.scheduling.domain.recurrence import RecurrenceConflict, RecurrenceOccurrence
-from app.modules.scheduling.domain.series import LessonSeries, SeriesSegment
+from app.modules.scheduling.domain.series import LessonSeries, SeriesOccurrence, SeriesSegment
 from app.modules.scheduling.domain.values import RevisionKind
 
 

@@ -51,56 +51,12 @@ class SeriesReplyService:
             if series is None:
                 raise LessonError("series_not_found")
 
-            series.require_version(expected_version)
-
             now = self.runtime.clock()
-            segments = []
-            changed = False
-            found = False
+            revised = series.reply(card_id, answer, actor.account_id, now, expected_version)
 
-            for segment in series.segments:
-                part = next(
-                    (part for part in segment.template.participants if part.card_id == card_id),
-                    None,
-                )
-
-                if part is None or segment.until_at is not None and segment.until_at <= now:
-                    segments.append(segment)
-
-                    continue
-
-                found = True
-
-                if part.state is answer and part.response_by == actor.account_id:
-                    segments.append(segment)
-
-                    continue
-
-                if part.deadline is None:
-                    raise LessonError("lesson_reply_not_requested")
-
-                if part.deadline <= now:
-                    raise LessonError("lesson_reply_expired")
-
-                updated = replace(part, state=answer, response_by=actor.account_id, replied_at=now)
-                participants = tuple(
-                    updated if item.card_id == card_id else item
-                    for item in segment.template.participants
-                )
-
-                segments.append(
-                    replace(segment, template=replace(segment.template, participants=participants))
-                )
-
-                changed = True
-
-            if not found:
-                raise LessonError("series_not_found")
-
-            if not changed:
+            if revised == series:
                 return OwnSeriesResult(SeriesResult(series, now), card_id, True)
 
-            revised = replace(series, segments=tuple(segments))
             overrides = await unit.series.response_overrides(series_id, card_id)
             occurrences = await unit.series.occurrences(
                 series_id, start=now, limit=self.runtime.policy.expansion_limit + 1

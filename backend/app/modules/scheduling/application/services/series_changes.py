@@ -1,8 +1,6 @@
 """Явная замена будущего шаблона с предварительной оценкой подтверждений и исключений."""
 
-from collections.abc import Sequence
 from dataclasses import replace
-from datetime import datetime
 from uuid import UUID, uuid4
 
 from app.modules.identity.public import Actor
@@ -10,8 +8,6 @@ from app.modules.scheduling.application.lesson_contracts import LessonDraft
 from app.modules.scheduling.application.series_contracts import (
     RecurrenceDraft,
     SeriesChange,
-    SeriesImpact,
-    SeriesOccurrence,
     SeriesResult,
 )
 from app.modules.scheduling.application.services.lesson_participants import LessonParticipantBuilder
@@ -24,45 +20,7 @@ from app.modules.scheduling.application.services.series_access import (
     validate_rule,
 )
 from app.modules.scheduling.domain.exceptions import LessonError
-from app.modules.scheduling.domain.lessons import ReplyState
-from app.modules.scheduling.domain.series import LessonSeries, SeriesSegment
-
-
-def impact_for(
-    series: LessonSeries,
-    occurrences: Sequence[SeriesOccurrence],
-    *,
-    preserve_exceptions: bool,
-    start: datetime,
-    end: datetime | None = None,
-) -> SeriesImpact:
-    affected = tuple(
-        item
-        for item in occurrences
-        if not item.lesson.deleted and (not preserve_exceptions or not item.customized)
-    )
-
-    return SeriesImpact(
-        tuple(item.lesson.id for item in affected),
-        tuple(
-            item.lesson.id
-            for item in affected
-            if any(part.state is ReplyState.ACCEPTED for part in item.lesson.participants)
-        ),
-        tuple(item.lesson.id for item in occurrences if item.customized),
-        any(
-            part.state is ReplyState.ACCEPTED
-            for segment in series.segments
-            if (segment.until_at is None or segment.until_at > start)
-            and (end is None or segment.effective_at < end)
-            for part in segment.template.participants
-        ),
-    )
-
-
-def require_confirmation(impact: SeriesImpact, allowed: bool) -> None:
-    if (impact.confirmed or impact.confirmed_schedule) and not allowed:
-        raise LessonError("series_confirmation_required")
+from app.modules.scheduling.domain.series import SeriesSegment
 
 
 class SeriesChangeService:
@@ -167,14 +125,14 @@ class SeriesChangeService:
 
             self.runtime.materializer.require_budget(len(occurrences))
 
-            impact = impact_for(
-                current, future, preserve_exceptions=not command.overwrite_exceptions, start=cutoff
+            impact = current.impact(
+                future, preserve_exceptions=not command.overwrite_exceptions, start=cutoff
             )
 
             if command.preview:
                 return SeriesResult(current, now, impact)
 
-            require_confirmation(impact, command.allow_confirmed)
+            impact.require_confirmation(command.allow_confirmed)
 
             for item in future:
                 if item.customized and not command.overwrite_exceptions:

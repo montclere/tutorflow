@@ -1,11 +1,12 @@
 """Версии регулярного расписания, будущие границы и сохраняемые периоды пауз."""
 
+from collections.abc import Sequence
 from dataclasses import dataclass, replace
-from datetime import datetime
+from datetime import date, datetime
 from uuid import UUID
 
 from app.modules.scheduling.domain.exceptions import LessonError
-from app.modules.scheduling.domain.lessons import Lesson
+from app.modules.scheduling.domain.lessons import Lesson, ReplyState
 from app.modules.scheduling.domain.recurrence import RecurrenceRule
 
 
@@ -39,6 +40,28 @@ class SeriesPause:
 
     def contains(self, starts_at: datetime) -> bool:
         return self.starts_at <= starts_at and (self.ends_at is None or starts_at < self.ends_at)
+
+
+@dataclass(frozen=True)
+class SeriesOccurrence:
+    series_id: UUID
+    segment_id: UUID
+    local_date: date
+    lesson: Lesson
+    customized: bool = False
+    suppressed: bool = False
+
+
+@dataclass(frozen=True)
+class SeriesImpact:
+    affected: tuple[UUID, ...] = ()
+    confirmed: tuple[UUID, ...] = ()
+    exceptions: tuple[UUID, ...] = ()
+    confirmed_schedule: bool = False
+
+    def require_confirmation(self, allowed: bool) -> None:
+        if (self.confirmed or self.confirmed_schedule) and not allowed:
+            raise LessonError("series_confirmation_required")
 
 
 @dataclass(frozen=True)
@@ -121,6 +144,98 @@ class LessonSeries:
             segments=segments or (replace(self.segments[0], until_at=now),),
             deleted=True,
             version=self.version + 1,
+        )
+
+    def reply(
+        self,
+        card_id: UUID,
+        answer: ReplyState,
+        account_id: UUID,
+        now: datetime,
+        expected_version: int,
+    ) -> "LessonSeries":
+        self.require_version(expected_version)
+
+        if answer not in {ReplyState.ACCEPTED, ReplyState.DECLINED}:
+            raise LessonError("invalid_lesson_reply")
+
+        segments = []
+        changed = False
+        found = False
+
+        for segment in self.segments:
+            part = next(
+                (part for part in segment.template.participants if part.card_id == card_id),
+                None,
+            )
+
+            if part is None or segment.until_at is not None and segment.until_at <= now:
+                segments.append(segment)
+
+                continue
+
+            found = True
+
+            if part.state is answer and part.response_by == account_id:
+                segments.append(segment)
+
+                continue
+
+            if part.deadline is None:
+                raise LessonError("lesson_reply_not_requested")
+
+            if part.deadline <= now:
+                raise LessonError("lesson_reply_expired")
+
+            updated = replace(part, state=answer, response_by=account_id, replied_at=now)
+            participants = tuple(
+                updated if item.card_id == card_id else item
+                for item in segment.template.participants
+            )
+
+            segments.append(
+                replace(segment, template=replace(segment.template, participants=participants))
+            )
+
+            changed = True
+
+        if not found:
+            raise LessonError("series_not_found")
+
+        if not changed:
+            return self
+
+        return replace(self, segments=tuple(segments))
+
+    def impact(
+        self,
+        occurrences: Sequence[SeriesOccurrence],
+        *,
+        preserve_exceptions: bool,
+        start: datetime,
+        end: datetime | None = None,
+    ) -> SeriesImpact:
+        affected = tuple(
+            item
+            for item in occurrences
+            if not item.lesson.deleted and (not preserve_exceptions or not item.customized)
+        )
+
+        return SeriesImpact(
+            tuple(item.lesson.id for item in affected),
+            tuple(
+                item.lesson.id
+                for item in affected
+                if any(part.state is ReplyState.ACCEPTED for part in item.lesson.participants)
+            ),
+            tuple(item.lesson.id for item in occurrences if item.customized),
+            any(
+                part.state is ReplyState.ACCEPTED
+                for segment in self.segments
+                if (segment.until_at is None or segment.until_at > start)
+                and (end is None or segment.effective_at < end)
+                for part in segment.template.participants
+            ),
         )
 
     def paused(self, starts_at: datetime) -> bool:

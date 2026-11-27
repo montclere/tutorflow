@@ -9,10 +9,9 @@ from uuid import UUID
 from app.modules.scheduling.application.lesson_ports import LessonTransaction
 from app.modules.scheduling.application.series_contracts import (
     SavedSeriesRequest,
-    SeriesOccurrence,
     SeriesRevision,
 )
-from app.modules.scheduling.domain.series import LessonSeries
+from app.modules.scheduling.domain.series import LessonSeries, SeriesOccurrence
 
 
 class SeriesRepository(Protocol):

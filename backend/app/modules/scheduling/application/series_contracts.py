@@ -1,17 +1,16 @@
 """Команды регулярного расписания, результаты подготовки и сведения о последствиях."""
 
 from dataclasses import dataclass
-from datetime import date, datetime
+from datetime import datetime
 from uuid import UUID
 
 from app.modules.scheduling.application.lesson_contracts import LessonDraft
-from app.modules.scheduling.domain.lessons import Lesson
 from app.modules.scheduling.domain.recurrence import (
     RecurrenceConflict,
     RecurrenceDraft,
     RecurrenceRule,
 )
-from app.modules.scheduling.domain.series import LessonSeries
+from app.modules.scheduling.domain.series import LessonSeries, SeriesImpact
 
 
 @dataclass(frozen=True)
@@ -33,24 +32,6 @@ class SeriesChange:
     overwrite_exceptions: bool = False
     allow_confirmed: bool = False
     preview: bool = False
-
-
-@dataclass(frozen=True)
-class SeriesOccurrence:
-    series_id: UUID
-    segment_id: UUID
-    local_date: date
-    lesson: Lesson
-    customized: bool = False
-    suppressed: bool = False
-
-
-@dataclass(frozen=True)
-class SeriesImpact:
-    affected: tuple[UUID, ...] = ()
-    confirmed: tuple[UUID, ...] = ()
-    exceptions: tuple[UUID, ...] = ()
-    confirmed_schedule: bool = False
 
 
 @dataclass(frozen=True)

@@ -10,10 +10,6 @@ from app.modules.scheduling.application.services.series_access import (
     lock_series,
     save_series,
 )
-from app.modules.scheduling.application.services.series_changes import (
-    impact_for,
-    require_confirmation,
-)
 from app.modules.scheduling.domain.series import SeriesPause
 
 
@@ -50,8 +46,7 @@ class SeriesPauseService:
                 if item.lesson.conditions.starts_at > now
                 and pause.contains(item.lesson.conditions.starts_at)
             ]
-            impact = impact_for(
-                current,
+            impact = current.impact(
                 affected,
                 preserve_exceptions=False,
                 start=pause.starts_at,
@@ -61,7 +56,7 @@ class SeriesPauseService:
             if preview:
                 return SeriesResult(current, now, impact)
 
-            require_confirmation(impact, allow_confirmed)
+            impact.require_confirmation(allow_confirmed)
 
             for item in affected:
                 if not item.lesson.deleted:
@@ -143,12 +138,12 @@ class SeriesPauseService:
             self.runtime.materializer.require_budget(len(occurrences))
 
             future = [item for item in occurrences if item.lesson.conditions.starts_at > now]
-            impact = impact_for(current, future, preserve_exceptions=False, start=now)
+            impact = current.impact(future, preserve_exceptions=False, start=now)
 
             if preview:
                 return SeriesResult(current, now, impact)
 
-            require_confirmation(impact, allow_confirmed)
+            impact.require_confirmation(allow_confirmed)
 
             for item in future:
                 if not item.lesson.deleted:

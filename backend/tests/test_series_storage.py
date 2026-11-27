@@ -11,10 +11,9 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from tests.identity_testkit import seed_account
 from tests.postgres_testkit import check_schema, migrate, migrated_schema
 
-from app.modules.scheduling.application.series_contracts import SeriesOccurrence
 from app.modules.scheduling.domain.lessons import Lesson, LessonConditions, LessonParticipant
 from app.modules.scheduling.domain.recurrence import Frequency, RecurrenceRule
-from app.modules.scheduling.domain.series import LessonSeries, SeriesSegment
+from app.modules.scheduling.domain.series import LessonSeries, SeriesOccurrence, SeriesSegment
 from app.modules.scheduling.domain.values import LessonPrice
 from app.modules.scheduling.infrastructure.persistence.lesson_models import (
     LessonParticipantRow,

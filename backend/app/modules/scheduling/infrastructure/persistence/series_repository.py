@@ -9,11 +9,10 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.modules.scheduling.application.series_contracts import (
     SavedSeriesRequest,
-    SeriesOccurrence,
     SeriesRevision,
 )
 from app.modules.scheduling.domain.exceptions import LessonError
-from app.modules.scheduling.domain.series import LessonSeries
+from app.modules.scheduling.domain.series import LessonSeries, SeriesOccurrence
 from app.modules.scheduling.infrastructure.persistence.lesson_models import LessonRow
 from app.modules.scheduling.infrastructure.persistence.lesson_repository import (
     PostgresLessonsRepository,

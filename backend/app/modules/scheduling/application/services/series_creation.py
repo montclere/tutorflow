@@ -13,7 +13,6 @@ from app.modules.scheduling.application.lesson_contracts import LessonRevision
 from app.modules.scheduling.application.series_contracts import (
     RecurrenceDraft,
     SeriesCreate,
-    SeriesOccurrence,
     SeriesResult,
     SeriesRevision,
 )
@@ -25,7 +24,7 @@ from app.modules.scheduling.application.services.series_access import (
     validate_rule,
 )
 from app.modules.scheduling.domain.exceptions import LessonError
-from app.modules.scheduling.domain.series import LessonSeries, SeriesSegment
+from app.modules.scheduling.domain.series import LessonSeries, SeriesOccurrence, SeriesSegment
 from app.modules.scheduling.domain.values import RevisionKind
 
 
