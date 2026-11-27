@@ -5,6 +5,7 @@ from datetime import date, datetime, timedelta
 from enum import StrEnum
 from uuid import UUID, uuid4
 
+from app.modules.scheduling.domain.completion import Attendance, LessonOutcome
 from app.modules.scheduling.domain.exceptions import LessonError
 from app.modules.scheduling.domain.values import (
     TITLE_MAX_LENGTH,
@@ -70,6 +71,8 @@ class LessonParticipant:
     cancelled: bool = False
     cancellation_reason: str | None = None
 
+    attendance: Attendance = Attendance.UNMARKED
+
     def effective_state(self, now: datetime) -> ReplyState:
         if self.state is ReplyState.PENDING and self.deadline is not None and self.deadline <= now:
             return ReplyState.EXPIRED
@@ -92,6 +95,9 @@ class Lesson:
     original_date: date | None = None
     cancelled: bool = False
     cancellation_reason: str | None = None
+
+    outcome: LessonOutcome = LessonOutcome.UNRECORDED
+    completion_notes: str | None = None
 
     def __post_init__(self) -> None:
         if (self.group_id is None) != (self.group_name is None):
@@ -213,6 +219,49 @@ class Lesson:
             conditions=conditions,
             participants=participants,
             confirmation=confirmation,
+            version=self.version + 1,
+        )
+
+    def complete(
+        self,
+        outcome: LessonOutcome,
+        attendance: dict[UUID, Attendance],
+        notes: str | None,
+        now: datetime,
+        expected_version: int,
+    ) -> "Lesson":
+        if self.deleted or self.version != expected_version:
+            raise LessonError("lesson_conflict")
+
+        if self.conditions.starts_at > now:
+            raise LessonError("lesson_not_started")
+
+        if outcome not in {LessonOutcome.HELD, LessonOutcome.NOT_HELD}:
+            raise LessonError("invalid_lesson_completion")
+
+        if self.cancelled and outcome is LessonOutcome.HELD:
+            raise LessonError("lesson_cancelled")
+
+        if attendance.keys() - {part.card_id for part in self.participants}:
+            raise LessonError("invalid_lesson_completion")
+
+        parts = tuple(
+            replace(part, attendance=attendance.get(part.card_id, part.attendance))
+            for part in self.participants
+        )
+
+        if any(
+            part.attendance is Attendance.PRESENT
+            and (part.cancelled or outcome is LessonOutcome.NOT_HELD)
+            for part in parts
+        ):
+            raise LessonError("invalid_lesson_completion")
+
+        return replace(
+            self,
+            participants=parts,
+            outcome=outcome,
+            completion_notes=lesson_text(notes),
             version=self.version + 1,
         )
 
