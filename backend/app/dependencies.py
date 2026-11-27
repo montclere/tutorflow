@@ -16,6 +16,7 @@ from app.modules.identity.presentation.http.session import (
 )
 from app.modules.identity.public import Actor, InvitedSession, Principal, Role
 from app.modules.scheduling.application.calendar import Calendar
+from app.modules.scheduling.application.services.availability_collection import AvailabilityServices
 from app.modules.scheduling.application.services.lesson_collection import LessonServices
 from app.modules.scheduling.application.services.series_collection import SeriesServices
 from app.modules.students.application.services.collection import AdultServices, StudentServices
@@ -137,3 +138,7 @@ async def lesson_services(request: Request) -> LessonServices:
 
 async def series_services(request: Request) -> SeriesServices:
     return (await resolve_services(request)).series
+
+
+async def availability_services(request: Request) -> AvailabilityServices:
+    return (await resolve_services(request)).availability

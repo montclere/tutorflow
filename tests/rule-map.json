@@ -611,6 +611,58 @@
         "tests/test_lesson_completion.py::test_completion_is_manual_private_versioned_and_correctable",
         "tests/test_lesson_completion.py::test_completion_failure_rolls_back_and_rejects_foreign_attendance"
       ]
+    },
+    "BR-062": {
+      "pytest": [
+        "tests/test_availability_api.py::test_publication_change_invalidates_reservation_and_stale_versions"
+      ]
+    },
+    "BR-063": {
+      "pytest": [
+        "tests/test_availability_api.py::test_blocks_breaks_and_group_visibility_with_recurring_windows"
+      ]
+    },
+    "BR-064": {
+      "pytest": [
+        "tests/test_availability_domain.py::test_cells_preserve_free_remainder_and_respect_breaks_without_doubling",
+        "tests/test_availability_api.py::test_competing_students_cannot_book_same_time",
+        "tests/test_availability_api.py::test_saved_break_survives_lowered_configuration",
+        "tests/test_availability_api.py::test_future_series_outside_preparation_horizon_still_blocks_booking"
+      ]
+    },
+    "BR-065": {
+      "pytest": [
+        "tests/test_availability_api.py::test_instant_booking_replays_and_preserves_remaining_slots",
+        "tests/test_availability_api.py::test_approval_reserves_expires_and_teacher_accepts_current_request"
+      ]
+    },
+    "BR-066": {
+      "pytest": [
+        "tests/test_availability_domain.py::test_reservation_is_single_decision_and_expires_before_start",
+        "tests/test_availability_api.py::test_publication_change_invalidates_reservation_and_stale_versions",
+        "tests/test_availability_api.py::test_booking_audit_failure_rolls_back_claim_and_lesson"
+      ]
+    },
+    "BR-067": {
+      "pytest": [
+        "tests/test_availability_api.py::test_observer_permissions_responsibility_transfer_and_foreign_owner",
+        "tests/test_availability_api.py::test_database_rejects_booking_with_foreign_publication_owner"
+      ]
+    },
+    "BR-068": {
+      "pytest": [
+        "tests/test_availability_api.py::test_blocks_breaks_and_group_visibility_with_recurring_windows"
+      ]
+    },
+    "BR-069": {
+      "pytest": [
+        "tests/test_availability_api.py::test_selecting_one_time_option_moves_existing_lesson_once"
+      ]
+    },
+    "BR-070": {
+      "pytest": [
+        "tests/test_availability_api.py::test_student_hours_only_expose_free_intervals_and_suggest_matches"
+      ]
     }
   }
 }
