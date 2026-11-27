@@ -576,6 +576,41 @@
         "tests/test_lesson_changes_domain.py::test_group_member_requests_only_own_cancellation",
         "tests/test_lesson_changes_api.py::test_group_request_cancels_only_own_member_and_hides_other_requests"
       ]
+    },
+    "BR-053": {
+      "pytest": [
+        "tests/test_lesson_completion_domain.py::test_completion_requires_started_lesson_and_consistent_attendance",
+        "tests/test_lesson_completion.py::test_completion_is_manual_private_versioned_and_correctable"
+      ]
+    },
+    "BR-054": {
+      "pytest": [
+        "tests/test_lesson_completion_domain.py::test_completion_requires_started_lesson_and_consistent_attendance",
+        "tests/test_lesson_completion.py::test_completion_is_manual_private_versioned_and_correctable"
+      ]
+    },
+    "BR-055": {
+      "pytest": [
+        "tests/test_lesson_completion_domain.py::test_completion_requires_started_lesson_and_consistent_attendance",
+        "tests/test_lesson_completion.py::test_completion_is_manual_private_versioned_and_correctable"
+      ]
+    },
+    "BR-056": {
+      "pytest": [
+        "tests/test_lesson_completion.py::test_completion_is_manual_private_versioned_and_correctable"
+      ]
+    },
+    "BR-057": {
+      "pytest": [
+        "tests/test_lesson_completion.py::test_completion_is_manual_private_versioned_and_correctable"
+      ]
+    },
+    "BR-061": {
+      "pytest": [
+        "tests/test_lesson_completion_domain.py::test_completion_requires_started_lesson_and_consistent_attendance",
+        "tests/test_lesson_completion.py::test_completion_is_manual_private_versioned_and_correctable",
+        "tests/test_lesson_completion.py::test_completion_failure_rolls_back_and_rejects_foreign_attendance"
+      ]
     }
   }
 }

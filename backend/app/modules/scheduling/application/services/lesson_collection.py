@@ -6,6 +6,7 @@ from app.modules.scheduling.application.services.lesson_cancellation import (
     LessonCancellationService,
 )
 from app.modules.scheduling.application.services.lesson_changes import LessonChangeService
+from app.modules.scheduling.application.services.lesson_completion import LessonCompletionService
 from app.modules.scheduling.application.services.lesson_creation import LessonCreationService
 from app.modules.scheduling.application.services.lesson_preferences import (
     TeachingPreferencesService,
@@ -26,3 +27,4 @@ class LessonServices:
     policy: LessonPolicy
     cancellation: LessonCancellationService
     requests: LessonRequestService
+    completion: LessonCompletionService

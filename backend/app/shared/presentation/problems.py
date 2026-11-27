@@ -14,6 +14,8 @@ from starlette.responses import JSONResponse
 
 MAX_VALIDATION_ERRORS = 20
 DESCRIPTIONS = {
+    "lesson_not_started": "Занятие ещё не началось.",
+    "invalid_lesson_completion": "Проверьте результат занятия и посещаемость участников.",
     "lesson_cancelled": "Сначала восстановите отменённое занятие или участие.",
     "lesson_group_required": "Отдельная отмена участия доступна для группового занятия.",
     "group_reschedule_forbidden": "Участник группы может запросить отмену своего участия.",

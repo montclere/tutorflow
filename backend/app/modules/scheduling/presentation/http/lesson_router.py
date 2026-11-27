@@ -9,6 +9,7 @@ from pydantic import AwareDatetime
 
 from app.modules.identity.public import Actor
 from app.modules.scheduling.application.services.lesson_collection import LessonServices
+from app.modules.scheduling.presentation.http.completion_router import completion_router
 from app.modules.scheduling.presentation.http.lesson_changes_router import change_requests_router
 from app.modules.scheduling.presentation.http.lesson_participation_router import (
     lesson_cursor,
@@ -36,6 +37,8 @@ def lessons_router(
     adult: RequestAccess[Actor],
 ) -> APIRouter:
     router = APIRouter(tags=["Занятия"])
+
+    router.include_router(completion_router(get_services, teacher))
 
 
     @router.post("/lessons", status_code=201)

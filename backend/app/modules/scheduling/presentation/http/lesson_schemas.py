@@ -16,6 +16,7 @@ from app.modules.scheduling.application.lesson_contracts import (
     PreferencesPatch,
     TeachingPreferences,
 )
+from app.modules.scheduling.domain.completion import Attendance, LessonOutcome
 from app.modules.scheduling.domain.lessons import Lesson, LessonParticipant, ReplyState
 from app.modules.scheduling.domain.values import (
     PRICE_QUANTUM,
@@ -170,6 +171,7 @@ class ParticipantView(BaseModel):
     profile_subject: str | None
     cancelled: bool
     cancellation_reason: str | None
+    attendance: Attendance
     confirmation: TeacherConfirmationView
 
     @classmethod
@@ -177,6 +179,7 @@ class ParticipantView(BaseModel):
         return cls(
             card_id=part.card_id,
             cancelled=part.cancelled,
+            attendance=part.attendance,
             cancellation_reason=part.cancellation_reason,
             name=part.name,
             price=Price(amount=part.price.amount),
@@ -202,6 +205,7 @@ class LessonDetails(BaseModel):
     delivery_format: str | None
     group: GroupSnapshotView | None
     version: int
+    outcome: LessonOutcome
     cancelled: bool
     cancellation_reason: str | None
     series_id: UUID | None = None
@@ -224,6 +228,7 @@ def common_fields(lesson: Lesson) -> dict[str, object]:
         if lesson.group_id and lesson.group_name
         else None,
         version=lesson.version,
+        outcome=lesson.outcome,
         cancelled=lesson.cancelled,
         cancellation_reason=lesson.cancellation_reason,
         series_id=lesson.series_id,
@@ -242,6 +247,7 @@ class LessonView(LessonDetails):
     participants: list[ParticipantView]
     total_price: TotalPrice
     deleted: bool
+    completion_notes: str | None
 
     @classmethod
     def from_lesson(cls, lesson: Lesson, now: datetime) -> "LessonView":
@@ -257,6 +263,7 @@ class LessonView(LessonDetails):
                 ],
                 total_price=TotalPrice(amount=total.quantize(PRICE_QUANTUM)),
                 deleted=lesson.deleted,
+                completion_notes=lesson.completion_notes,
             )
         )
 
@@ -292,6 +299,7 @@ class OwnLessonView(LessonDetails):
     profile_subject: str | None
     confirmation: ConfirmationView
     can_reply: bool
+    attendance: Attendance
     participation_cancelled: bool
     participation_cancellation_reason: str | None
 
@@ -312,6 +320,7 @@ class OwnLessonView(LessonDetails):
                 ),
                 can_reply=result.can_reply,
                 participation_cancelled=part.cancelled,
+                attendance=part.attendance,
                 participation_cancellation_reason=part.cancellation_reason,
             )
         )

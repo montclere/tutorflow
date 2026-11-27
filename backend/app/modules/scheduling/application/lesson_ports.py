@@ -71,6 +71,16 @@ class LessonsRepository(Protocol):
         group_id: UUID | None = None,
     ) -> list[Lesson]: ...
 
+    async def unfinished(
+        self,
+        teacher_id: UUID,
+        start: datetime,
+        end: datetime,
+        now: datetime,
+        after_id: UUID | None,
+        limit: int,
+    ) -> list[Lesson]: ...
+
     async def warnings(self, lesson: Lesson, limit: int) -> list[CalendarWarning]: ...
 
     async def preferences(self, teacher_id: UUID) -> TeachingPreferences: ...

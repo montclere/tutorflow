@@ -7,6 +7,8 @@ from app.shared.presentation.problems import ProblemResponse, problem_response, 
 
 
 LESSON_STATUSES = {
+    "lesson_not_started": 409,
+    "invalid_lesson_completion": 422,
     "lesson_cancelled": 409,
     "lesson_group_required": 422,
     "group_reschedule_forbidden": 422,
