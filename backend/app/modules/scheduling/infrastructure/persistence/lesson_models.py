@@ -32,6 +32,7 @@ class LessonRow(LessonsBase):
     __tablename__ = "scheduling_lessons"
     __table_args__ = (
         UniqueConstraint("teacher_id", "request_id", name="uq_lesson_creation_request"),
+        UniqueConstraint("id", "teacher_id", name="uq_lesson_owner"),
         CheckConstraint("duration_minutes > 0", name="ck_lesson_duration"),
         CheckConstraint("version > 0", name="ck_lesson_version"),
         CheckConstraint("outcome IN ('unrecorded', 'held', 'not_held')", name="ck_lesson_outcome"),

@@ -3,6 +3,7 @@
 from app.modules.groups.infrastructure.persistence.models import GroupsBase
 from app.modules.identity.infrastructure.persistence.models import IdentityBase
 from app.modules.scheduling.infrastructure.models import SchedulingBase
+from app.modules.scheduling.infrastructure.persistence.availability_models import AvailabilityRow
 from app.modules.scheduling.infrastructure.persistence.change_requests import LessonChangeRequestRow
 from app.modules.scheduling.infrastructure.persistence.lesson_models import LessonsBase
 from app.modules.scheduling.infrastructure.persistence.series_models import SeriesBase
@@ -18,6 +19,7 @@ model_bases = (
     AdultAccessBase,
     GroupsBase,
     LessonsBase,
+    AvailabilityRow,
     LessonChangeRequestRow,
     SeriesBase,
 )
