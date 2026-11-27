@@ -139,12 +139,15 @@ class Lesson:
     def collective(self) -> bool:
         return self.group_id is not None or len(self.participants) > 1
 
-    def require_editable(self, now: datetime, expected_version: int) -> None:
+    def require_future_version(self, now: datetime, expected_version: int) -> None:
         if self.deleted or self.version != expected_version:
             raise LessonError("lesson_conflict")
 
         if self.conditions.starts_at <= now:
             raise LessonError("lesson_already_started")
+
+    def require_editable(self, now: datetime, expected_version: int) -> None:
+        self.require_future_version(now, expected_version)
 
         if self.cancelled:
             raise LessonError("lesson_cancelled")
@@ -157,11 +160,7 @@ class Lesson:
         expected_version: int,
         card_id: UUID | None = None,
     ) -> "Lesson":
-        if self.deleted or self.version != expected_version:
-            raise LessonError("lesson_conflict")
-
-        if self.conditions.starts_at <= now:
-            raise LessonError("lesson_already_started")
+        self.require_future_version(now, expected_version)
 
         reason = lesson_text(reason) if cancelled else None
 
@@ -266,7 +265,7 @@ class Lesson:
         )
 
     def remove(self, now: datetime, expected_version: int) -> "Lesson":
-        self.require_editable(now, expected_version)
+        self.require_future_version(now, expected_version)
 
         return replace(self, deleted=True, version=self.version + 1)
 

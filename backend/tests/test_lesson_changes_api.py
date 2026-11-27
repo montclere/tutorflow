@@ -342,3 +342,29 @@ async def test_request_acceptance_audit_failure_rolls_back(client, inbox, servic
         assert not (await client.get(path)).json()["cancelled"]
         assert (await student.get(own)).json()["items"][0]["state"] == "pending"
         assert len((await client.get(f"{path}/history")).json()["items"]) == 1
+
+
+async def test_cancelled_future_lesson_can_be_removed_without_losing_history(client, inbox):
+    headers = await teacher(client, inbox, "teacher@example.com")
+    item = await card(client, headers)
+    saved = await create_lesson(client, headers, lesson_body([item["id"]]))
+    path = f"{BASE}/lessons/{saved['id']}"
+
+    assert (
+        await client.post(
+            f"{path}/cancellation", json={"expected_version": 1, "cancelled": True}, headers=headers
+        )
+    ).status_code == 200
+    assert (
+        await client.delete(path, params={"expected_version": 1}, headers=headers)
+    ).status_code == 409
+
+    removed = await client.delete(path, params={"expected_version": 2}, headers=headers)
+
+    assert removed.status_code == 204, removed.text
+    assert (await client.get(path)).status_code == 404
+
+    history = (await client.get(f"{path}/history")).json()["items"]
+
+    assert [row["kind"] for row in history] == ["created", "cancelled", "deleted"]
+    assert history[-1]["lesson"]["cancelled"] and history[-1]["lesson"]["deleted"]
