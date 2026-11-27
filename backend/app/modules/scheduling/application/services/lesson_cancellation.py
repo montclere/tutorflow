@@ -57,9 +57,17 @@ class LessonCancellationService:
             return await with_warnings(unit, changed, self.policy, now)
 
         if not cancelled:
+            restore_sources = replace(
+                sources,
+                commands=tuple(
+                    command
+                    for command in sources.commands
+                    if card_id is None or command.card_id == card_id
+                ),
+            )
             parts = await builder.build(
                 unit,
-                sources,
+                restore_sources,
                 changed.conditions,
                 changed.confirmation,
                 None,

@@ -135,6 +135,18 @@ async def test_group_request_cancels_only_own_member_and_hides_other_requests(
         assert participants[item["id"]]["cancelled"] and not participants[other["id"]]["cancelled"]
         assert (await student.get(own)).json()["items"][0]["state"] == "accepted"
         assert (await student.get(own.replace(item["id"], other["id"]))).status_code == 404
+        assert (
+            await client.post(f"{BASE}/students/cards/{other['id']}/archive", headers=headers)
+        ).status_code == 200
+
+        restored = await client.post(
+            f"{path}/cancellation",
+            json={"cancelled": False, "card_id": item["id"], "expected_version": 2},
+            headers=headers,
+        )
+
+        assert restored.status_code == 200, restored.text
+        assert all(not part["cancelled"] for part in restored.json()["participants"])
 
 
 async def test_reschedule_request_is_versioned_and_concurrent_decision_runs_once(
