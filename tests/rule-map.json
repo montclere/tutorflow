@@ -567,7 +567,8 @@
     "BR-048": {
       "pytest": [
         "tests/test_lesson_changes_api.py::test_request_acceptance_audit_failure_rolls_back",
-        "tests/test_lesson_changes_api.py::test_reschedule_request_is_versioned_and_concurrent_decision_runs_once"
+        "tests/test_lesson_changes_api.py::test_reschedule_request_is_versioned_and_concurrent_decision_runs_once",
+        "tests/test_lesson_changes_storage.py::test_upgrade_keeps_old_snapshots_and_database_rejects_duplicate_open_request"
       ]
     },
     "BR-052": {

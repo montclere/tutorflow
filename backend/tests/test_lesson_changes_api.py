@@ -9,7 +9,14 @@ from tests.students_testkit import card, client_for, invitation, signup, teacher
 from tests.test_lessons_api import BASE, create_lesson, lesson_body
 
 
-pytestmark = pytest.mark.anyio
+pytestmark = [
+    pytest.mark.anyio,
+    pytest.mark.br_044,
+    pytest.mark.br_045,
+    pytest.mark.br_047,
+    pytest.mark.br_048,
+    pytest.mark.br_052,
+]
 
 
 async def connected_student(client, inbox, student, headers):

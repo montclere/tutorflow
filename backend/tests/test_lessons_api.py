@@ -328,6 +328,7 @@ async def test_conflicts_are_warnings_adjacent_events_are_allowed_and_foreign_ev
 
 
 @pytest.mark.br_097
+@pytest.mark.br_046
 async def test_concurrent_edits_and_logical_deletion_keep_ordered_history(client, inbox):
     headers = await teacher(client, inbox, "teacher@example.com")
     student = await card(client, headers)

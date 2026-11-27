@@ -17,6 +17,9 @@ from app.modules.scheduling.domain.lessons import Lesson, LessonConditions, Less
 from app.modules.scheduling.domain.values import LessonPrice
 
 
+pytestmark = [pytest.mark.br_044, pytest.mark.br_045, pytest.mark.br_052]
+
+
 def example_lesson(group: bool = False) -> tuple[Lesson, datetime]:
     now = datetime.now(UTC)
     lesson = Lesson.create(
