@@ -5,7 +5,7 @@ from datetime import timedelta
 from pydantic import Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
-from app.modules.scheduling.domain.policies import LessonPolicy
+from app.modules.scheduling.domain.policies import LessonPolicy, SeriesPolicy
 
 
 class LessonSettings(BaseSettings):
@@ -31,3 +31,15 @@ class LessonSettings(BaseSettings):
             timedelta(hours=self.confirmation_hours),
             self.conflict_limit,
         )
+
+
+class SeriesSettings(BaseSettings):
+    model_config = SettingsConfigDict(env_prefix="SCHEDULING_SERIES_", extra="ignore")
+    preparation_days: int = Field(default=90, ge=1)
+    expansion_limit: int = Field(default=1000, ge=1)
+    scan_limit: int = Field(default=100_000, ge=1)
+    query_series_limit: int = Field(default=100, ge=1)
+
+    @property
+    def policy(self) -> SeriesPolicy:
+        return SeriesPolicy(**self.model_dump())

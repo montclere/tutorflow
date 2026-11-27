@@ -7,6 +7,17 @@ from app.shared.presentation.problems import ProblemResponse, problem_response, 
 
 
 LESSON_STATUSES = {
+    "series_not_found": 404,
+    "series_conflict": 409,
+    "series_request_conflict": 409,
+    "series_source_mismatch": 409,
+    "series_past_change": 409,
+    "series_pause_not_found": 404,
+    "series_confirmation_required": 409,
+    "series_time_conflict": 409,
+    "series_expansion_limit": 422,
+    "invalid_series_rule": 422,
+    "invalid_series_pause": 422,
     "teacher_required": 403,
     "lesson_participant_required": 403,
     "lesson_response_forbidden": 403,

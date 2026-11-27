@@ -77,6 +77,7 @@ class LessonChangeService:
             )
 
             await unit.lessons.save(changed)
+            await unit.lessons.mark_exception(changed.id)
             await unit.lessons.append_revision(
                 LessonRevision(uuid4(), actor.account_id, now, RevisionKind.UPDATED, changed)
             )
@@ -97,6 +98,7 @@ class LessonChangeService:
             changed = current.remove(now, expected_version)
 
             await unit.lessons.save(changed)
+            await unit.lessons.mark_exception(changed.id)
             await unit.lessons.append_revision(
                 LessonRevision(uuid4(), actor.account_id, now, RevisionKind.DELETED, changed)
             )

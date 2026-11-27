@@ -56,6 +56,7 @@ class LessonReplyService:
 
             if changed != lesson:
                 await unit.lessons.save(changed)
+                await unit.lessons.mark_response_exception(changed.id, card_id)
                 await unit.lessons.append_revision(
                     LessonRevision(uuid4(), actor.account_id, now, RevisionKind.REPLY, changed)
                 )

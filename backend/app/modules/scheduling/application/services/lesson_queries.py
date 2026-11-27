@@ -11,7 +11,10 @@ from app.modules.scheduling.application.lesson_contracts import (
     LessonRevision,
     OwnLesson,
 )
-from app.modules.scheduling.application.lesson_ports import LessonsUnitOfWork
+from app.modules.scheduling.application.lesson_ports import (
+    LessonCalendarPreparation,
+    LessonsUnitOfWork,
+)
 from app.modules.scheduling.application.services.lesson_access import (
     owned_lesson,
     require_limit,
@@ -27,11 +30,16 @@ from app.modules.students.public import CardReference, ConfirmationRecipient
 
 class LessonQueryService:
     def __init__(
-        self, persistence: LessonsUnitOfWork, policy: LessonPolicy, clock: Callable[[], datetime]
+        self,
+        persistence: LessonsUnitOfWork,
+        policy: LessonPolicy,
+        clock: Callable[[], datetime],
+        preparation: LessonCalendarPreparation | None = None,
     ) -> None:
         self.persistence = persistence
         self.policy = policy
         self.clock = clock
+        self.preparation = preparation
 
     async def get(self, actor: Actor, lesson_id: UUID) -> LessonResult:
         async with self.persistence.transaction() as unit:
@@ -51,6 +59,9 @@ class LessonQueryService:
         require_teacher(actor)
 
         start, end = require_range(start, end, limit, self.policy)
+
+        if self.preparation is not None:
+            await self.preparation.prepare(actor, start, end)
 
         async with self.persistence.transaction() as unit:
             lessons = await unit.lessons.for_teacher(
@@ -128,6 +139,9 @@ class LessonQueryService:
 
         start, end = require_range(start, end, limit, self.policy)
 
+        if self.preparation is not None:
+            await self.preparation.prepare(actor, start, end, card_id)
+
         async with self.persistence.transaction() as unit:
             card = await unit.cards.find_accessible(card_id, actor, include_archived=True)
 
@@ -155,6 +169,9 @@ class LessonQueryService:
         require_teacher(actor)
 
         start, end = require_range(start, end, limit, self.policy)
+
+        if self.preparation is not None:
+            await self.preparation.prepare(actor, start, end)
 
         async with self.persistence.transaction() as unit:
             if await unit.groups.find(group_id, actor.account_id, lock=False) is None:
