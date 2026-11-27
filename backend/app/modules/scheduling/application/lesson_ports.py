@@ -7,6 +7,7 @@ from typing import Protocol
 from uuid import UUID
 
 from app.modules.groups.public import LessonGroups
+from app.modules.identity.public import Actor
 from app.modules.scheduling.application.lesson_contracts import (
     CalendarWarning,
     LessonCursor,
@@ -37,6 +38,10 @@ class LessonsRepository(Protocol):
     async def add(self, lesson: Lesson, request_id: UUID | None, fingerprint: str) -> bool: ...
 
     async def save(self, lesson: Lesson) -> None: ...
+
+    async def mark_exception(self, lesson_id: UUID) -> None: ...
+
+    async def mark_response_exception(self, lesson_id: UUID, card_id: UUID) -> None: ...
 
     async def append_revision(self, revision: LessonRevision) -> None: ...
 
@@ -83,3 +88,9 @@ class LessonTransaction:
 
 class LessonsUnitOfWork(Protocol):
     def transaction(self) -> AbstractAsyncContextManager[LessonTransaction]: ...
+
+
+class LessonCalendarPreparation(Protocol):
+    async def prepare(
+        self, actor: Actor, start: datetime, end: datetime, card_id: UUID | None = None
+    ) -> None: ...

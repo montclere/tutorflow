@@ -30,6 +30,7 @@ class LessonParticipantBuilder:
         group_id: UUID | None,
         commands: tuple[ParticipantDraft, ...] | None,
         previous: Lesson | None = None,
+        extra_card_ids: tuple[UUID, ...] = (),
     ) -> LessonSources:
         group = await unit.groups.find(group_id, actor.account_id, lock=False) if group_id else None
         preserve = previous is not None and commands is None
@@ -59,7 +60,7 @@ class LessonParticipantBuilder:
 
         requested_ids = {command.card_id for command in commands}
         previous_ids = {item.card_id for item in previous.participants} if previous else set()
-        lock_ids = requested_ids | previous_ids
+        lock_ids = requested_ids | previous_ids | set(extra_card_ids)
 
         cards: dict[UUID, CardReference] = {}
 

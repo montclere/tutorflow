@@ -2,7 +2,7 @@
 
 import json
 from dataclasses import asdict
-from datetime import datetime
+from datetime import date, datetime
 from decimal import Decimal
 from typing import Any
 from uuid import UUID
@@ -17,7 +17,7 @@ from app.modules.scheduling.domain.values import LessonPrice
 
 
 def json_value(value: object) -> str:
-    if isinstance(value, datetime):
+    if isinstance(value, date):
         return value.isoformat()
 
     if isinstance(value, (UUID, Decimal)):
@@ -65,4 +65,6 @@ def lesson_from_snapshot(value: dict[str, Any]) -> Lesson:
         value["confirmation"],
         value["version"],
         value["deleted"],
+        UUID(value["series_id"]) if value.get("series_id") else None,
+        date.fromisoformat(value["original_date"]) if value.get("original_date") else None,
     )

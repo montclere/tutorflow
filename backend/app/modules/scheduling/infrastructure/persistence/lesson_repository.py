@@ -35,6 +35,10 @@ from app.modules.scheduling.infrastructure.persistence.lesson_snapshots import (
     lesson_from_snapshot,
     lesson_snapshot,
 )
+from app.modules.scheduling.infrastructure.persistence.series_models import (
+    SeriesOccurrenceRow,
+    SeriesResponseOverrideRow,
+)
 
 
 def lesson_values(lesson: Lesson) -> dict:
@@ -74,6 +78,15 @@ class PostgresLessonsRepository:
         if not rows:
             return []
 
+        links = (
+            await self.db.scalars(
+                select(SeriesOccurrenceRow).where(
+                    SeriesOccurrenceRow.lesson_id.in_([row.id for row in rows])
+                )
+            )
+        ).all()
+        series_by_lesson = {link.lesson_id: link for link in links}
+
         participants = await self.db.scalars(
             select(LessonParticipantRow)
             .where(LessonParticipantRow.lesson_id.in_([row.id for row in rows]))
@@ -104,6 +117,8 @@ class PostgresLessonsRepository:
                 row.confirmation,
                 row.version,
                 row.deleted,
+                series_by_lesson[row.id].series_id if row.id in series_by_lesson else None,
+                series_by_lesson[row.id].local_date if row.id in series_by_lesson else None,
             )
             for row in rows
         ]
@@ -383,3 +398,25 @@ class PostgresLessonsRepository:
                 },
             )
         )
+
+    async def mark_exception(self, lesson_id: UUID) -> None:
+        await self.db.execute(
+            update(SeriesOccurrenceRow)
+            .where(SeriesOccurrenceRow.lesson_id == lesson_id)
+            .values(customized=True)
+        )
+
+    async def mark_response_exception(self, lesson_id: UUID, card_id: UUID) -> None:
+        if (
+            await self.db.scalar(
+                select(SeriesOccurrenceRow.lesson_id).where(
+                    SeriesOccurrenceRow.lesson_id == lesson_id
+                )
+            )
+            is not None
+        ):
+            await self.db.execute(
+                insert(SeriesResponseOverrideRow)
+                .values(lesson_id=lesson_id, card_id=card_id)
+                .on_conflict_do_nothing()
+            )

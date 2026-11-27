@@ -14,8 +14,12 @@ from app.modules.groups.infrastructure.persistence.repository import PostgresGro
 from app.modules.groups.public import LessonGroup, LessonGroupMember
 from app.modules.identity.public import Role
 from app.modules.scheduling.application.lesson_ports import LessonTransaction
+from app.modules.scheduling.application.series_ports import SeriesTransaction
 from app.modules.scheduling.infrastructure.persistence.lesson_repository import (
     PostgresLessonsRepository,
+)
+from app.modules.scheduling.infrastructure.persistence.series_repository import (
+    PostgresSeriesRepository,
 )
 from app.modules.students.domain.responsibilities import SCHEDULING_RESPONSIBILITY
 from app.modules.students.infrastructure.persistence.models import CardResponsibility, Connection
@@ -93,4 +97,19 @@ class PostgresLessonsUnitOfWork:
         async with self.sessions.begin() as db:
             yield LessonTransaction(
                 PostgresLessonsRepository(db), PostgresLessonCards(db), PostgresLessonGroups(db)
+            )
+
+
+class PostgresSeriesUnitOfWork:
+    def __init__(self, engine: AsyncEngine) -> None:
+        self.sessions = async_sessionmaker(engine, expire_on_commit=False)
+
+    @asynccontextmanager
+    async def transaction(self) -> AsyncIterator[SeriesTransaction]:
+        async with self.sessions.begin() as db:
+            yield SeriesTransaction(
+                PostgresLessonsRepository(db),
+                PostgresLessonCards(db),
+                PostgresLessonGroups(db),
+                PostgresSeriesRepository(db),
             )
