@@ -49,3 +49,27 @@ class LessonPolicy:
             raise LessonError("invalid_lesson_range")
 
         return selected
+
+
+@dataclass(frozen=True)
+class SeriesPolicy:
+    preparation_days: int = 90
+    expansion_limit: int = 1000
+    scan_limit: int = 100_000
+    query_series_limit: int = 100
+
+    def __post_init__(self) -> None:
+        if (
+            min(
+                self.preparation_days,
+                self.expansion_limit,
+                self.scan_limit,
+                self.query_series_limit,
+            )
+            < 1
+        ):
+            raise ValueError("Границы подготовки серии должны быть положительными")
+
+    @property
+    def horizon(self) -> timedelta:
+        return timedelta(days=self.preparation_days)
