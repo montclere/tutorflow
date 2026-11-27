@@ -13,8 +13,12 @@ from app.modules.groups.infrastructure.persistence.models import Membership
 from app.modules.groups.infrastructure.persistence.repository import PostgresGroupsRepository
 from app.modules.groups.public import LessonGroup, LessonGroupMember
 from app.modules.identity.public import Role
+from app.modules.scheduling.application.availability_ports import AvailabilityTransaction
 from app.modules.scheduling.application.lesson_ports import LessonTransaction
 from app.modules.scheduling.application.series_ports import SeriesTransaction
+from app.modules.scheduling.infrastructure.persistence.availability_repository import (
+    PostgresAvailabilityRepository,
+)
 from app.modules.scheduling.infrastructure.persistence.change_requests import PostgresChangeRequests
 from app.modules.scheduling.infrastructure.persistence.lesson_repository import (
     PostgresLessonsRepository,
@@ -117,4 +121,21 @@ class PostgresSeriesUnitOfWork:
                 PostgresLessonGroups(db),
                 PostgresChangeRequests(db),
                 PostgresSeriesRepository(db),
+            )
+
+
+class PostgresAvailabilityUnitOfWork:
+    def __init__(self, engine: AsyncEngine) -> None:
+        self.sessions = async_sessionmaker(engine, expire_on_commit=False)
+
+    @asynccontextmanager
+    async def transaction(self) -> AsyncIterator[AvailabilityTransaction]:
+        async with self.sessions.begin() as db:
+            yield AvailabilityTransaction(
+                PostgresLessonsRepository(db),
+                PostgresLessonCards(db),
+                PostgresLessonGroups(db),
+                PostgresChangeRequests(db),
+                PostgresSeriesRepository(db),
+                PostgresAvailabilityRepository(db),
             )

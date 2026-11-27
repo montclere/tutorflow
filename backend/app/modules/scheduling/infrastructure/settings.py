@@ -5,6 +5,7 @@ from datetime import timedelta
 from pydantic import Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
+from app.modules.scheduling.domain.availability_policy import AvailabilityPolicy
 from app.modules.scheduling.domain.policies import LessonPolicy, SeriesPolicy
 
 
@@ -43,3 +44,18 @@ class SeriesSettings(BaseSettings):
     @property
     def policy(self) -> SeriesPolicy:
         return SeriesPolicy(**self.model_dump())
+
+
+class AvailabilitySettings(BaseSettings):
+    model_config = SettingsConfigDict(env_prefix="SCHEDULING_AVAILABILITY_", extra="ignore")
+    reservation_hours: int = Field(default=24, ge=1)
+    query_publications: int = Field(default=100, ge=1)
+    slots_limit: int = Field(default=1000, ge=1)
+    windows_limit: int = Field(default=100, ge=1)
+    busy_limit: int = Field(default=1000, ge=1)
+    max_window_minutes: int = Field(default=1440, ge=1)
+    max_break_minutes: int = Field(default=480, ge=0)
+
+    @property
+    def policy(self) -> AvailabilityPolicy:
+        return AvailabilityPolicy(**self.model_dump())

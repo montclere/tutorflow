@@ -9,7 +9,11 @@ from sqlalchemy.ext.asyncio import AsyncEngine
 
 from app.config import Settings
 from app.integrations.groups import PostgresGroupsUnitOfWork
-from app.integrations.scheduling import PostgresLessonsUnitOfWork, PostgresSeriesUnitOfWork
+from app.integrations.scheduling import (
+    PostgresAvailabilityUnitOfWork,
+    PostgresLessonsUnitOfWork,
+    PostgresSeriesUnitOfWork,
+)
 from app.integrations.students import PostgresStudentsUnitOfWork, StudentRateLimits
 from app.modules.groups.application.services.collection import GroupServices
 from app.modules.groups.application.services.groups import GroupService
@@ -38,6 +42,11 @@ from app.modules.identity.presentation.http.session import (
 )
 from app.modules.identity.public import Role
 from app.modules.scheduling.application.calendar import Calendar
+from app.modules.scheduling.application.services.availability_access import AvailabilityRuntime
+from app.modules.scheduling.application.services.availability_bookings import BookingService
+from app.modules.scheduling.application.services.availability_collection import AvailabilityServices
+from app.modules.scheduling.application.services.availability_publications import PublicationService
+from app.modules.scheduling.application.services.availability_slots import AvailabilitySlotService
 from app.modules.scheduling.application.services.lesson_cancellation import (
     LessonCancellationService,
 )
@@ -62,9 +71,15 @@ from app.modules.scheduling.application.services.series_queries import (
     SeriesQueryService,
 )
 from app.modules.scheduling.application.services.series_replies import SeriesReplyService
+from app.modules.scheduling.application.services.student_hours import StudentHoursService
+from app.modules.scheduling.domain.availability_policy import AvailabilityPolicy
 from app.modules.scheduling.domain.policies import LessonPolicy, SeriesPolicy
 from app.modules.scheduling.infrastructure.repository import PostgresCalendarRepository
-from app.modules.scheduling.infrastructure.settings import LessonSettings, SeriesSettings
+from app.modules.scheduling.infrastructure.settings import (
+    AvailabilitySettings,
+    LessonSettings,
+    SeriesSettings,
+)
 from app.modules.students.application.services.adult_connections import AdultConnectionService
 from app.modules.students.application.services.adult_invitations import AdultInvitationService
 from app.modules.students.application.services.cards import CardService
@@ -102,6 +117,7 @@ class Services:
     groups: GroupServices
     lessons: LessonServices
     series: SeriesServices
+    availability: AvailabilityServices
 
     @property
     def cookie_name(self) -> str:
@@ -125,6 +141,7 @@ async def build_services(
     adult_policy: AdultAccessPolicy | None = None,
     lesson_policy: LessonPolicy | None = None,
     series_policy: SeriesPolicy | None = None,
+    availability_policy: AvailabilityPolicy | None = None,
     lesson_clock: Callable[[], datetime] | None = None,
 ) -> Services:
     metrics = metrics or Metrics()
@@ -242,6 +259,22 @@ async def build_services(
         LessonCompletionService(lesson_persistence, lesson_policy, lesson_clock, series.calendar),
     )
 
+    availability_runtime = AvailabilityRuntime(
+        PostgresAvailabilityUnitOfWork(engine),
+        availability_policy or AvailabilitySettings().policy,
+        lesson_policy,
+        series_runtime,
+        lesson_clock,
+    )
+    slots = AvailabilitySlotService(availability_runtime)
+    availability = AvailabilityServices(
+        PublicationService(availability_runtime),
+        slots,
+        BookingService(availability_runtime, slots, changes),
+        StudentHoursService(availability_runtime, slots),
+        lesson_policy,
+    )
+
     return Services(
         IdentityServices(
             registration,
@@ -259,6 +292,7 @@ async def build_services(
         groups,
         lessons,
         series,
+        availability,
     )
 
 

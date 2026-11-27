@@ -14,6 +14,13 @@ from starlette.responses import JSONResponse
 
 MAX_VALIDATION_ERRORS = 20
 DESCRIPTIONS = {
+    "availability_not_found": "Публикация свободного времени недоступна.",
+    "availability_conflict": "Свободное время или условия изменились; выберите время заново.",
+    "availability_limit": "Сузьте диапазон либо выберите одну публикацию свободного времени.",
+    "invalid_availability": "Проверьте интервалы и условия записи.",
+    "booking_not_found": "Запись недоступна.",
+    "booking_conflict": "Резерв истёк, уже рассмотрен либо запрос изменился.",
+    "booking_pending_limit": "Сначала рассмотрите или отзовите предыдущий запрос этой карточки.",
     "lesson_not_started": "Занятие ещё не началось.",
     "invalid_lesson_completion": "Проверьте результат занятия и посещаемость участников.",
     "lesson_cancelled": "Сначала восстановите отменённое занятие или участие.",

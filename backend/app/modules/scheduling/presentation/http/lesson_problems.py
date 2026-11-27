@@ -7,6 +7,13 @@ from app.shared.presentation.problems import ProblemResponse, problem_response, 
 
 
 LESSON_STATUSES = {
+    "availability_not_found": 404,
+    "availability_conflict": 409,
+    "availability_limit": 422,
+    "invalid_availability": 422,
+    "booking_not_found": 404,
+    "booking_conflict": 409,
+    "booking_pending_limit": 409,
     "lesson_not_started": 409,
     "invalid_lesson_completion": 422,
     "lesson_cancelled": 409,
