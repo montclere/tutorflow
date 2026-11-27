@@ -34,6 +34,7 @@ class LessonRow(LessonsBase):
         UniqueConstraint("teacher_id", "request_id", name="uq_lesson_creation_request"),
         CheckConstraint("duration_minutes > 0", name="ck_lesson_duration"),
         CheckConstraint("version > 0", name="ck_lesson_version"),
+        CheckConstraint("outcome IN ('unrecorded', 'held', 'not_held')", name="ck_lesson_outcome"),
         Index(
             "ix_lesson_group_time",
             "teacher_id",
@@ -69,6 +70,8 @@ class LessonRow(LessonsBase):
     deleted: Mapped[bool] = mapped_column(Boolean, server_default="false")
     cancelled: Mapped[bool] = mapped_column(Boolean, server_default="false")
     cancellation_reason: Mapped[str | None] = mapped_column(String(4000))
+    outcome: Mapped[str] = mapped_column(String(16), server_default="unrecorded")
+    completion_notes: Mapped[str | None] = mapped_column(String(4000))
     request_id: Mapped[UUID | None] = mapped_column()
     fingerprint: Mapped[str] = mapped_column(String(64))
 
@@ -89,6 +92,9 @@ class LessonParticipantRow(LessonsBase):
             name="ck_lesson_participant_response",
         ),
         Index("ix_lesson_card_listing", "card_id", "lesson_id"),
+        CheckConstraint(
+            "attendance IN ('unmarked', 'present', 'absent')", name="ck_lesson_attendance"
+        ),
     )
     lesson_id: Mapped[UUID] = mapped_column(
         ForeignKey("scheduling_lessons.id", ondelete="CASCADE"), primary_key=True
@@ -104,6 +110,7 @@ class LessonParticipantRow(LessonsBase):
     replied_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     cancelled: Mapped[bool] = mapped_column(Boolean, server_default="false")
     cancellation_reason: Mapped[str | None] = mapped_column(String(4000))
+    attendance: Mapped[str] = mapped_column(String(16), server_default="unmarked")
 
 
 class LessonRevisionRow(LessonsBase):
@@ -112,7 +119,8 @@ class LessonRevisionRow(LessonsBase):
         UniqueConstraint("sequence", name="uq_lesson_revision_sequence"),
         CheckConstraint("schema_version = 1", name="ck_lesson_revision_schema"),
         CheckConstraint(
-            "kind IN ('created', 'updated', 'deleted', 'reply', 'cancelled', 'restored')",
+            "kind IN ('created', 'updated', 'deleted', 'reply', "
+            "'cancelled', 'restored', 'completed')",
             name="ck_lesson_revision_kind",
         ),
         Index("ix_lesson_revision_history", "lesson_id", "sequence"),

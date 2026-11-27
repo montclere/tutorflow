@@ -7,6 +7,7 @@ from decimal import Decimal
 from typing import Any
 from uuid import UUID
 
+from app.modules.scheduling.domain.completion import Attendance, LessonOutcome
 from app.modules.scheduling.domain.lessons import (
     Lesson,
     LessonConditions,
@@ -45,6 +46,7 @@ def lesson_from_snapshot(value: dict[str, Any]) -> Lesson:
             datetime.fromisoformat(item["replied_at"]) if item["replied_at"] else None,
             item.get("cancelled", False),
             item.get("cancellation_reason"),
+            Attendance(item.get("attendance", "unmarked")),
         )
         for item in value["participants"]
     )
@@ -71,4 +73,6 @@ def lesson_from_snapshot(value: dict[str, Any]) -> Lesson:
         date.fromisoformat(value["original_date"]) if value.get("original_date") else None,
         value.get("cancelled", False),
         value.get("cancellation_reason"),
+        LessonOutcome(value.get("outcome", "unrecorded")),
+        value.get("completion_notes"),
     )
