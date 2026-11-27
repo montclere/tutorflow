@@ -9,7 +9,7 @@ from sqlalchemy.ext.asyncio import AsyncEngine
 
 from app.config import Settings
 from app.integrations.groups import PostgresGroupsUnitOfWork
-from app.integrations.scheduling import PostgresLessonsUnitOfWork
+from app.integrations.scheduling import PostgresLessonsUnitOfWork, PostgresSeriesUnitOfWork
 from app.integrations.students import PostgresStudentsUnitOfWork, StudentRateLimits
 from app.modules.groups.application.services.collection import GroupServices
 from app.modules.groups.application.services.groups import GroupService
@@ -46,9 +46,20 @@ from app.modules.scheduling.application.services.lesson_preferences import (
 )
 from app.modules.scheduling.application.services.lesson_queries import LessonQueryService
 from app.modules.scheduling.application.services.lesson_replies import LessonReplyService
-from app.modules.scheduling.domain.policies import LessonPolicy
+from app.modules.scheduling.application.services.series_access import SeriesRuntime
+from app.modules.scheduling.application.services.series_changes import SeriesChangeService
+from app.modules.scheduling.application.services.series_collection import SeriesServices
+from app.modules.scheduling.application.services.series_creation import SeriesCreationService
+from app.modules.scheduling.application.services.series_materialization import SeriesMaterializer
+from app.modules.scheduling.application.services.series_pauses import SeriesPauseService
+from app.modules.scheduling.application.services.series_queries import (
+    SeriesCalendarPreparation,
+    SeriesQueryService,
+)
+from app.modules.scheduling.application.services.series_replies import SeriesReplyService
+from app.modules.scheduling.domain.policies import LessonPolicy, SeriesPolicy
 from app.modules.scheduling.infrastructure.repository import PostgresCalendarRepository
-from app.modules.scheduling.infrastructure.settings import LessonSettings
+from app.modules.scheduling.infrastructure.settings import LessonSettings, SeriesSettings
 from app.modules.students.application.services.adult_connections import AdultConnectionService
 from app.modules.students.application.services.adult_invitations import AdultInvitationService
 from app.modules.students.application.services.cards import CardService
@@ -85,6 +96,7 @@ class Services:
     adults: AdultServices
     groups: GroupServices
     lessons: LessonServices
+    series: SeriesServices
 
     @property
     def cookie_name(self) -> str:
@@ -107,6 +119,7 @@ async def build_services(
     student_policy: StudentPolicy | None = None,
     adult_policy: AdultAccessPolicy | None = None,
     lesson_policy: LessonPolicy | None = None,
+    series_policy: SeriesPolicy | None = None,
     lesson_clock: Callable[[], datetime] | None = None,
 ) -> Services:
     metrics = metrics or Metrics()
@@ -190,11 +203,28 @@ async def build_services(
 
     lesson_policy = lesson_policy or LessonSettings().policy
     lesson_clock = lesson_clock or now_utc
+    series_policy = series_policy or SeriesSettings().policy
+    series_runtime = SeriesRuntime(
+        PostgresSeriesUnitOfWork(engine),
+        lesson_policy,
+        series_policy,
+        lesson_clock,
+        SeriesMaterializer(series_policy),
+    )
+    series = SeriesServices(
+        SeriesCreationService(series_runtime),
+        SeriesChangeService(series_runtime),
+        SeriesPauseService(series_runtime),
+        SeriesQueryService(series_runtime),
+        SeriesReplyService(series_runtime),
+        SeriesCalendarPreparation(series_runtime),
+        lesson_policy,
+    )
     lesson_persistence = PostgresLessonsUnitOfWork(engine)
     lessons = LessonServices(
         LessonCreationService(lesson_persistence, lesson_policy, lesson_clock),
         LessonChangeService(lesson_persistence, lesson_policy, lesson_clock),
-        LessonQueryService(lesson_persistence, lesson_policy, lesson_clock),
+        LessonQueryService(lesson_persistence, lesson_policy, lesson_clock, series.calendar),
         LessonReplyService(lesson_persistence, lesson_clock),
         TeachingPreferencesService(lesson_persistence, lesson_policy),
         lesson_policy,
@@ -216,6 +246,7 @@ async def build_services(
         adult_services,
         groups,
         lessons,
+        series,
     )
 
 

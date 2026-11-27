@@ -1,7 +1,7 @@
 """Агрегат занятия со снимком условий и независимыми ответами участников."""
 
 from dataclasses import dataclass, replace
-from datetime import datetime, timedelta
+from datetime import date, datetime, timedelta
 from enum import StrEnum
 from uuid import UUID, uuid4
 
@@ -86,6 +86,8 @@ class Lesson:
     confirmation: bool = False
     version: int = 1
     deleted: bool = False
+    series_id: UUID | None = None
+    original_date: date | None = None
 
     def __post_init__(self) -> None:
         if (self.group_id is None) != (self.group_name is None):

@@ -1,6 +1,6 @@
 """HTTP-команды и раздельные представления преподавателя и собственного участия."""
 
-from datetime import datetime
+from datetime import date, datetime
 from decimal import Decimal
 from typing import Annotated, Literal
 from uuid import UUID
@@ -198,6 +198,8 @@ class LessonDetails(BaseModel):
     delivery_format: str | None
     group: GroupSnapshotView | None
     version: int
+    series_id: UUID | None = None
+    original_date: date | None = None
 
 
 def common_fields(lesson: Lesson) -> dict[str, object]:
@@ -216,6 +218,8 @@ def common_fields(lesson: Lesson) -> dict[str, object]:
         if lesson.group_id and lesson.group_name
         else None,
         version=lesson.version,
+        series_id=lesson.series_id,
+        original_date=lesson.original_date,
     )
 
 

@@ -14,6 +14,17 @@ from starlette.responses import JSONResponse
 
 MAX_VALIDATION_ERRORS = 20
 DESCRIPTIONS = {
+    "series_not_found": "Серия не найдена.",
+    "series_conflict": "Расписание изменилось; прочитайте актуальную версию.",
+    "series_request_conflict": "Идентификатор запроса уже использован с другим содержанием.",
+    "series_source_mismatch": "Исходное занятие не соответствует первому повторению.",
+    "series_past_change": "Прошедшие и начавшиеся события не изменяются этой операцией.",
+    "series_pause_not_found": "Действующая пауза не найдена.",
+    "series_confirmation_required": "Подтвердите изменение согласованного расписания.",
+    "series_time_conflict": "Откройте серию и разрешите конфликт местного времени.",
+    "series_expansion_limit": "Сузьте диапазон подготовки или выберите одну серию.",
+    "invalid_series_rule": "Некорректное правило повторения.",
+    "invalid_series_pause": "Некорректный период паузы.",
     "group_conflict": "Состав группы изменился. Повторите действие.",
     "lesson_not_found": "Занятие недоступно.",
     "lesson_participant_required": "Операция доступна участнику занятия.",
