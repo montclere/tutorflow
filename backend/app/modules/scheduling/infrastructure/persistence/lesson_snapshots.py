@@ -43,6 +43,8 @@ def lesson_from_snapshot(value: dict[str, Any]) -> Lesson:
             datetime.fromisoformat(item["deadline"]) if item["deadline"] else None,
             UUID(item["response_by"]) if item["response_by"] else None,
             datetime.fromisoformat(item["replied_at"]) if item["replied_at"] else None,
+            item.get("cancelled", False),
+            item.get("cancellation_reason"),
         )
         for item in value["participants"]
     )
@@ -67,4 +69,6 @@ def lesson_from_snapshot(value: dict[str, Any]) -> Lesson:
         value["deleted"],
         UUID(value["series_id"]) if value.get("series_id") else None,
         date.fromisoformat(value["original_date"]) if value.get("original_date") else None,
+        value.get("cancelled", False),
+        value.get("cancellation_reason"),
     )

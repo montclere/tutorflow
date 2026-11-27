@@ -67,6 +67,8 @@ class LessonRow(LessonsBase):
     confirmation: Mapped[bool] = mapped_column(Boolean, server_default="false")
     version: Mapped[int] = mapped_column(Integer, server_default="1")
     deleted: Mapped[bool] = mapped_column(Boolean, server_default="false")
+    cancelled: Mapped[bool] = mapped_column(Boolean, server_default="false")
+    cancellation_reason: Mapped[str | None] = mapped_column(String(4000))
     request_id: Mapped[UUID | None] = mapped_column()
     fingerprint: Mapped[str] = mapped_column(String(64))
 
@@ -100,6 +102,8 @@ class LessonParticipantRow(LessonsBase):
     deadline: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     response_by: Mapped[UUID | None] = mapped_column()
     replied_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    cancelled: Mapped[bool] = mapped_column(Boolean, server_default="false")
+    cancellation_reason: Mapped[str | None] = mapped_column(String(4000))
 
 
 class LessonRevisionRow(LessonsBase):
@@ -108,7 +112,8 @@ class LessonRevisionRow(LessonsBase):
         UniqueConstraint("sequence", name="uq_lesson_revision_sequence"),
         CheckConstraint("schema_version = 1", name="ck_lesson_revision_schema"),
         CheckConstraint(
-            "kind IN ('created', 'updated', 'deleted', 'reply')", name="ck_lesson_revision_kind"
+            "kind IN ('created', 'updated', 'deleted', 'reply', 'cancelled', 'restored')",
+            name="ck_lesson_revision_kind",
         ),
         Index("ix_lesson_revision_history", "lesson_id", "sequence"),
     )
