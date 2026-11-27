@@ -36,7 +36,13 @@ class LessonChangeService:
             return await self.update_in_transaction(unit, actor, lesson_id, command)
 
     async def update_in_transaction(
-        self, unit: LessonTransaction, actor: Actor, lesson_id: UUID, command: LessonPatch
+        self,
+        unit: LessonTransaction,
+        actor: Actor,
+        lesson_id: UUID,
+        command: LessonPatch,
+        *,
+        audit_actor_id: UUID | None = None,
     ) -> LessonResult:
         initial = await owned_lesson(unit, actor, lesson_id)
         sources = await self.participants.sources(
@@ -84,7 +90,9 @@ class LessonChangeService:
         await unit.lessons.save(changed)
         await unit.lessons.mark_exception(changed.id)
         await unit.lessons.append_revision(
-            LessonRevision(uuid4(), actor.account_id, now, RevisionKind.UPDATED, changed)
+            LessonRevision(
+                uuid4(), audit_actor_id or actor.account_id, now, RevisionKind.UPDATED, changed
+            )
         )
 
         return await with_warnings(unit, changed, self.policy, self.clock())
