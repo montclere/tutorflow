@@ -7,6 +7,12 @@ from app.shared.presentation.problems import ProblemResponse, problem_response, 
 
 
 LESSON_STATUSES = {
+    "lesson_cancelled": 409,
+    "lesson_group_required": 422,
+    "group_reschedule_forbidden": 422,
+    "invalid_lesson_change_request": 422,
+    "lesson_change_request_conflict": 409,
+    "lesson_change_request_not_found": 404,
     "series_not_found": 404,
     "series_conflict": 409,
     "series_request_conflict": 409,

@@ -96,6 +96,8 @@ class LessonQueryService:
 
         can_reply = (
             not card.archived
+            and not lesson.cancelled
+            and not participant.cancelled
             and recipient.account_id == actor.account_id
             and recipient.role is actor.role
             and participant.deadline is not None

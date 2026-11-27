@@ -67,6 +67,8 @@ class LessonParticipant:
     deadline: datetime | None = None
     response_by: UUID | None = None
     replied_at: datetime | None = None
+    cancelled: bool = False
+    cancellation_reason: str | None = None
 
     def effective_state(self, now: datetime) -> ReplyState:
         if self.state is ReplyState.PENDING and self.deadline is not None and self.deadline <= now:
@@ -88,6 +90,8 @@ class Lesson:
     deleted: bool = False
     series_id: UUID | None = None
     original_date: date | None = None
+    cancelled: bool = False
+    cancellation_reason: str | None = None
 
     def __post_init__(self) -> None:
         if (self.group_id is None) != (self.group_name is None):
@@ -125,12 +129,71 @@ class Lesson:
             uuid4(), teacher_id, conditions, participants, group_id, group_name, confirmation
         )
 
+    @property
+    def collective(self) -> bool:
+        return self.group_id is not None or len(self.participants) > 1
+
     def require_editable(self, now: datetime, expected_version: int) -> None:
         if self.deleted or self.version != expected_version:
             raise LessonError("lesson_conflict")
 
         if self.conditions.starts_at <= now:
             raise LessonError("lesson_already_started")
+
+        if self.cancelled:
+            raise LessonError("lesson_cancelled")
+
+    def change_cancellation(
+        self,
+        cancelled: bool,
+        reason: str | None,
+        now: datetime,
+        expected_version: int,
+        card_id: UUID | None = None,
+    ) -> "Lesson":
+        if self.deleted or self.version != expected_version:
+            raise LessonError("lesson_conflict")
+
+        if self.conditions.starts_at <= now:
+            raise LessonError("lesson_already_started")
+
+        reason = lesson_text(reason) if cancelled else None
+
+        if card_id is None:
+            if self.cancelled is cancelled:
+                return self
+
+            return replace(
+                self,
+                cancelled=cancelled,
+                cancellation_reason=reason,
+                version=self.version + 1,
+            )
+
+        if self.cancelled:
+            raise LessonError("lesson_cancelled")
+
+        if not self.collective:
+            raise LessonError("lesson_group_required")
+
+        participant = next((part for part in self.participants if part.card_id == card_id), None)
+
+        if participant is None:
+            raise LessonError("lesson_not_found")
+
+        if participant.cancelled is cancelled:
+            return self
+
+        return replace(
+            self,
+            participants=tuple(
+                replace(part, cancelled=cancelled, cancellation_reason=reason)
+                if part.card_id == card_id
+                else part
+                for part in self.participants
+            ),
+            version=self.version + 1,
+        )
 
     def revise(
         self,
@@ -176,6 +239,9 @@ class Lesson:
 
         if participant is None:
             raise LessonError("lesson_not_found")
+
+        if participant.cancelled:
+            raise LessonError("lesson_cancelled")
 
         if participant.deadline is None or not self.confirmation:
             raise LessonError("lesson_reply_not_requested")

@@ -9,6 +9,7 @@ from pydantic import AwareDatetime
 
 from app.modules.identity.public import Actor
 from app.modules.scheduling.application.services.lesson_collection import LessonServices
+from app.modules.scheduling.presentation.http.lesson_changes_router import change_requests_router
 from app.modules.scheduling.presentation.http.lesson_participation_router import (
     lesson_cursor,
     lesson_participation_router,
@@ -197,6 +198,7 @@ def lessons_router(
         )
 
 
+    router.include_router(change_requests_router(get_services, teacher, student, adult))
     router.include_router(lesson_participation_router("/me/teachers", student, get_services))
     router.include_router(lesson_participation_router("/me/students", adult, get_services))
 

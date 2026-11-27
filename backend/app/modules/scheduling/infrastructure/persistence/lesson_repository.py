@@ -25,6 +25,7 @@ from app.modules.scheduling.domain.lessons import (
 from app.modules.scheduling.domain.values import LessonPrice, RevisionKind
 from app.modules.scheduling.infrastructure.calendar_lock import lock_calendar
 from app.modules.scheduling.infrastructure.models import CalendarBlock
+from app.modules.scheduling.infrastructure.persistence.change_requests import PostgresChangeRequests
 from app.modules.scheduling.infrastructure.persistence.lesson_models import (
     LessonParticipantRow,
     LessonRevisionRow,
@@ -50,6 +51,8 @@ def lesson_values(lesson: Lesson) -> dict:
         confirmation=lesson.confirmation,
         version=lesson.version,
         deleted=lesson.deleted,
+        cancelled=lesson.cancelled,
+        cancellation_reason=lesson.cancellation_reason,
     )
 
 
@@ -64,6 +67,8 @@ def participant_value(row: LessonParticipantRow) -> LessonParticipant:
         row.deadline,
         row.response_by,
         row.replied_at,
+        row.cancelled,
+        row.cancellation_reason,
     )
 
 
@@ -119,6 +124,8 @@ class PostgresLessonsRepository:
                 row.deleted,
                 series_by_lesson[row.id].series_id if row.id in series_by_lesson else None,
                 series_by_lesson[row.id].local_date if row.id in series_by_lesson else None,
+                row.cancelled,
+                row.cancellation_reason,
             )
             for row in rows
         ]
@@ -185,6 +192,7 @@ class PostgresLessonsRepository:
             .values(**lesson_values(lesson))
         )
         await self.save_participants(lesson)
+        await PostgresChangeRequests(self.db).supersede(lesson.id, lesson.version)
 
     async def save_participants(self, lesson: Lesson) -> None:
         condition = LessonParticipantRow.lesson_id == lesson.id
@@ -210,6 +218,8 @@ class PostgresLessonsRepository:
                 deadline=item.deadline,
                 response_by=item.response_by,
                 replied_at=item.replied_at,
+                cancelled=item.cancelled,
+                cancellation_reason=item.cancellation_reason,
             )
             for item in lesson.participants
         ]
@@ -223,6 +233,8 @@ class PostgresLessonsRepository:
             "deadline",
             "response_by",
             "replied_at",
+            "cancelled",
+            "cancellation_reason",
         )
 
         await self.db.execute(
@@ -350,6 +362,7 @@ class PostgresLessonsRepository:
         ).where(
             LessonRow.teacher_id == lesson.teacher_id,
             LessonRow.id != lesson.id,
+            LessonRow.cancelled.is_(False),
             LessonRow.deleted.is_(False),
             LessonRow.starts_at < lesson.conditions.ends_at,
             LessonRow.starts_at + LessonRow.duration_minutes * text("interval '1 minute'")

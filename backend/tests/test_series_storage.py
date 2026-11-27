@@ -152,7 +152,9 @@ async def test_upgrade_preserves_old_lesson_history_and_rejects_duplicate_occurr
         await migrate(engine, "0013", downgrade=True)
 
         async with AsyncSession(engine) as db:
-            assert await db.get(LessonRow, lesson_id) is not None
+            assert (
+                await db.scalar(select(LessonRow.id).where(LessonRow.id == lesson_id)) == lesson_id
+            )
             assert (
                 len(
                     (

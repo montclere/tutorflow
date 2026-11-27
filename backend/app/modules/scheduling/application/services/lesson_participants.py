@@ -190,6 +190,18 @@ class LessonParticipantBuilder:
                     profile.subject if profile else None,
                 )
 
+            if old is not None:
+                participant = replace(
+                    participant,
+                    cancelled=old.cancelled,
+                    cancellation_reason=old.cancellation_reason,
+                )
+
+            if participant.cancelled:
+                result.append(participant)
+
+                continue
+
             if preserve_response and old is not None:
                 participant = replace(
                     participant,
