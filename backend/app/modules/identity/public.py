@@ -57,7 +57,39 @@ class InvitedSession:
     csrf_token: str = field(repr=False)
 
 
+@dataclass(frozen=True)
+class ChildCredentials:
+    account_id: UUID
+    login: str
+    password: str = field(repr=False)
+
+
+@dataclass(frozen=True)
+class ChildManagement:
+    account_id: UUID
+    manager_id: UUID | None
+    pending_manager_id: UUID | None
+
+
 class InvitedAccounts(Protocol):
+    async def create_child(self, manager_id: UUID) -> ChildCredentials: ...
+
+    async def get_child_management(self, child_id: UUID) -> ChildManagement | None: ...
+
+    async def list_managed_children(self, manager_id: UUID) -> list[ChildManagement]: ...
+
+    async def request_child_transfer(
+        self, child_id: UUID, manager_id: UUID, target_id: UUID
+    ) -> None: ...
+
+    async def accept_child_transfer(self, child_id: UUID, target_id: UUID) -> ChildCredentials: ...
+
+    async def cancel_child_transfer(self, child_id: UUID, manager_id: UUID) -> None: ...
+
+    async def release_child(self, child_id: UUID, manager_id: UUID) -> None: ...
+
+    async def reset_child_password(self, child_id: UUID, manager_id: UUID) -> ChildCredentials: ...
+
     async def lock_profile(self, account_id: UUID, role: Role) -> PublicProfile | None: ...
 
     async def activate_role(self, account_id: UUID, role: Role) -> PublicProfile | None: ...

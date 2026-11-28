@@ -26,6 +26,11 @@ IDENTITY_STATUSES = {
     "identity_busy": 503,
     "invalid_registration_role": 403,
     "role_not_enabled": 403,
+    "child_not_found": 404,
+    "child_not_managed_by_actor": 403,
+    "child_transfer_invalid": 409,
+    "child_account_managed": 403,
+    "child_manager_invalid": 403,
 }
 
 

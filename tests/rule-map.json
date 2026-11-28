@@ -664,6 +664,22 @@
       "pytest": [
         "tests/test_availability_api.py::test_student_hours_only_expose_free_intervals_and_suggest_matches"
       ]
+    },
+    "BR-019": {
+      "pytest": [
+        "tests/test_identity_children.py::test_child_credentials_and_manager_lifecycle",
+        "tests/test_identity_children.py::test_deleted_manager_leaves_child_independent",
+        "tests/test_identity_children.py::test_child_login_migration_preserves_existing_account_and_refuses_loss",
+        "tests/test_identity_children.py::test_only_one_concurrent_transfer_accept_succeeds"
+      ]
+    },
+    "BR-020": {
+      "pytest": [
+        "tests/test_identity_children.py::test_child_credentials_and_manager_lifecycle",
+        "tests/test_identity_children.py::test_deleted_manager_leaves_child_independent",
+        "tests/test_identity_children.py::test_child_login_migration_preserves_existing_account_and_refuses_loss",
+        "tests/test_identity_children.py::test_only_one_concurrent_transfer_accept_succeeds"
+      ]
     }
   }
 }

@@ -15,6 +15,7 @@ TIMEZONE_MAX_LENGTH = 80
 class ContactKind(StrEnum):
     EMAIL = "email"
     PHONE = "phone"
+    CHILD = "child"
 
 
 class Role(StrEnum):

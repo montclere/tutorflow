@@ -15,10 +15,11 @@ from app.modules.identity.domain.exceptions import IdentityError
 from app.modules.identity.domain.values import Role
 from app.modules.identity.presentation.http.schemas import (
     AccountView,
+    ChildPassword,
     CompleteRegistration,
-    Contact,
     CsrfView,
     Login,
+    LoginContact,
     Profile,
     ProfilePatch,
     RegistrationView,
@@ -34,7 +35,7 @@ def account_view(account: Account) -> AccountView:
         id=account.id,
         roles=sorted(account.roles, key=lambda role: role.value),
         workspace_id=account.id,
-        login_contact=Contact.model_validate(
+        login_contact=LoginContact.model_validate(
             {"type": account.contact.kind.value, "value": account.contact.value}
         ),
     )
@@ -169,6 +170,24 @@ def identity_router(
         current = await session.authenticate(request, csrf=True)
 
         return account_view(await roles.activate_teacher(current.account.id))
+
+
+    @router.put("/me/child-account/password", status_code=204)
+    async def change_child_password(
+        command: ChildPassword,
+        request: Request,
+        response: Response,
+        session: Annotated[IdentityHttpSession, Depends(require_session)],
+        authentication: Annotated[AuthenticationService, Depends(get_authentication)],
+    ) -> None:
+        require_json(request)
+
+        current = await session.authenticate(request, csrf=True)
+
+        await authentication.change_child_password(
+            current.account.id, command.password.get_secret_value(), current.token
+        )
+        session.clear_cookie(response)
 
 
     @router.get("/me/profile")

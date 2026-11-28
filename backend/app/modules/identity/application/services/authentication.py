@@ -3,6 +3,7 @@
 from collections.abc import Callable
 from dataclasses import replace
 from datetime import datetime
+from uuid import UUID
 
 from app.modules.identity.application.contracts import ContactInput, SignedIn
 from app.modules.identity.application.ports import ContactNormalizer, IdentityUnitOfWork, Passwords
@@ -10,7 +11,7 @@ from app.modules.identity.application.services.rate_limits import RateLimitServi
 from app.modules.identity.application.services.sessions import SessionService
 from app.modules.identity.domain.exceptions import IdentityError
 from app.modules.identity.domain.policies import IdentityPolicy, validate_password
-from app.modules.identity.domain.values import Role
+from app.modules.identity.domain.values import Contact, ContactKind, Role
 
 
 MAX_CREDENTIAL_VERIFICATIONS = 2
@@ -49,7 +50,14 @@ class AuthenticationService:
     ) -> SignedIn:
         validate_password(password, registering=False)
 
-        normalized = self.contacts.normalize(contact)
+        if contact.kind is ContactKind.CHILD:
+            try:
+                normalized = Contact(ContactKind.CHILD, str(UUID(contact.value.strip())))
+            except ValueError:
+                raise IdentityError("invalid_contact") from None
+        else:
+            normalized = self.contacts.normalize(contact)
+
         now = self.clock()
 
         await self.rate_limits.check("login-ip", ip, self.policy.login_ip, now)
@@ -91,3 +99,24 @@ class AuthenticationService:
                 return await self.sessions.create(repository, current, previous_token, self.clock())
 
         raise IdentityError("identity_busy")
+
+    async def change_child_password(self, account_id: UUID, password: str, token: str) -> None:
+        validate_password(password, registering=True)
+
+        async with self.persistence.transaction() as repository:
+            account = await repository.find_account_for_update(account_id)
+
+            if account is None:
+                raise IdentityError("authentication_required")
+
+            current = await self.sessions.require_account(repository, token)
+
+            if current.id != account_id:
+                raise IdentityError("authentication_required")
+
+            account.require_independent_child()
+
+            digest = await self.passwords.hash(password)
+
+            await repository.update_password_hash(account_id, digest)
+            await repository.remove_account_sessions(account_id)

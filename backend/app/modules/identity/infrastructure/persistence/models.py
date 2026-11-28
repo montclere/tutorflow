@@ -32,15 +32,30 @@ class Account(IdentityBase):
     __table_args__ = (
         UniqueConstraint("contact_kind", "contact", name="uq_identity_account_contact"),
         CheckConstraint(
-            "contact_kind IN ('email', 'phone')", name="ck_identity_account_contact_kind"
+            "contact_kind IN ('email', 'phone', 'child')", name="ck_identity_account_contact_kind"
         ),
         CheckConstraint("length(trim(contact)) > 0", name="ck_identity_account_contact_present"),
+        CheckConstraint(
+            "contact_kind = 'child' OR (manager_id IS NULL AND pending_manager_id IS NULL)",
+            name="ck_identity_child_management_kind",
+        ),
+        CheckConstraint(
+            "manager_id IS DISTINCT FROM id AND pending_manager_id IS DISTINCT FROM id "
+            "AND (pending_manager_id IS NULL OR pending_manager_id IS DISTINCT FROM manager_id)",
+            name="ck_identity_child_management_distinct",
+        ),
     )
     id: Mapped[UUID] = mapped_column(primary_key=True)
     contact_kind: Mapped[str] = mapped_column(String(5))
     contact: Mapped[str] = mapped_column(String(254))
     verified_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
     password_hash: Mapped[str] = mapped_column(String(255))
+    manager_id: Mapped[UUID | None] = mapped_column(
+        ForeignKey("identity_accounts.id", ondelete="SET NULL"), index=True
+    )
+    pending_manager_id: Mapped[UUID | None] = mapped_column(
+        ForeignKey("identity_accounts.id", ondelete="SET NULL"), index=True
+    )
     role_assignments: Mapped[list[AccountRole]] = relationship(
         lazy="selectin", cascade="all, delete-orphan"
     )

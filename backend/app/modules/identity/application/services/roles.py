@@ -23,6 +23,7 @@ class RoleService:
             if account is None:
                 raise IdentityError("authentication_required")
 
+            account.require_role_activation(Role.TEACHER)
             await repository.add_role(account.id, Role.TEACHER, self.clock())
 
             return replace(account, roles=account.roles | {Role.TEACHER})

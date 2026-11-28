@@ -70,6 +70,9 @@ class RegistrationService:
     async def _start(
         self, contact: ContactInput, ip: str, invitation_id: UUID | None, role: Role = Role.TEACHER
     ) -> UUID:
+        if contact.kind is ContactKind.CHILD:
+            raise IdentityError("invalid_contact")
+
         normalized = self.contacts.normalize(contact)
         now = self.clock()
 

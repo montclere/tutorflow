@@ -17,7 +17,7 @@ from app.modules.identity.infrastructure.persistence.models import (
     RateWindow,
 )
 from app.modules.identity.infrastructure.persistence.models import Registration as RegistrationRow
-from app.modules.identity.public import PublicProfile
+from app.modules.identity.public import ChildManagement, PublicProfile
 
 
 def to_account(row: AccountRow | None) -> Account | None:
@@ -31,6 +31,8 @@ def to_account(row: AccountRow | None) -> Account | None:
         row.password_hash,
         row.verified_at,
         Profile(row.display_name, row.timezone),
+        row.manager_id,
+        row.pending_manager_id if row.manager_id is not None else None,
     )
 
 
@@ -94,6 +96,8 @@ class PostgresIdentityRepository:
                 contact=account.contact.value,
                 password_hash=account.password_hash,
                 verified_at=account.verified_at,
+                manager_id=account.manager_id,
+                pending_manager_id=account.pending_manager_id,
             )
             .on_conflict_do_nothing(index_elements=[AccountRow.contact_kind, AccountRow.contact])
             .returning(AccountRow.id)
@@ -118,6 +122,43 @@ class PostgresIdentityRepository:
         await self.db.execute(
             update(AccountRow).where(AccountRow.id == account_id).values(password_hash=digest)
         )
+
+    async def find_child_management(self, child_id: UUID) -> ChildManagement | None:
+        row = (
+            await self.db.execute(
+                select(AccountRow.id, AccountRow.manager_id, AccountRow.pending_manager_id).where(
+                    AccountRow.id == child_id, AccountRow.contact_kind == ContactKind.CHILD
+                )
+            )
+        ).one_or_none()
+
+        if row is None:
+            return None
+
+        return ChildManagement(
+            row.id, row.manager_id, row.pending_manager_id if row.manager_id is not None else None
+        )
+
+    async def list_managed_children(self, manager_id: UUID) -> list[ChildManagement]:
+        rows = await self.db.execute(
+            select(AccountRow.id, AccountRow.pending_manager_id)
+            .where(AccountRow.manager_id == manager_id)
+            .order_by(AccountRow.id)
+        )
+
+        return [ChildManagement(row.id, manager_id, row.pending_manager_id) for row in rows]
+
+    async def update_child_management(
+        self, child_id: UUID, manager_id: UUID | None, pending_manager_id: UUID | None
+    ) -> None:
+        await self.db.execute(
+            update(AccountRow)
+            .where(AccountRow.id == child_id)
+            .values(manager_id=manager_id, pending_manager_id=pending_manager_id)
+        )
+
+    async def remove_account_sessions(self, account_id: UUID) -> None:
+        await self.db.execute(delete(LoginSession).where(LoginSession.account_id == account_id))
 
     async def save_registration(
         self,

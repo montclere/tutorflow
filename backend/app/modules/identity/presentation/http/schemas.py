@@ -47,9 +47,24 @@ class CompleteRegistration(Input):
     ]
 
 
-class Login(StartRegistration):
+class LoginContact(Input):
+    type: Literal["email", "phone", "child"]
+    value: Annotated[str, Field(min_length=1, max_length=CONTACT_MAX_LENGTH)]
+
+    def to_input(self) -> ContactInput:
+        return ContactInput(ContactKind(self.type), self.value)
+
+
+class Login(Input):
+    login_contact: LoginContact
     role: Role | None = None
     password: Annotated[SecretStr, Field(min_length=1, max_length=PASSWORD_MAX_LENGTH)]
+
+
+class ChildPassword(Input):
+    password: Annotated[
+        SecretStr, Field(min_length=PASSWORD_MIN_LENGTH, max_length=PASSWORD_MAX_LENGTH)
+    ]
 
 
 class ProfilePatch(Input):
@@ -77,7 +92,7 @@ class Profile(BaseModel):
 class AccountView(BaseModel):
     id: UUID
     roles: list[Role]
-    login_contact: Contact
+    login_contact: LoginContact
     workspace_id: UUID
 
 
