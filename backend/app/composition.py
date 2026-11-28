@@ -83,6 +83,7 @@ from app.modules.scheduling.infrastructure.settings import (
 from app.modules.students.application.services.adult_connections import AdultConnectionService
 from app.modules.students.application.services.adult_invitations import AdultInvitationService
 from app.modules.students.application.services.cards import CardService
+from app.modules.students.application.services.child_accounts import ChildAccountService
 from app.modules.students.application.services.collection import AdultServices, StudentServices
 from app.modules.students.application.services.connections import ConnectionService
 from app.modules.students.application.services.invitations import InvitationService
@@ -114,6 +115,7 @@ class Services:
     metrics: Metrics
     students: StudentServices
     adults: AdultServices
+    children: ChildAccountService
     groups: GroupServices
     lessons: LessonServices
     series: SeriesServices
@@ -289,6 +291,7 @@ async def build_services(
         metrics,
         student_services,
         adult_services,
+        ChildAccountService(student_persistence, now_utc),
         groups,
         lessons,
         series,

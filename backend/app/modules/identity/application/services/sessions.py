@@ -49,9 +49,12 @@ class SessionService:
 
     async def get_account(self, token: str) -> Account:
         async with self.persistence.transaction() as repository:
-            account = await repository.find_account_by_session(
-                self.security.session_digest(token), self.clock()
-            )
+            return await self.require_account(repository, token)
+
+    async def require_account(self, repository: IdentityRepository, token: str) -> Account:
+        account = await repository.find_account_by_session(
+            self.security.session_digest(token), self.clock()
+        )
 
         if account is None:
             raise IdentityError("authentication_required")

@@ -8,7 +8,7 @@ from uuid import UUID
 from app.modules.identity.application.contracts import ContactInput, RegistrationDelivery
 from app.modules.identity.domain.entities import Account, Registration, Session
 from app.modules.identity.domain.values import Contact, Role
-from app.modules.identity.public import PublicProfile
+from app.modules.identity.public import ChildManagement, PublicProfile
 
 
 class IdentityRepository(Protocol):
@@ -29,6 +29,16 @@ class IdentityRepository(Protocol):
     async def add_role(self, account_id: UUID, role: Role, now: datetime) -> None: ...
 
     async def update_password_hash(self, account_id: UUID, digest: str) -> None: ...
+
+    async def find_child_management(self, child_id: UUID) -> ChildManagement | None: ...
+
+    async def list_managed_children(self, manager_id: UUID) -> list[ChildManagement]: ...
+
+    async def update_child_management(
+        self, child_id: UUID, manager_id: UUID | None, pending_manager_id: UUID | None
+    ) -> None: ...
+
+    async def remove_account_sessions(self, account_id: UUID) -> None: ...
 
     async def save_registration(
         self,
