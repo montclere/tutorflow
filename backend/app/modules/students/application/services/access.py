@@ -4,7 +4,7 @@ from uuid import UUID
 
 from app.modules.identity.public import Actor, Role
 from app.modules.students.application.contracts import PAGE_MAX_SIZE
-from app.modules.students.application.ports import StudentsRepository
+from app.modules.students.application.ports import StudentsRepository, StudentsTransaction
 from app.modules.students.domain.entities import StudentCard
 from app.modules.students.domain.exceptions import StudentError
 
@@ -40,3 +40,16 @@ async def owned_card(
 def require_adult(actor: Actor) -> None:
     if actor.role is not Role.ADULT:
         raise StudentError("adult_required")
+
+
+async def connected_adult_card(
+    unit: StudentsTransaction, actor: Actor, card_id: UUID
+) -> StudentCard:
+    require_adult(actor)
+
+    card = await unit.adults.find_card_for_update(card_id, actor.account_id)
+
+    if card is None or await unit.adults.find_connection(card.id, actor.account_id) is None:
+        raise StudentError("adult_connection_not_found")
+
+    return card

@@ -4,7 +4,7 @@ from dataclasses import dataclass
 from datetime import datetime
 from uuid import UUID
 
-from app.modules.identity.public import Role, field
+from app.modules.identity.public import ChildManagement, PublicProfile, Role, field
 from app.modules.students.domain.entities import StudentCard
 from app.modules.students.domain.values import Money
 
@@ -73,3 +73,10 @@ class ResponsibilityAssignment:
     card_id: UUID
     account_id: UUID | None
     role: Role | None
+
+
+@dataclass(frozen=True)
+class ChildAccountStatus:
+    can_create: bool
+    management: ChildManagement | None
+    transfer_targets: list[PublicProfile]

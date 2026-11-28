@@ -6,6 +6,7 @@ from app.modules.identity.public import Actor, Principal, PublicProfile, Role
 from app.modules.students.application.contracts import AdultLearningProfile, AdultStudent
 from app.modules.students.application.ports import StudentsTransaction, StudentsUnitOfWork
 from app.modules.students.application.services.access import (
+    connected_adult_card,
     owned_card,
     require_adult,
     require_page_size,
@@ -63,21 +64,9 @@ class AdultConnectionService:
 
             return await self.connect(unit, card, invitation, actor.account_id)
 
-    async def connected_card(
-        self, unit: StudentsTransaction, actor: Actor, card_id: UUID
-    ) -> StudentCard:
-        require_adult(actor)
-
-        card = await unit.adults.find_card_for_update(card_id, actor.account_id)
-
-        if card is None or await unit.adults.find_connection(card.id, actor.account_id) is None:
-            raise StudentError("adult_connection_not_found")
-
-        return card
-
     async def disconnect(self, actor: Actor, card_id: UUID) -> None:
         async with self.persistence.transaction() as unit:
-            card = await self.connected_card(unit, actor, card_id)
+            card = await connected_adult_card(unit, actor, card_id)
 
             await unit.accounts.lock_profile(actor.account_id, Role.ADULT)
             await unit.adults.delete_connection(card.id, actor.account_id)
@@ -128,6 +117,6 @@ class AdultConnectionService:
         require_page_size(limit)
 
         async with self.persistence.transaction() as unit:
-            await self.connected_card(unit, actor, card_id)
+            await connected_adult_card(unit, actor, card_id)
 
             return await unit.adults.list_learning_profiles(card_id, after_id, limit + 1)

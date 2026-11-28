@@ -667,6 +667,8 @@
     },
     "BR-019": {
       "pytest": [
+        "tests/test_child_accounts_api.py::test_adult_creates_child_and_transfers_or_releases_management",
+        "tests/test_child_accounts_api.py::test_existing_student_is_not_managed_and_child_creation_is_atomic",
         "tests/test_identity_children.py::test_child_credentials_and_manager_lifecycle",
         "tests/test_identity_children.py::test_deleted_manager_leaves_child_independent",
         "tests/test_identity_children.py::test_child_login_migration_preserves_existing_account_and_refuses_loss",
@@ -675,10 +677,19 @@
     },
     "BR-020": {
       "pytest": [
+        "tests/test_child_accounts_api.py::test_adult_creates_child_and_transfers_or_releases_management",
+        "tests/test_child_accounts_api.py::test_existing_student_is_not_managed_and_child_creation_is_atomic",
         "tests/test_identity_children.py::test_child_credentials_and_manager_lifecycle",
         "tests/test_identity_children.py::test_deleted_manager_leaves_child_independent",
         "tests/test_identity_children.py::test_child_login_migration_preserves_existing_account_and_refuses_loss",
         "tests/test_identity_children.py::test_only_one_concurrent_transfer_accept_succeeds"
+      ]
+    },
+    "BR-100": {
+      "pytest": [
+        "tests/test_child_accounts_api.py::test_adult_creates_child_and_transfers_or_releases_management",
+        "tests/test_child_accounts_api.py::test_existing_student_is_not_managed_and_child_creation_is_atomic",
+        "tests/test_child_accounts_api.py::test_child_creation_races_with_invited_registration"
       ]
     }
   }

@@ -19,6 +19,7 @@ from app.modules.scheduling.application.calendar import Calendar
 from app.modules.scheduling.application.services.availability_collection import AvailabilityServices
 from app.modules.scheduling.application.services.lesson_collection import LessonServices
 from app.modules.scheduling.application.services.series_collection import SeriesServices
+from app.modules.students.application.services.child_accounts import ChildAccountService
 from app.modules.students.application.services.collection import AdultServices, StudentServices
 from app.shared.presentation.http import RequestAccess
 
@@ -126,6 +127,10 @@ async def set_invited_session(
 
 async def adult_services(request: Request) -> AdultServices:
     return (await resolve_services(request)).adults
+
+
+async def child_services(request: Request) -> ChildAccountService:
+    return (await resolve_services(request)).children
 
 
 async def group_services(request: Request) -> GroupServices:
